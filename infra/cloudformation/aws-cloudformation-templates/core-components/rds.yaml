@@ -1,0 +1,262 @@
+---
+# This CloudFormation template defines the resources required to set up an Amazon 
+# RDS (Relational Database Service) instance. It includes configurations for the database
+# instance, such as instance type, storage, security groups, and other necessary parameters.
+# The template will output two values: the ARN of the secret containing the database admin, 
+# and the security group ID that clients should use to connect to the database.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template for creating an RDS instance with PostgreSQL engine."
+
+Parameters:
+  EnvId:
+    Description: "The environment id. This value will be used to tag and namespace the resources."
+    Type: String
+
+  IsDevelopmentGrade:
+    Description: "If true, the RDS instance will be created with minimal resources."
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+
+  VpcId:
+    Description: "VPC Id where the RDS instance will be created."
+    Type: AWS::EC2::VPC::Id
+
+  SubnetIds:
+    Description: "Comma separated list of subnet ids where the RDS instance will be created."
+    Type: List<AWS::EC2::Subnet::Id>
+  
+
+  PublicSubnetIds:
+    Description: "Comma separated list of subnet ids where lambda will run."
+    Type: List<AWS::EC2::Subnet::Id>
+
+  LambdaS3BucketName:
+    Description: Name of the s3 bucket holding the packaged lambda code.
+    Type: String
+  
+  LambdaS3KeyPrefix:
+    Description: |
+      The prefix of the s3 key for the lambda code. The full key will be constructed
+      using the prefix and the location of the zip file relative to this tempalte.
+
+    Type: String
+
+## Optional parameters
+
+  DBAllocatedStorage:
+    Description: "The size of the database (in GB)."
+    Type: Number
+    Default: 5
+    MinValue: 5
+    MaxValue: 16384
+
+  DBInstanceClass:
+    Description: "The compute and memory capacity of the DB instance, for example db.m5.large. "
+    Type: String
+    Default: "db.t3.micro"
+
+
+Conditions:
+  IsDevelopmentGrade: !Equals [!Ref IsDevelopmentGrade, "true"]
+
+
+Resources:
+  DatabaseMasterCredential:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Name: !Sub "/${EnvId}/DbAdminSecret"
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "root"}'
+        GenerateStringKey: "password"
+        PasswordLength: 30
+        ExcludePunctuation: true
+      Tags:
+        - Key: EnvId
+          Value: !Ref EnvId
+
+  SecretTargetAttachment:
+    Type: "AWS::SecretsManager::SecretTargetAttachment"
+    Properties:
+      TargetId: !Ref DBInstance
+      SecretId: !Ref "DatabaseMasterCredential"
+      TargetType: "AWS::RDS::DBInstance"
+
+  ClientSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Ref "AWS::StackName"
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: EnvId
+          Value: !Ref "EnvId"
+
+  DatabaseSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Ref "AWS::StackName"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref "ClientSecurityGroup"
+      Tags:
+        - Key: EnvId
+          Value: !Ref "EnvId"
+
+  DevelopmentInboudRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: IsDevelopmentGrade
+    Properties:
+      CidrIp: "0.0.0.0/0"
+      FromPort: 5432
+      ToPort: 5432
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+
+
+  DBSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: !Ref "AWS::StackName"
+      SubnetIds: !Ref SubnetIds
+      Tags:
+        - Key: EnvId
+          Value: !Ref "EnvId"
+
+  DBInstance:
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Type: "AWS::RDS::DBInstance"
+    DependsOn:
+      - DatabaseMasterCredential
+    Properties:
+      PubliclyAccessible: !If [IsDevelopmentGrade, true, false]
+      DBName: postgres
+      StorageEncrypted: true
+      MasterUsername: !Join ["",["{{resolve:secretsmanager:",!Ref DatabaseMasterCredential,":SecretString:username}}"]]
+      MasterUserPassword: !Join ["",["{{resolve:secretsmanager:",!Ref DatabaseMasterCredential,":SecretString:password}}"]]
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      CopyTagsToSnapshot: true
+      DBInstanceClass: !Ref DBInstanceClass
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      EnableIAMDatabaseAuthentication: true
+      Engine: postgres
+      EngineVersion: "16.4"
+      MultiAZ: false
+      StorageType: gp2
+      VPCSecurityGroups:
+        - !Ref DatabaseSecurityGroup
+      Tags:
+        - Key: EnvId
+          Value: !Ref "EnvId"
+
+## DatabaseInitLamba Resources
+# The following resources createa a custom Cloudformation resource type that
+# can be used by other templates to configure this db instance (such as creating
+# service specific database).
+
+
+  DatabaseInitLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "DB init Lambda security group"
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+      - IpProtocol: udp
+        FromPort: 53
+        ToPort: 53
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 5432
+        ToPort: 5432
+        CidrIp: 0.0.0.0/0
+  
+  DatabaseInitLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: !Sub DatabaseInitLambdaRole-policy
+          PolicyDocument: |
+            {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction",
+                    "logs:*",
+                    "secretsmanager:*",
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeVpcs"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+  
+  DatabaseInitLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: main 
+      Role: !GetAtt DatabaseInitLambdaRole.Arn
+      Runtime: provided.al2023
+      Timeout: 60
+      Code:
+        S3Bucket: !Ref LambdaS3BucketName
+        S3Key: !Sub '${LambdaS3KeyPrefix}/custom-resource-lambdas/zip/pgDatabase.zip'
+      # If this stack is development grade the lambda does not need to live in the vpc
+      VpcConfig:
+        Ipv6AllowedForDualStack: !If [IsDevelopmentGrade, false, true]
+        SecurityGroupIds: !If [IsDevelopmentGrade, [], [!Ref DatabaseInitLambdaSecurityGroup, !Ref ClientSecurityGroup]]
+        SubnetIds: !If [IsDevelopmentGrade, [], !Ref SubnetIds]
+
+
+Outputs:
+  AdminSecretArn:
+    Description: "The ARN of the secret of the database admin."
+    Value: !Ref DatabaseMasterCredential
+
+
+  ClientSecurityGroupId:
+    Description: "The security group clients should use to connect to the db."
+    Value: !GetAtt ClientSecurityGroup.GroupId
+
+  DatabaseInitLambdaArn:
+    Description: "The ARN of the lambda function that can be used to initialize the database."
+    Value: !GetAtt DatabaseInitLambda.Arn
+
+  DatabaseInstanceEndpointAddress:
+    Description: "The endpoint of the database instance."
+    Value: !GetAtt DBInstance.Endpoint.Address
+
+  DatabaseMasterSecretId:
+    Description: "The secret id of the database admin."
+    Value: !Sub "/${EnvId}/DbAdminSecret"
+
+  DatabaseName:
+    Description: "The name of the database."
+    Value: !GetAtt DBInstance.DBName
+
+  DBName:
+    Description: "The name of the database."
+    Value: postgres

@@ -1,0 +1,237 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The API service
+Parameters:
+  EnvId:
+    Type: String
+    Description: Environment Id (used to namespace resources)
+    AllowedPattern: "[a-z][a-z0-9]{2,19}"
+    ConstraintDescription: Must be lower case letters between 3 and 20 characters.
+
+  VPC:
+    Type: AWS::EC2::VPC::Id
+
+  LogGroupName:
+    Type: String
+    Description: LogGroup name that should be use for the service
+
+  ClusterArn:
+    Type: String
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
+  Image:
+    Type: String
+
+  DesiredCount:
+    Type: Number
+    Default: 2
+
+  DomainName:
+    Type: String
+    Description: The domain name for the environment where the service register a DNS record.
+
+  LoadBalancerDNSName:
+    Type: String
+    Description: The DNS name of the load balancer that the service is registered with. A DNS record will created that points to this value.
+
+  LoadBalancerCanonicalHostedZoneID:
+    Type: String
+    Description: The canonical hosted zone ID of the load balancer that the service is registered with.
+
+  HttpsListener:
+    Type: String
+    Description: The ARN of the HTTPS listener that the service is registered with.
+
+  DbAdminSecretArn:
+    Type: String
+
+  CustomResourcesServiceToken:
+    Type: String
+    Description: The ARN of the lambda that deploys custom resoures (needed for created an application specific database)
+
+  # The following are optional parameters and are treated more like constants and input values.
+  ContainerPort:
+    Type: Number
+    Default: 80
+
+  AppName:
+    Type: String
+    Default: "api"
+
+Resources:
+
+  AppDatabaseSecret:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Name: !Sub "/${EnvId}/${AppName}_database"
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${AppName}", "dbname": "${AppName}"}'
+        GenerateStringKey: "password"
+        PasswordLength: 30
+        ExcludePunctuation: true
+      Tags:
+        - Key: EnvId
+          Value: !Ref EnvId
+
+
+  # We create a data in the RDS instance for the application.
+  # We do this with a custom Cloudformation resource that will run a lambda function.
+  AppDatabase:
+    Type: "Custom::PgDatabase"
+    Properties:
+      ServiceToken: !Ref CustomResourcesServiceToken
+      StackName: !Ref "AWS::StackName"
+      ServiceTimeout: 120
+      AdminSecretArn: !Ref DbAdminSecretArn
+      ServiceSecretArn: !Ref AppDatabaseSecret
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      # Name of the task definition. Subsequent versions of the task definition are grouped together under this name.
+      Family: !Sub "${EnvId}-${AppName}"
+      NetworkMode: bridge
+      RequiresCompatibilities:
+        - EC2
+      Memory: 84 # 84 MB = 20 for golang service container + 64MB for Service Connect proxy
+      ExecutionRoleArn: !Ref ExecutionRole
+      # "The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM) role that grants containers in the task permission to call AWS APIs on your behalf."
+      TaskRoleArn: !Ref TaskRole
+      ContainerDefinitions:
+        - Name: App
+          Image: !Ref Image
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Name: grpc
+          # Send logs to CloudWatch Logs
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroupName
+              awslogs-stream-prefix: !Ref AppName
+          Environment:
+            - Name: LISTEN_PORT
+              Value: !Ref ContainerPort
+            - Name: ALLOWED_ORIGINS
+              Value: !Sub "https://${DomainName}"
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: WEBHOOKS_BUCKET_NAME
+              Value: !Sub "${EnvId}-${AWS::AccountId}-data-ingest"
+            - Name: MIGRATIONS_PATH
+              Value: "/app/migrations"
+          Secrets:
+            - Name: DB_NAME
+              ValueFrom: !Sub "${AppDatabaseSecret}:dbname::"
+            - Name: DB_USER
+              ValueFrom: !Sub "${AppDatabaseSecret}:username::"
+            - Name: DB_HOST
+              ValueFrom: !Sub "${DbAdminSecretArn}:host::"
+            - Name: DB_PORT
+              ValueFrom: !Sub "${DbAdminSecretArn}:port::"
+            - Name: DB_PASSWORD
+              ValueFrom: !Sub "${AppDatabaseSecret}:password::"
+
+    # A role needed by ECS to Start the Ecs Service
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-EcsExecutionRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "secretsmanager:GetResourcePolicy"
+                  - "secretsmanager:GetSecretValue"
+                  - "secretsmanager:DescribeSecret"
+                  - "secretsmanager:ListSecretVersionIds"
+                  - "secretsmanager:ListSecrets"
+                Resource:
+                  - !Ref AppDatabaseSecret
+                  - !Ref DbAdminSecretArn
+
+  # A role for the containers
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvId}-${AppName}-TaskRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies: []
+
+  EcsService:
+    Type: AWS::ECS::Service
+    DependsOn: [ApiTargetGroup, ApiListenerRule]
+    Properties:
+      ServiceName: !Sub "${AppName}"
+      Cluster: !Ref ClusterArn
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: !Ref DesiredCount
+      LaunchType: EC2
+      LoadBalancers:
+        - ContainerName: App
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref ApiTargetGroup
+
+  ApiTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: "/healthcheck"
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub "${EnvId}-${AppName}-TargetGroup"
+      Protocol: HTTP
+      Port: !Ref ContainerPort
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: instance
+      VpcId: !Ref VPC
+
+  ApiListenerRule:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ApiTargetGroup
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Sub "api.${DomainName}"
+      ListenerArn: !Ref HttpsListener
+      Priority: 1
+
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub "${DomainName}."
+      Name: !Sub "api.${DomainName}"
+      Type: A
+      AliasTarget:
+        DNSName: !Ref LoadBalancerDNSName
+        HostedZoneId: !Ref LoadBalancerCanonicalHostedZoneID
+

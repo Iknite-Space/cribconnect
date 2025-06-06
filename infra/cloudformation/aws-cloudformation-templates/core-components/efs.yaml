@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template creates an EFS File System with Mount Targets
+Parameters:
+  EnvId: 
+    Type: String
+    Description: Environment ID
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: "VPC ID"
+  SubnetA:
+    Type: AWS::EC2::Subnet::Id
+  SubnetB:
+    Type: AWS::EC2::Subnet::Id
+Resources:
+  Efs:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+  EfsSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "EFS Security Group"
+      VpcId: !Ref VpcId
+  EfsSecurityGroupNFSinbound:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref EfsSecurityGroup
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      SourceSecurityGroupId: !Ref ClientSecurityGroup 
+  EfsMountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: Efs
+      SubnetId: !Ref SubnetA
+      SecurityGroups:
+        - Ref: "EfsSecurityGroup"
+  EfsMountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: Efs
+      SubnetId: !Ref SubnetB
+      SecurityGroups:
+        - Ref: "EfsSecurityGroup"
+  ClientSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Ref "AWS::StackName"
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: EnvId
+          Value: !Ref "EnvId"
+
+Outputs:
+  FileSystemId:
+    Value: !Ref Efs
+    Description: "EFS File System ID"
+  SecurityGroupId:
+    Value: !Ref EfsSecurityGroup
+    Description: "EFS Security Group ID"
+  ClientSecurityGroupId:
+    Description: "The security group clients should use to connect to the db."
+    Value: !GetAtt ClientSecurityGroup.GroupId

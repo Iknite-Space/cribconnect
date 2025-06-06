@@ -1,0 +1,58 @@
+name: Artifact Account Setup
+## This workflow will setup and configure the "Artifact AWS Account". This account
+# holds all build artifacts for the application.
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: 
+      - "cd/config.yaml"
+      - "cd/build-artifacts-cloudformation-template.yaml"
+      - ".github/workflows/build-artifact-setup.yaml"
+
+# Necessary permissions for workflow
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ConfigureMainAccount:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Install awscli
+      - uses: unfor19/install-aws-cli-action@v1
+
+      - uses: mikefarah/yq@v4.44.3
+        with:
+            cmd: yq -V
+
+
+      - name: Read the account id of the Artifact account
+        id: read_aws_account_id
+        run: |
+          AWS_ACCOUNT_ID=$(yq eval '.aws_account_id' cd/config.yaml)
+          # Set the value as an output
+            echo "aws_account_id=$AWS_ACCOUNT_ID" >> $GITHUB_OUTPUT
+      
+      # Assume the OIDC Role to get temporary credentials 
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::${{ steps.read_aws_account_id.outputs.aws_account_id }}:role/deploy
+  
+      - name: Configure Build Artifacts
+        env:
+          GIT_REPOSITORY_NAME: ${{ github.repository }}
+        run: |
+          cf_template_file='./cd/build-artifacts-cloudformation-template.yaml'
+          stack_name='build-artifact-setup'
+
+          aws sts get-caller-identity
+          
+          aws cloudformation deploy --template-file "$cf_template_file" \
+            --stack-name "$stack_name"  --no-fail-on-empty-changeset
+
+
+

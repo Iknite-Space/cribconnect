@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+
+Resources:
+
+  EcrRepositoryApi:
+    Type: "AWS::ECR::Repository"
+    Properties:
+      RepositoryName: api
+
+  InfraArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", ["infra-artifacts", !Ref "AWS::AccountId"]]
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+
+  AppArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", ["app-artifacts", !Ref "AWS::AccountId"]]
+
+## Output Values
+Outputs:
+  InfraArtifactsBucket:
+    Description: Artifact Bucket
+    Value: !Ref "InfraArtifactsBucket"
+
+  AppArtifactsBucket:
+    Description: App Artifact Bucket (for static hosting)
+    Value: !Ref "AppArtifactsBucket"
+
+  EcrRepositoryApiArn:
+    Description: Users ECR Repository Arn
+    Value: !GetAtt EcrRepositoryApi.Arn
