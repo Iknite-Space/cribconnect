@@ -22,7 +22,6 @@ on:
       - "api/**"
       - "app/**"
       - "infra/**"
-  
 
 # Necessary permissions for workflow
 permissions:
@@ -31,7 +30,7 @@ permissions:
 
 jobs:
   golangci:
-    name: lint
+    name: api-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,15 +43,15 @@ jobs:
           working-directory: ./api
           version: v2.1
   reactci:
-    name: lint
+    name: react-app-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4  
+      - uses: actions/setup-node@v4
       - name: Install modules
         run: npm install
       - name: Run ESLint
-        run: eslint . --ext .js,.jsx,.ts,.tsx
+        run: npm run lint
 
   BuildApi:
     runs-on: ubuntu-latest
