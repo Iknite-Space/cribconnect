@@ -43,6 +43,17 @@ jobs:
         with:
           working-directory: ./api
           version: v2.1
+  reactci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4  
+      - name: Install modules
+        run: yarn
+      - name: Run ESLint
+        run: eslint . --ext .js,.jsx,.ts,.tsx
+
   BuildApi:
     runs-on: ubuntu-latest
     steps:
