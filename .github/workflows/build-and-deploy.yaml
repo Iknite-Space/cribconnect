@@ -40,6 +40,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
+          working-directory: ./api
           version: v2.1
   BuildApi:
     runs-on: ubuntu-latest
