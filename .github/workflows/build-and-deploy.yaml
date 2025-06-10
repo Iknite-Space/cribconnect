@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: stable
-      - name: golangci-lint
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.1
