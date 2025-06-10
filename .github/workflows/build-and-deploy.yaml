@@ -22,14 +22,6 @@ on:
       - "api/**"
       - "app/**"
       - "infra/**"
-  merge:
-    branches: ["main"]
-    paths:
-      - "cd/config.yaml"
-      - ".github/workflows/build-and-deploy.yaml"
-      - "api/**"
-      - "app/**"
-      - "infra/**"
 
 # Necessary permissions for workflow
 permissions:
