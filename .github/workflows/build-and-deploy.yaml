@@ -46,7 +46,7 @@ jobs:
         with:
           go-version: stable
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v8
         with:
           working-directory: ./api
           version: v2.1
