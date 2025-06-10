@@ -8,6 +8,22 @@ concurrency:
 
 on:
   push:
+    branches: [ "DevOps" ]
+    paths: 
+      - "cd/config.yaml"
+      - ".github/workflows/build-and-deploy.yaml"
+      - "api/**"
+      - "app/**"
+      - "infra/**"
+  pull_request:
+    branches: [ "main" ]
+    paths: 
+      - "cd/config.yaml"
+      - ".github/workflows/build-and-deploy.yaml"
+      - "api/**"
+      - "app/**"
+      - "infra/**"
+  commit:
     branches: [ "main" ]
     paths: 
       - "cd/config.yaml"
@@ -22,6 +38,18 @@ permissions:
   contents: read
 
 jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.8
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
   BuildApi:
     runs-on: ubuntu-latest
     steps:
@@ -65,6 +93,18 @@ jobs:
 
 
   BuildApp:
+    golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.8
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
