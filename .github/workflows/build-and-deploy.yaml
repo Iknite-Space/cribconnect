@@ -22,6 +22,14 @@ on:
       - "api/**"
       - "app/**"
       - "infra/**"
+  merge:
+    branches: ["main"]
+    paths:
+      - "cd/config.yaml"
+      - ".github/workflows/build-and-deploy.yaml"
+      - "api/**"
+      - "app/**"
+      - "infra/**"
 
 # Necessary permissions for workflow
 permissions:
@@ -38,7 +46,7 @@ jobs:
         with:
           go-version: stable
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v3
         with:
           working-directory: ./api
           version: v2.1
