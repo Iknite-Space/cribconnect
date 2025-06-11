@@ -51,7 +51,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.15.1'  # or your project's Node version
+          node-version: '18'  # or your project's Node version
 
       - name: Install dependencies
         run: npm install

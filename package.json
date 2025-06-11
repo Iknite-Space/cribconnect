@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "react-scripts start",
     "lint": "eslint . --config eslint.config.js"
   },
   "devDependencies": {
