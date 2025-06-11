@@ -42,16 +42,22 @@ jobs:
         with:
           working-directory: ./api
           version: v2.1
-  # reactci:
-  #   name: react-app-lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #     - name: Install modules
-  #       run: npm install
-  #     - name: Run ESLint
-  #       run: npm run lint
+  reactci:
+    name: React App Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.1'  # or your project's Node version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
 
   BuildApi:
     runs-on: ubuntu-latest

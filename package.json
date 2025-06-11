@@ -6,6 +6,6 @@
     "eslint-plugin-react-hooks": "^5.2.0"
   },
   "scripts": {
-    "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint ."
   }
 }
