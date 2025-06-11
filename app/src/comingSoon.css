@@ -1,0 +1,54 @@
+.coming-soon-container {
+  text-align: center;
+  padding: 50px;
+  background: linear-gradient(to right, #ff7e5f, #feb47b);
+  color: white;
+  font-family: "Arial", sans-serif;
+}
+
+h1 {
+  font-size: 3rem;
+  animation: fadeIn 2s ease-in-out;
+}
+
+p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.notify-button {
+  padding: 10px 20px;
+  font-size: 1.5rem;
+  background: white;
+  color: #ff7e5f;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+.notify-button:hover {
+  background: #ff7e5f;
+  color: white;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
