@@ -4,12 +4,16 @@
   "type": "module",
   "scripts": {
     "start": "react-scripts start",
-    "lint": "eslint ."
+    "lint": "eslint . --config eslint.config.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "eslint": "^9.28.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "extends": "./eslint.config.js"
   }
 }
