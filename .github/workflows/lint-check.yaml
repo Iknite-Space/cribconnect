@@ -10,10 +10,8 @@ on:
       - "app/**"
       - "infra/**"
   pull_request:
-
     branches: ["main"]
     paths:
-    
       - "cd/config.yaml"
       - ".github/workflows/build-and-deploy.yaml"
       - "api/**"
@@ -22,7 +20,7 @@ on:
 
 jobs:
   golangci:
-    name: api-lint
+    name: Api-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
