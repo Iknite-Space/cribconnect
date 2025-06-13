@@ -2,7 +2,7 @@ name: Api-lint and React-lint
 
 on:
   push:
-    branches: ["DevOps", "main"]
+    branches: ["DevOps"]
     paths:
       - "cd/config.yaml"
       - ".github/workflows/build-and-deploy.yaml"
