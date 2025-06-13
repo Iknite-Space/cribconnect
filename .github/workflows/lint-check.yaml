@@ -9,6 +9,7 @@ on:
       - "api/**"
       - "app/**"
       - "infra/**"
+      
   pull_request:
     branches: ["main"]
     paths:
