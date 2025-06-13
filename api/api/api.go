@@ -18,7 +18,7 @@ func NewMessageHandler(querier repo.Querier) *MessageHandler {
 }
 
 func (h *MessageHandler) WireHttpHandler() http.Handler {
-
+	//testing
 	r := gin.Default()
 	r.Use(gin.CustomRecovery(func(c *gin.Context, _ any) {
 		c.String(http.StatusInternalServerError, "Internal Server Error: panic")
