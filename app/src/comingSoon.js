@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./comingSoon.css"; // Styles for animations
 
 const ComingSoon = () => {
