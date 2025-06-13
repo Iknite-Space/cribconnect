@@ -2,22 +2,11 @@ name: Api-lint and React-lint
 
 on:
   push:
-    branches: ["DevOps", "main"]
-    paths:
-      - "cd/config.yaml"
-      - ".github/workflows/build-and-deploy.yaml"
-      - "api/**"
-      - "app/**"
-      - "infra/**"
+    branches: ["main"]
+      
   pull_request:
     branches: ["main"]
-    paths:
-      - "cd/config.yaml"
-      - ".github/workflows/build-and-deploy.yaml"
-      - "api/**"
-      - "app/**"
-      - "infra/**"
-
+    
 jobs:
   golangci:
     name: Api-lint
