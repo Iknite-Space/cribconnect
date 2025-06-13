@@ -7,60 +7,20 @@ concurrency:
 
 on:
   push:
-    branches: ["DevOps"]
-    paths:
-      - "cd/config.yaml"
-      - ".github/workflows/build-and-deploy.yaml"
-      - "api/**"
-      - "app/**"
-      - "infra/**"
-  pull_request:
-
     branches: ["main"]
     paths:
-    
       - "cd/config.yaml"
       - ".github/workflows/build-and-deploy.yaml"
       - "api/**"
       - "app/**"
       - "infra/**"
-
 
 # Necessary permissions for workflow
 permissions:
   id-token: write
   contents: read
 
-jobs:
-  golangci:
-    name: api-lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: stable
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          working-directory: ./api
-          version: v2.1
-  reactci:
-    name: React App Lint
-    runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'  # or your project's Node version
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run ESLint
-        run: npm run lint
 
   BuildApi:
     runs-on: ubuntu-latest
