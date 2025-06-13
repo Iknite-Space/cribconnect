@@ -20,8 +20,7 @@ permissions:
   id-token: write
   contents: read
 
-
-
+jobs:
   BuildApi:
     runs-on: ubuntu-latest
     steps:
