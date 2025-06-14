@@ -25,7 +25,7 @@ func (h *MessageHandler) WireHttpHandler() http.Handler {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
 
-	// r.GET("//healthcheck", h.handleHealthcheck)
+	r.GET("//healthcheck", h.handleHealthcheck)
 	// r.POST("/message", h.handleCreateMessage)
 	// r.GET("/message/:id", h.handleGetMessage)
 	// r.DELETE("/message/:id", h.handleDeleteMessage)
@@ -34,9 +34,9 @@ func (h *MessageHandler) WireHttpHandler() http.Handler {
 	return r
 }
 
-// func (h *MessageHandler) handleHealthcheck(c *gin.Context) {
-// 	c.String(http.StatusOK, "ok")
-// }
+func (h *MessageHandler) handleHealthcheck(c *gin.Context) {
+	c.String(http.StatusOK, "ok")
+}
 
 // func (h *MessageHandler) handleCreateMessage(c *gin.Context) {
 // 	var req repo.CreateMessageParams
