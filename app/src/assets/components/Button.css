@@ -1,0 +1,39 @@
+.btn {
+  border-radius: 20px;
+  border: 1px solid #003151;
+  background-color: #003151;
+  color: #FFFDD0;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 12px 45px;
+  margin-top: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: transform 80ms ease-in;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn:focus {
+  outline: none;
+}
+
+.btn.ghost {
+  background-color: transparent;
+  border-color: #FFFDD0;
+  color: #FFFDD0;
+}
+
+.btn.google {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #0E4C92;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
