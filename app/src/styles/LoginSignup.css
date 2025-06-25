@@ -1,0 +1,195 @@
+/* --Primary: #003151; PRussian 
+--Secondary: #0E4C92; Yale
+--Tertiary: FFFDD0; Cream */
+
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,800');
+/* Reset just for this component */
+#container * {
+ 
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.bigbox {
+  margin-top: 5%;
+}
+
+/* Wrapper styles */
+#container {
+  background-color: #fffdd0;
+  border-radius: 10px;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25),
+              0 10px 10px rgba(0,0,0,0.22);
+  position: relative;
+  overflow: hidden;
+  width: 768px;
+  max-width: 100%;
+  min-height: 480px;
+  margin: 0 auto;
+}
+
+/* Form Containers */
+.form-container {
+  margin-top: 10%;
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transition: all 0.6s ease-in-out;
+}
+
+.sign-in-container {
+  left: 0;
+  width: 50%;
+  z-index: 2;
+}
+
+.sign-up-container {
+  left: 0;
+  width: 50%;
+  opacity: 0;
+  z-index: 1;
+}
+
+/* Active Panel Switch */
+#container.right-panel-active .sign-in-container {
+  transform: translateX(100%);
+}
+
+#container.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+  animation: show 0.6s;
+}
+
+@keyframes show {
+  0%, 49.99% {
+    opacity: 0;
+    z-index: 1;
+  }
+  50%, 100% {
+    opacity: 1;
+    z-index: 5;
+  }
+}
+
+/* Overlay Section */
+.overlay-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.6s ease-in-out;
+  z-index: 100;
+}
+
+#container.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+}
+
+.overlay {
+  background: linear-gradient(to right, #003151, #0E4C92);
+  color: #FFFDD0;
+  position: relative;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  transform: translateX(0);
+  transition: transform 0.6s ease-in-out;
+}
+
+#container.right-panel-active .overlay {
+  transform: translateX(50%);
+}
+
+.overlay-panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 40px;
+  height: 100%;
+  width: 50%;
+  transition: transform 0.6s ease-in-out;
+}
+
+.overlay-left {
+  transform: translateX(-20%);
+}
+
+#container.right-panel-active .overlay-left {
+  transform: translateX(0);
+}
+
+.overlay-right {
+  right: 0;
+  transform: translateX(0);
+}
+
+#container.right-panel-active .overlay-right {
+  transform: translateX(20%);
+}
+
+/* Form Styling */ 
+/* FFFFFF   */
+form {
+  background-color: #FFFDD0; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 50px;
+  height: 100%;
+  text-align: center;
+}
+
+input {
+  background-color: #eee;
+  border: none;
+  padding: 12px 15px;
+  margin: 8px 0;
+  width: 100%;
+}
+
+
+/* Heading */
+h2 {
+  text-align: center;
+  /* margin: 20px 0; */
+}
+h1 {
+  font-size: 30px;
+	font-weight: bold;
+	margin: 0;
+}
+p {
+	font-size: 14px;
+	font-weight: 100;
+	line-height: 20px;
+	letter-spacing: 0.5px;
+	margin: 20px 0 30px;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+.or-text {
+  margin: 10px 0 4px; /* reduced bottom margin */
+  font-size: 14px;
+  color: #555;
+}
+
+.social-signin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.forgot-link {
+  margin-top: -5px;
+
+}
+ 

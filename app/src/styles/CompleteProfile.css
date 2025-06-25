@@ -1,0 +1,83 @@
+.profile-page {
+  max-width: 700px;
+  margin: 50px auto;
+  padding: 40px;
+  background: #fffDD0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.profile-page h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: larger;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+h3 {
+  margin-top: 30px;
+  color: #555;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+input,
+select,
+textarea {
+  padding: 12px 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #0E4C92;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+button[type="submit"] {
+  padding: 14px;
+  background: #003131;
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-top: 10px;
+}
+
+button[type="submit"]:hover {
+  background: #0E4C92;
+}
+
+/* Optional: Make it mobile-friendly */
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 20px;
+  }
+}
+
+.error-message {
+  color: crimson;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
