@@ -1,0 +1,14 @@
+.top-left-message {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #e0f7fa;
+  color: #003151;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  font-weight: 500;
+  z-index: 9999;
+  max-width: 300px;
+  animation: fadeIn 0.3s ease-in-out;
+}
