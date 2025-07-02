@@ -188,8 +188,30 @@ p {
   flex-direction: column;
   align-items: center;
 }
+
+#google-signin-btn {
+  all: unset; /* remove inherited styles */
+  padding: 6px;
+  border: 1px solid #ccc;
+  background-color: #003151;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#google-signin-btn:hover {
+  background-color: #0E4C92;
+}
+
 .forgot-link {
   margin-top: -5px;
 
 }
  
+
+
+
+
+

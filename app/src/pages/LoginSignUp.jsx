@@ -1,13 +1,14 @@
 //LoginSignup.jsx 
-import React, { useState } from 'react'; 
+import React, { useContext, useState } from 'react'; 
 import { FcGoogle } from 'react-icons/fc';
 import '../styles/LoginSignup.css'; // for styling
 import { useNavigate } from 'react-router-dom'; 
 import { Link } from 'react-router-dom';
-import { register,login, loginWithGoogle } from '../features/auth/firebaseAuth';
-// import { useAuth } from '../context/firebaseAuthCtx';
+import {  loginWithGoogle } from '../features/auth/firebaseAuth';
+import { AuthContext } from '../context/AuthContext';
 
 import Button from '../assets/components/Button';
+import MessageBanner from '../assets/components/MessageBanner';
 
 const LoginSignup = () => { 
  const [isRightPanelActive, setIsRightPanelActive] = useState(false);
@@ -15,14 +16,23 @@ const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const navigate = useNavigate(); 
 
+ const { setToken} = useContext(AuthContext)
+  const [message, setMessage] = useState('');
+
+
+ 
  const handleGoogleSignIn = async () => {
   try {
     const result = await loginWithGoogle();
-    const user = result.user;
-    alert(`Welcome ${user.displayName}! 🎉`);
-    // navigate('/complete-profile');
+    const {isNewUser} = result._tokenResponse;
+
+    if (isNewUser) {
+      navigate('/complete-profile');
+    } else {
+       setMessage(`Welcome ${result.user.displayName}! 🎉`);
+    }
   } catch (error) {
-    alert(error.message);
+    setMessage(error.message);
   }
 };
 
@@ -30,39 +40,46 @@ const [email, setEmail] = useState('');
 const handleSubmit = async (e, isSignUpMode) => {
     e.preventDefault();
     try {
-      if (isSignUpMode) {
-       const userCreate = await register(email, password);
-        alert('Account created! 🎉');
-        // Get secure ID token
-       const idToken = await userCreate.user.getIdToken();
-        // Send user data to Go backend
-       const response = await fetch("http://localhost:8081/users/register", {
-         method:"POST",
-        headers: {
-           Authorization: `Bearer ${idToken}`,
-           
-           "Content-Type": "application/json",
-          },
-           body: JSON.stringify({
-            idToken,
-            email,// must match backend expectations
-             }),
-           });
-              const result = await response.json();
-               console.log("Server response:", result);
-              //return result;
-              navigate('/complete-profile');
-      } 
-      else {
-        await login(email, password);
-        alert('Welcome back! 👋');
-        navigate('/complete-profile');
-      }
+      const endpoint = isSignUpMode
+      ? "http://localhost:8081/users/register"
+      : "http://localhost:8081/user/login";  // double-check this path for consistency
+        const isValidEmail = (email) => /^[A-Za-z0-9._%+-]+@gmail\.com$/.test(email);
+      if (!isValidEmail(email)) {
+          alert("Please enter a valid email address.");
+         return;
+        }
+       const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }) // properly closed object
+    });
+
+    const result = await response.json();
+    
+
+    if (!response.ok) {
+      throw new Error(result.message || "Something went wrong");
     }
-      catch (err) {
-      alert(err.message);
+
+    console.log("Server response:", result);
+
+    if (result.id_token) {
+        setToken(result.id_token); // <-- set here
     }
+
+    if (isSignUpMode) {
+      navigate("/complete-profile");
+    } else {
+      alert("Welcome back! 👋");
+      navigate("/");
+    }
+  } catch (err) {
+    alert(err.message);
+  }
   };
+
+
+
 
 return (
   <div className='bigbox'>
@@ -74,7 +91,11 @@ return (
              <h1>Create Account</h1>
              <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} required />
              <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} required />
+             <p className="or-text">or sign up with Google</p>
+             <Button  id="google-signin-btn" onClick={handleGoogleSignIn} ><FcGoogle size={20} /></Button>
              <Button type="submit">Sign Up</Button>
+           <MessageBanner message={message} clear={() => setMessage('')} />
+
            </form>
          </div>
 
@@ -86,11 +107,16 @@ return (
              <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} required />
              <div className="social-signin">
              <p className="or-text">or sign in with Google</p>
-             <Button  onClick={handleGoogleSignIn} className="google-icon-btn"><FcGoogle size={20} /></Button>
+             <Button  id="google-signin-btn" onClick={handleGoogleSignIn} ><FcGoogle size={20} /></Button>
              </div>
              
              <Link to="/forgot-password" className="forgot-link">Forgot your password?</Link>
              <Button type="submit">Log In</Button>
+              {message && (
+  <div className="top-left-message">
+    {message}
+  </div>
+)}
            </form>
          </div>
 

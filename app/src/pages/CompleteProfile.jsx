@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
-import { getAuth } from 'firebase/auth';
+import React, { useState, useRef, useContext } from 'react';
 import '../styles/CompleteProfile.css';
 //npm install react-phone-input-2
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import Cropper from 'react-easy-crop'
+import {getCroppedImage} from '../utils/cropImageHelper';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+
 
 
 
 
 const CompleteProfile = () => {
+   const fileInputRef = useRef(null);
+
+const [imageSrc, setImageSrc] = useState(null);
+const [crop, setCrop] = useState({ x: 0, y: 0 });
+const [zoom, setZoom] = useState(1);
+const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+const [isCropping, setIsCropping] = useState(false);
+
+const { token } = useContext(AuthContext)
+
    const navigate = useNavigate(); 
   const [phoneError, setPhoneError] = useState('');
   const [form, setForm] = useState({
@@ -45,16 +58,88 @@ const CompleteProfile = () => {
     }
   };
 
+// 📸 Handle file upload, limit to 5MB, and create a preview
   const handleFileChange = (e) => {
-  setForm((prev) => ({ ...prev, profile_picture: e.target.files[0] }));
-  console.log("Selected file:", e.target.files[0]);
 
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert("Profile photo must be 5MB or smaller.");
+      return;
+    }
+      const reader = new FileReader();
+     reader.onload = () => {
+      setImageSrc(reader.result);
+     setIsCropping(true);
+     };
+      reader.readAsDataURL(file);
+    console.log("Selected file:", file);
+  };
+
+  const handleCropConfirm = async () => {
+  try {
+    const blob = await getCroppedImage(imageSrc, croppedAreaPixels);
+    const mimeType = blob?.type || 'image/jpeg';
+const extension = mimeType === 'image/png' ? 'png' : 'jpg';
+
+const file = new File([blob], `profile.${extension}`, { type: mimeType });
+
+    const previewURL = URL.createObjectURL(blob);
+
+    setForm((prev) => ({
+      ...prev,
+      profile_picture: file,
+      profile_preview: previewURL,
+    }));
+
+    setIsCropping(false);
+    setImageSrc(null);
+  } catch (err) {
+    alert('Failed to crop image.');
+    console.error(err);
+  }
 };
+
+
+  // ❌ Remove/reset profile photo
+  const handleRemovePhoto = () => {
+  setForm((prev) => ({
+    ...prev,
+    profile_picture: null,
+    profile_preview: null,
+  }));
+  setImageSrc(null);
+  setIsCropping(false);
+  setCroppedAreaPixels(null);
+  setCrop({ x: 0, y: 0 });
+  setZoom(1);
+
+  if (fileInputRef.current) {
+    fileInputRef.current.value = ''; // ❌ fully clears the file selection
+  }
+};
+
+
+//Bio text area 
+  const [bio, setBio] = useState('');
+const [charCount, setCharCount] = useState(0);
+const [isInvalid, setIsInvalid] = useState(false);
+
+const handleInputChanges = (e) => {
+  const value = e.target.value;
+  setBio(value);
+  setCharCount(value.length);
+  setIsInvalid(value.length < 50 || value.length > 300);
+};
+
+  
 
 
   const handleSubmit = async (e) => {
   e.preventDefault();
-  
+
   // ✅ Cameroonian phone number format validation
 const isValidCameroonPhone = (num) => {
   const pattern = /^\+237((6(70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89))|(65[0-9])|(69[1-9])|(62[0-3]))\d{6}$/;
@@ -69,14 +154,6 @@ if (!isValidCameroonPhone(form.phonenum)) {
 }
 
   try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) {
-      alert("You must be logged in");
-      return;
-    }
-
-    const idToken = await user.getIdToken();
 
     // Prepare form data
     const formData = new FormData();
@@ -98,10 +175,11 @@ if (!isValidCameroonPhone(form.phonenum)) {
     const res = await fetch("http://localhost:8081/users/complete-profile", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${idToken}`,
+        Authorization: `Bearer ${token}`,
       },
       body: formData,
     });
+    console.log(token)
 
     const result = await res.json();
     if (res.ok) {
@@ -140,8 +218,67 @@ if (!isValidCameroonPhone(form.phonenum)) {
         {phoneError && <div className="error-message">{phoneError}</div>}
 
         <input name="birthdate" type="date" required onChange={handleInputChange} />
-        <textarea name="bio" placeholder="Tell us about yourself" onChange={handleInputChange}></textarea>
-        <input name="profile_picture" type="file" accept="image/png, image/jpeg" onChange={handleFileChange} />
+        {/* <div className="bio-container"> */}
+        <textarea
+             name="bio"
+             placeholder="Tell us about yourself"
+             value={bio}
+             onChange={handleInputChanges}
+             className={isInvalid ? 'textarea-error' : ''}
+             ></textarea>
+
+         <div className="char-feedback">
+          <span className={isInvalid ? 'char-count error' : 'char-count'}>
+           {charCount}/300
+          </span>
+           {isInvalid && (
+           <p className="error-msg">Bio must be between 50 and 300 characters.</p>
+           )}
+         </div>
+         {/* </div> */}
+
+        {/* 📸 Profile Photo Input + Preview + Remove */}
+      <label>Profile Picture</label>
+      <input
+        type="file"
+        name="profile_picture"
+        accept="image/png, image/jpeg"
+        onChange={handleFileChange}
+        ref={fileInputRef}
+      />
+
+     {form.profile_preview && !isCropping && (
+  <div className="preview">
+    <img src={form.profile_preview} alt="Cropped preview" />
+    <button type="button" onClick={handleRemovePhoto}>Remove Photo</button>
+  </div>
+)}
+
+{isCropping && imageSrc && (
+  <div className="cropper-wrapper">
+  <div className="cropper-box">
+    <Cropper
+      image={imageSrc}
+      crop={crop}
+      zoom={zoom}
+      aspect={1}
+      cropShape="round"
+      showGrid={false}
+      onCropChange={setCrop}
+      onZoomChange={setZoom}
+      onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+    />
+  </div>
+
+  <div className="cropper-buttons">
+    <button onClick={handleCropConfirm}>Crop & Save</button>
+    <button onClick={() => setIsCropping(false)}>Cancel</button>
+  </div>
+</div>
+
+)}
+
+
 
         <h3>Provide Your Roommate Preferences</h3>
         <select name="ageRange" onChange={handleInputChange}>
