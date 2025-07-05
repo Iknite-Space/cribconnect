@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api"
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 )
 
@@ -76,9 +77,11 @@ func run() error {
 	}
 
 	querier := repo.New(db)
+	service := api.NewService()
+	middleware := middleware.NewMiddleware()
 
 	// We create a new http handler using the database querier.
-	handler := api.NewMessageHandler(querier).WireHttpHandler()
+	handler := api.NewControllerHandler(querier, service, middleware).WireHttpHandler()
 
 	// And finally we start the HTTP server on the configured port.
 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.ListenPort), handler)
@@ -87,6 +90,10 @@ func run() error {
 	}
 
 	return nil
+}
+
+func InitFirebaseClient() any {
+	panic("unimplemented")
 }
 
 // LoadConfig reads configuration from file or environment variables.
