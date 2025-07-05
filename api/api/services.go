@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"os"
 )
@@ -24,7 +25,13 @@ func (s *Service) SaveProfilePicture(file multipart.File, userID string) (string
 	if err != nil {
 		return "", err // Return an empty string and the error if file creation fails
 	}
-	defer outFile.Close() // Ensure the file is closed after writing
+	defer func() {
+		if err := outFile.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
+
+	// Ensure the file is closed after writing
 
 	// Copy the uploaded file's content into the new file
 	_, err = io.Copy(outFile, file)

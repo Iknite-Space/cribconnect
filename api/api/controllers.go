@@ -52,7 +52,12 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Firebase user"})
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// You can log this or handle it gracefully
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	var fbResp struct {
 		IDToken string `json:"idToken"`
@@ -108,7 +113,12 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Firebase login failed"})
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// You can log this or handle it gracefully
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	var fbResp struct {
 		IDToken string `json:"idToken"`
@@ -167,7 +177,11 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open profile picture"})
 			return
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Printf("error closing file: %v", err)
+			}
+		}()
 
 		// Save the profile picture using the helper function
 		filePath, err := h.service.SaveProfilePicture(file, firebaseUID)
