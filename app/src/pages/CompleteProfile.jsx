@@ -12,19 +12,24 @@ import { AuthContext } from '../context/AuthContext';
 
 
 
+
 const CompleteProfile = () => {
    const fileInputRef = useRef(null);
-
+   const navigate = useNavigate(); 
+   const { token } = useContext(AuthContext);
+  
 const [imageSrc, setImageSrc] = useState(null);
 const [crop, setCrop] = useState({ x: 0, y: 0 });
 const [zoom, setZoom] = useState(1);
 const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 const [isCropping, setIsCropping] = useState(false);
 
-const { token } = useContext(AuthContext)
+const [bio, setBio] = useState('');
+const [charCount, setCharCount] = useState(0);
+const [isInvalid, setIsInvalid] = useState(false); 
+const [phoneError, setPhoneError] = useState('');
 
-   const navigate = useNavigate(); 
-  const [phoneError, setPhoneError] = useState('');
+
   const [form, setForm] = useState({
     fname: '',
     lname: '',
@@ -46,6 +51,8 @@ const { token } = useContext(AuthContext)
     }
   });
 
+
+  // ✏️ Handles regular inputs and nested preference inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name in form.preferences) {
@@ -123,9 +130,7 @@ const file = new File([blob], `profile.${extension}`, { type: mimeType });
 
 
 //Bio text area 
-  const [bio, setBio] = useState('');
-const [charCount, setCharCount] = useState(0);
-const [isInvalid, setIsInvalid] = useState(false);
+ 
 
 const handleInputChanges = (e) => {
   const value = e.target.value;
@@ -170,10 +175,10 @@ if (!isValidCameroonPhone(form.phonenum)) {
 
 
     }
-
+     
     // Send to backend
     const res = await fetch("http://localhost:8081/users/complete-profile", {
-      method: "POST",
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -190,7 +195,7 @@ if (!isValidCameroonPhone(form.phonenum)) {
       alert("⚠️ Error saving profile");
     }
   } catch (error) {
-    console.error("Submit error:", error);
+    console.log("Submit error:", error);
     alert("Something went wrong");
   }
 };
@@ -271,8 +276,8 @@ if (!isValidCameroonPhone(form.phonenum)) {
   </div>
 
   <div className="cropper-buttons">
-    <button onClick={handleCropConfirm}>Crop & Save</button>
-    <button onClick={() => setIsCropping(false)}>Cancel</button>
+    <button type="button" onClick={handleCropConfirm}>Crop & Save</button>
+    <button type="button" onClick={() => setIsCropping(false)}>Cancel</button>
   </div>
 </div>
 

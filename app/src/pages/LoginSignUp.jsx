@@ -55,7 +55,7 @@ const handleSubmit = async (e, isSignUpMode) => {
     });
 
     const result = await response.json();
-    
+    console.log(result);
 
     if (!response.ok) {
       throw new Error(result.message || "Something went wrong");
@@ -70,7 +70,7 @@ const handleSubmit = async (e, isSignUpMode) => {
     if (isSignUpMode) {
       navigate("/complete-profile");
     } else {
-      alert("Welcome back! 👋");
+      setMessage("Welcome back! 👋");
       navigate("/");
     }
   } catch (err) {
@@ -113,10 +113,10 @@ return (
              <Link to="/forgot-password" className="forgot-link">Forgot your password?</Link>
              <Button type="submit">Log In</Button>
               {message && (
-  <div className="top-left-message">
-    {message}
-  </div>
-)}
+             <div className="top-left-message">
+                     {message}
+                  </div>
+             )}
            </form>
          </div>
 
