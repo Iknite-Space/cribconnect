@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware/utils"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 	"github.com/gin-gonic/gin"
 )
@@ -211,4 +213,32 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *UserHandler) handleForgotPassword(c *gin.Context) {
+	var request struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil || request.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing email"})
+		return
+	}
+
+	// Generate reset link using Firebase Admin SDK
+	link, err := middleware.InitFirebaseClient().PasswordResetLink(c.Request.Context(), request.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate reset link"})
+		return
+	}
+
+	// Send email with your email service
+	err = utils.SendEmail(request.Email, "Password Reset Resquest", link)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password reset email sent"})
+
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -25,8 +26,9 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 
 	r.GET("//healthcheck", h.handleHealthcheck)
 	r.POST("/users/register", h.handleUserRegistration)
-	r.PUT("/users/complete-profile", h.middleware.FirebaseAuthMiddleware(h.middleware.InitFirebaseClient()), h.handleCompleteUserProfile)
+	r.PUT("/users/complete-profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCompleteUserProfile)
 	r.POST("/users/login", h.handleUserLogin)
+	r.POST("/forgot-password", h.handleForgotPassword)
 	// r.POST("/message", h.handleCreateMessage)
 	// r.GET("/message/:id", h.handleGetMessage)
 	// r.DELETE("/message/:id", h.handleDeleteMessage)
