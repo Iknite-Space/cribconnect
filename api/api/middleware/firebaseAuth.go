@@ -24,7 +24,7 @@ var firebaseClient *auth.Client
 
 // added
 
-func (m *Middleware) InitFirebaseClient() *auth.Client {
+func InitFirebaseClient() *auth.Client {
 	// added
 	if firebaseClient != nil {
 		return firebaseClient
@@ -43,7 +43,8 @@ func (m *Middleware) InitFirebaseClient() *auth.Client {
 		log.Fatalf("error initializing firebase auth client: %v\n", err)
 	}
 
-	return client
+	firebaseClient = client
+	return firebaseClient
 }
 
 func (m *Middleware) FirebaseAuthMiddleware(client *auth.Client) gin.HandlerFunc {
@@ -66,4 +67,9 @@ func (m *Middleware) FirebaseAuthMiddleware(client *auth.Client) gin.HandlerFunc
 		c.Set("firebase_email", token.Claims["email"])
 		c.Next()
 	}
+}
+
+func GeneratePasswordResetLink(email string) (string, error) {
+	client := InitFirebaseClient() // gets your *auth.Client
+	return client.GeneratePasswordResetLink(email)
 }
