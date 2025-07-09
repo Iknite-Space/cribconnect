@@ -1,6 +1,5 @@
 // src/components/ForgotPassword.jsx
 import React, { useState } from 'react';
-import { resetPassword } from '../features/auth/firebaseAuth';
 import '../styles/ForgotPassword.css'; // optional: for styling
 
 
@@ -8,16 +7,39 @@ import '../styles/ForgotPassword.css'; // optional: for styling
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('');
+  const [submitting, setSubmitting] = useState(false)
 
   const handleReset = async (e) => {
     e.preventDefault();
+      if (submitting) return; // ⛔ prevent double submits
+
+      setSubmitting(true);
+    setStatus(''); // reset status
     try {
-      await resetPassword( email);
+      const response = await fetch('http://localhost:8081/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+        
+      });
+      
+
+      const result = await response.json();
+        // console.log(result)
+      if (!response.ok) {
+        throw new Error(result.error || 'Something went wrong');
+      }
+
       setStatus('✅ Password reset email sent, if an account with that email exists!');
     } catch (error) {
       setStatus(`⚠️ ${error.message}`);
+    } finally {
+      setSubmitting(false)
     }
   };
+
 
   return (
     <div className="forgot-container">
@@ -30,7 +52,8 @@ const ForgotPassword = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Send Reset Email</button>
+        <button type="submit" disabled={submitting}>
+  {submitting ? 'Sending...' : 'Send Reset Email'}</button>
       </form>
       {status && <p className="status">{status}</p>}
     </div>
