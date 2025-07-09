@@ -68,8 +68,3 @@ func (m *Middleware) FirebaseAuthMiddleware(client *auth.Client) gin.HandlerFunc
 		c.Next()
 	}
 }
-
-func GeneratePasswordResetLink(email string) (string, error) {
-	client := InitFirebaseClient() // gets your *auth.Client
-	return client.GeneratePasswordResetLink(email)
-}
