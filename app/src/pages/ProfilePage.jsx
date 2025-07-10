@@ -77,10 +77,42 @@ const progressPercent = Math.floor((completedSections / 4) * 100);
 console.log('Progress:', progressPercent);
 
 
-///
-// const totalFields = Object.keys(formData).length;
-// const filledFields = Object.values(formData).filter(val => val !== '').length;
-// const completionPercent = Math.floor((filledFields / totalFields) * 100);
+const handleSubmit = (e) => {
+  e.preventDefault();
+
+  const payload = new FormData();
+
+  // Add all text fields
+  Object.entries(formData).forEach(([key, value]) => {
+    if (key !== "profileImage") {
+      payload.append(key, value);
+    }
+  });
+
+  // Add image (if present)
+  if (formData.profileImage) {
+    payload.append("profileImage", formData.profileImage);
+  }
+
+  // Example: POST to a server
+  fetch("/api/save-profile", {
+    method: "POST",
+    body: payload
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error("Failed to save profile");
+      return response.json();
+    })
+    .then((data) => {
+      alert("✅ Profile saved successfully!");
+      console.log("Server response:", data);
+    })
+    .catch((err) => {
+      console.error("Save error:", err);
+      alert("❌ Something went wrong. Please try again.");
+    });
+};
+
 
 
     return (
@@ -135,7 +167,7 @@ console.log('Progress:', progressPercent);
 
          </header>
 
-         <section className="profile-form">
+         <form className="profile-form" onSubmit={handleSubmit}>
   <div className="form-section personal">
     <h2>Personal Details</h2>
     <input type="text" placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} />
@@ -243,7 +275,18 @@ console.log('Progress:', progressPercent);
   </select>
 </div>
 
-</section>
+<div className="submit-wrapper">
+  <button
+    type="submit"
+    className="submit-btn"
+    disabled={progressPercent < 100}
+    onClick={handleSubmit}
+  >
+    Save Profile
+  </button>
+</div>
+
+</form>
 
         </>
     );
