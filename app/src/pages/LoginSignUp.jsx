@@ -18,6 +18,7 @@ const [email, setEmail] = useState('');
 
  const { setToken} = useContext(AuthContext)
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false)
 
 
  
@@ -39,6 +40,9 @@ const [email, setEmail] = useState('');
 
 const handleSubmit = async (e, isSignUpMode) => {
     e.preventDefault();
+    if (submitting) return;
+
+    setSubmitting(true);
     try {
       const endpoint = isSignUpMode
       ? "http://localhost:8081/users/register"
@@ -75,7 +79,9 @@ const handleSubmit = async (e, isSignUpMode) => {
     }
   } catch (err) {
     alert(err.message);
-  }
+  } finally {
+      setSubmitting(false)
+    }
   };
 
 
@@ -93,7 +99,8 @@ return (
              <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} required />
              <p className="or-text">or sign up with Google</p>
              <Button  id="google-signin-btn" onClick={handleGoogleSignIn} ><FcGoogle size={20} /></Button>
-             <Button type="submit">Sign Up</Button>
+             <Button type="submit" disabled={submitting}>
+  {submitting ? 'Signing UP...' : 'Sign Up'}</Button>
            <MessageBanner message={message} clear={() => setMessage('')} />
 
            </form>
@@ -111,7 +118,8 @@ return (
              </div>
              
              <Link to="/forgot-password" className="forgot-link">Forgot your password?</Link>
-             <Button type="submit">Log In</Button>
+             <Button type="submit" disabled={submitting}>
+  {submitting ? 'Loggin In...' : 'Login'}</Button>
               {message && (
              <div className="top-left-message">
                      {message}
