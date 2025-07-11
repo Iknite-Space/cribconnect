@@ -1,11 +1,15 @@
 import '../styles/ProfilePage.css'
 // import { Link } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import LoadingSpinner from '../assets/components/LoadingSpinner';
+import { AuthContext } from '../context/AuthContext';
 
 
 const ProfilePage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const {token} = useContext(AuthContext);
 
-    const [formData, setFormData] = useState({
+       const [formData, setFormData] = useState({
   firstName: '',
   lastName: '',
   email: '',
@@ -23,6 +27,47 @@ const ProfilePage = () => {
   occupation: '',
   profileImage: null
 });
+
+    //Example: GET from a server
+    const [imagePreviewUrl, setImagePreviewUrl] = useState(""); 
+
+  useEffect( () => {
+    let isMounted = true
+
+  const fetchProfile = async () => {
+    try{
+   const response = await fetch('/api/get-profile',{
+    method: "GET",
+    headers: {
+        Authorization: `Bearer ${token}`,
+      },
+  });
+
+    if (!response.ok) {
+      alert ('Failed to fetch profile');
+    }
+    const data = await response.json();
+
+      if (isMounted) {
+      setFormData((prev) => ({
+        ...prev,
+        ...data,  // This assumes the data matches your formData keys
+       profileImage: null  // file input stays null
+      }));
+      setImagePreviewUrl(data.profileImage || "/path-to-profile.jpg"); // update preview separately
+      setIsLoading(false);  // turn off spinner
+    }
+  }
+    catch(err) {
+      console.error("Fetch error:", err);
+     if(isMounted) setIsLoading(false);  // still turn off spinner
+    }
+   };
+   fetchProfile();
+
+    return () => { isMounted = false};
+}, [token]);
+
 
 const handleFileChange = (e) => {
   const file = e.target.files[0];
@@ -77,7 +122,7 @@ const progressPercent = Math.floor((completedSections / 4) * 100);
 console.log('Progress:', progressPercent);
 
 
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
   const payload = new FormData();
@@ -94,37 +139,43 @@ const handleSubmit = (e) => {
     payload.append("profileImage", formData.profileImage);
   }
 
+
+
   // Example: POST to a server
-  fetch("/api/save-profile", {
+  try {
+  const response = await fetch("/api/save-profile", {
     method: "POST",
+    headers: {
+        Authorization: `Bearer ${token}`,
+      },
     body: payload
   })
-    .then((response) => {
-      if (!response.ok) throw new Error("Failed to save profile");
-      return response.json();
-    })
-    .then((data) => {
+    if (!response.ok) {
+      alert("Failed to save profile");
+    }
+     
+      const data = await response.json();
       alert("✅ Profile saved successfully!");
       console.log("Server response:", data);
-    })
-    .catch((err) => {
+    }
+    catch(err)  {
       console.error("Save error:", err);
       alert("❌ Something went wrong. Please try again.");
-    });
+    }
 };
 
 
-
+if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
     return (
         <>
          <header className="hero">
-         <h1>Find Your Perfect Roommate</h1>
+         <h1>Make Changes To Suit Your Taste</h1>
          <div className="profile-container">
   <img
     src={
       formData.profileImage
         ? URL.createObjectURL(formData.profileImage)
-        : "/path-to-profile.jpg"
+        : imagePreviewUrl || "/path-to-profile.jpg"
     }
     alt="User Profile"
     className="profile-pic"
@@ -143,27 +194,7 @@ const handleSubmit = (e) => {
   <label htmlFor="imageUpload" className="profile-icon">📷</label>
 </div>
 
-         {progressPercent > 0 && (
-  <div className="progress-banner">
-    <div className="progress-bar">
-      <div
-        className="progress-fill"
-        style={{
-          width: `${progressPercent}%`,
-          backgroundColor:
-            progressPercent === 100 ? '#4CAF50' :
-            progressPercent < 34 ? '#FF4C4C' :
-            '#0E4C92'
-        }}
-      ></div>
-    </div>
-    <p className="progress-text">
-      {progressPercent === 100
-        ? '🎉 Profile Complete!'
-        : `Progress: ${progressPercent}%`}
-    </p>
-  </div>
-)}
+ 
 
          </header>
 
@@ -184,26 +215,27 @@ const handleSubmit = (e) => {
   </div>
 
   <div className="form-section preferences">
-    {/* <p style={{ textAlign: 'center', marginBottom: '8px', color: '#0E4C92' }}>
-  {progressPercent === 100
-    ? '✅ All sections completed!'
-    : `Progress: ${progressPercent}%`}
-</p>
-
-   <div className="progress-wrapper">
-  <div className="progress-bar">
-    <div
-      className="progress-fill"
-      style={{
-        width: `${progressPercent}%`,
-        backgroundColor:
-          progressPercent === 100 ? '#4CAF50' : // success green
-          progressPercent < 34 ? '#FF4C4C' :     // warning red
-          '#0E4C92'                               // default blue
-      }}
-    ></div>
+          {!isLoading && progressPercent > 0 && (
+  <div className="progress-banner">
+    <div className="progress-bar">
+      <div
+        className="progress-fill"
+        style={{
+          width: `${progressPercent}%`,
+          backgroundColor:
+            progressPercent === 100 ? '#4CAF50' :
+            progressPercent < 34 ? '#FF4C4C' :
+            '#0E4C92'
+        }}
+      ></div>
+    </div>
+    <p className="progress-text">
+      {progressPercent === 100
+        ? '🎉 Profile Complete!'
+        : `Progress: ${progressPercent}%`}
+    </p>
   </div>
-</div> */}
+)}
 
 
   <h2>Preferences</h2>
