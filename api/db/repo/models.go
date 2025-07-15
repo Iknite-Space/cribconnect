@@ -11,15 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Match struct {
-	MatchID    string           `json:"match_id"`
-	User1ID    *string          `json:"user1_id"`
-	User2ID    *string          `json:"user2_id"`
-	MatchScore *int32           `json:"match_score"`
-	Status     *string          `json:"status"`
-	CreatedAt  pgtype.Timestamp `json:"created_at"`
-}
-
 type Thread struct {
 	ID        string           `json:"id"`
 	Topic     string           `json:"topic"`
@@ -29,14 +20,13 @@ type Thread struct {
 
 type User struct {
 	UserID         string           `json:"user_id"`
-	Fname          string           `json:"fname"`
-	Lname          string           `json:"lname"`
+	Fname          *string          `json:"fname"`
+	Lname          *string          `json:"lname"`
 	Birthdate      time.Time        `json:"birthdate"`
-	Phoneno        string           `json:"phoneno"`
+	Phoneno        *string          `json:"phoneno"`
 	Email          string           `json:"email"`
-	Password       string           `json:"password"`
 	Bio            string           `json:"bio"`
-	Preferences    json.RawMessage  `json:"preferences"`
+	Habbits        json.RawMessage  `json:"habbits"`
 	ProfilePicture *string          `json:"profile_picture"`
 	CreatedAt      pgtype.Timestamp `json:"created_at"`
 }

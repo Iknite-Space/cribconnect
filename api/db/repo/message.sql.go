@@ -11,6 +11,30 @@ import (
 	"time"
 )
 
+const getUserById = `-- name: GetUserById :one
+SELECT user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at FROM users
+WHERE user_id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, userID string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserById, userID)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Fname,
+		&i.Lname,
+		&i.Birthdate,
+		&i.Phoneno,
+		&i.Email,
+		&i.Bio,
+		&i.Habbits,
+		&i.ProfilePicture,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const registerUser = `-- name: RegisterUser :one
 
 
@@ -61,20 +85,20 @@ SET
     phoneno = COALESCE($4, phoneno),
     birthdate = COALESCE($5, birthdate),
     bio = COALESCE($6, bio),
-    preferences = COALESCE($7, preferences),
+    habbits = COALESCE($7, preferences),
     profile_picture = COALESCE($8, profile_picture)
 WHERE user_id = $1
-RETURNING user_id, fname, lname, birthdate, phoneno, email, password, bio, preferences, profile_picture, created_at
+RETURNING user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at
 `
 
 type UpdateUserProfileParams struct {
 	UserID         string          `json:"user_id"`
-	Fname          string          `json:"fname"`
-	Lname          string          `json:"lname"`
-	Phoneno        string          `json:"phoneno"`
+	Fname          *string         `json:"fname"`
+	Lname          *string         `json:"lname"`
+	Phoneno        *string         `json:"phoneno"`
 	Birthdate      time.Time       `json:"birthdate"`
 	Bio            string          `json:"bio"`
-	Preferences    json.RawMessage `json:"preferences"`
+	Habbits        json.RawMessage `json:"habbits"`
 	ProfilePicture *string         `json:"profile_picture"`
 }
 
@@ -86,7 +110,7 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 		arg.Phoneno,
 		arg.Birthdate,
 		arg.Bio,
-		arg.Preferences,
+		arg.Habbits,
 		arg.ProfilePicture,
 	)
 	var i User
@@ -97,9 +121,8 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 		&i.Birthdate,
 		&i.Phoneno,
 		&i.Email,
-		&i.Password,
 		&i.Bio,
-		&i.Preferences,
+		&i.Habbits,
 		&i.ProfilePicture,
 		&i.CreatedAt,
 	)

@@ -36,6 +36,6 @@ sql:
           nullable: false
           go_type: "string"
 
-        - column: users.preferences
+        - column: users.habbits
           nullable: true
           go_type: "encoding/json.RawMessage"

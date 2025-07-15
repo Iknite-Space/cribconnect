@@ -22,6 +22,11 @@ INSERT INTO users (user_id,email)
 VALUES ($1, $2)
 RETURNING user_id,email;
 
+-- name: GetUserById :one
+SELECT * FROM users
+WHERE user_id = $1
+LIMIT 1;
+
 -- name: UpdateUserProfile :one
 UPDATE users
 SET
@@ -30,7 +35,7 @@ SET
     phoneno = COALESCE($4, phoneno),
     birthdate = COALESCE($5, birthdate),
     bio = COALESCE($6, bio),
-    preferences = COALESCE($7, preferences),
+    habbits = COALESCE($7, preferences),
     profile_picture = COALESCE($8, profile_picture)
 WHERE user_id = $1
 RETURNING *;
