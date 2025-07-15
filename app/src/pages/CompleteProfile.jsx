@@ -189,9 +189,10 @@ if (!isValidCameroonPhone(form.phonenum)) {
     const result = await res.json();
     if (res.ok) {
       alert("🎉 Profile saved!");
-      navigate('/');
+      navigate('/profile');
     } else {
-      console.error(result);
+      console.log(result)
+     // console.error(result);
       alert("⚠️ Error saving profile");
     }
   } catch (error) {

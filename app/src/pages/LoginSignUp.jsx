@@ -75,7 +75,7 @@ const handleSubmit = async (e, isSignUpMode) => {
       navigate("/complete-profile");
     } else {
       setMessage("Welcome back! 👋");
-      navigate("/");
+      navigate("/profile");
     }
   } catch (err) {
     alert(err.message);
