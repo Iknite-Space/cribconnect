@@ -10,22 +10,23 @@ const ProfilePage = () => {
   const {token} = useContext(AuthContext);
 
        const [formData, setFormData] = useState({
-  firstName: '',
-  lastName: '',
+  fname: '',
+  lname: '',
   email: '',
-  phone: '',
-  aboutMe: '',
-  ageRange: '',
+  phoneno: '',
+  birthdate: '',
+  bio: '',
+  agerange: '',
   gender: '',
   pet: '',
-  lateNights: '',
+  latenights: '',
   smoking: '',
   drinking: '',
   guests: '',
-  noiseTolerance: '',
+  noisetolerance: '',
   religion: '',
   occupation: '',
-  profileImage: null
+  profilepicture: null
 });
 
     //Example: GET from a server
@@ -36,7 +37,7 @@ const ProfilePage = () => {
 
   const fetchProfile = async () => {
     try{
-   const response = await fetch('/api/get-profile',{
+   const response = await fetch("http://localhost:8081/user/profile",{
     method: "GET",
     headers: {
         Authorization: `Bearer ${token}`,
@@ -46,19 +47,33 @@ const ProfilePage = () => {
     if (!response.ok) {
       alert ('Failed to fetch profile');
     }
-    const data = await response.json();
+  
 
+    const data = await response.json();
+      // Convert backend date string to YYYY-MM-DD explicitly
+const formattedDate = new Date(data.birthdate)
+  .toISOString()
+  .slice(0, 10); // returns 'YYYY-MM-DD'
+    console.log(data)
       if (isMounted) {
+        //const userData = data.User;
       setFormData((prev) => ({
         ...prev,
-        ...data,  // This assumes the data matches your formData keys
-       profileImage: null  // file input stays null
+        fname: data.fname,
+        lname: data.lname,
+        email: data.email,  
+        phoneno: data.phoneno,
+        birthdate: formattedDate,
+        bio: data.bio,
+        ...data.preferences,  // This assumes the data matches your formData keys
+       profilepicture: null  // file input stays null
       }));
-      setImagePreviewUrl(data.profileImage || "/path-to-profile.jpg"); // update preview separately
+      setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
       setIsLoading(false);  // turn off spinner
     }
   }
     catch(err) {
+      
       console.error("Fetch error:", err);
      if(isMounted) setIsLoading(false);  // still turn off spinner
     }
@@ -74,7 +89,7 @@ const handleFileChange = (e) => {
   if (file) {
     setFormData((prev) => ({
       ...prev,
-      profileImage: file
+      profilepicture: file
     }));
   }
 };
@@ -89,24 +104,24 @@ const handleInputChange = (e) => {
 
 ///
 const isPersonalComplete = Boolean(
-  formData.firstName &&
-  formData.lastName &&
+  formData.fname &&
+  formData.lname &&
   formData.email &&
-  formData.phone
+  formData.phoneno
 );
   
 
 const isAboutMeComplete = Boolean(
-    formData.aboutMe
+    formData.bio
 );
 
-const isProfileImageComplete = Boolean(
-    formData.profileImage
+const isprofilepictureComplete = Boolean(
+    formData.profilepicture
 );
 
 const preferenceFields = [
-  'ageRange', 'gender', 'pet', 'lateNights', 'smoking',
-  'drinking', 'guests', 'noiseTolerance', 'religion', 'occupation'
+  'agerange', 'gender', 'pet', 'latenights', 'smoking',
+  'drinking', 'guests', 'noisetolerance', 'religion', 'occupation'
 ];
 
 const filledPreferences = preferenceFields.filter(field => formData[field] !== '');
@@ -116,7 +131,7 @@ const completedSections =
   (isPersonalComplete ? 1 : 0) +
   (isAboutMeComplete ? 1 : 0) +
   (isPreferencesComplete ? 1 : 0) +
-  (isProfileImageComplete);
+  (isprofilepictureComplete);
 
 const progressPercent = Math.floor((completedSections / 4) * 100);
 console.log('Progress:', progressPercent);
@@ -129,14 +144,14 @@ const handleSubmit = async (e) => {
 
   // Add all text fields
   Object.entries(formData).forEach(([key, value]) => {
-    if (key !== "profileImage") {
+    if (key !== "profilepicture") {
       payload.append(key, value);
     }
   });
 
   // Add image (if present)
-  if (formData.profileImage) {
-    payload.append("profileImage", formData.profileImage);
+  if (formData.profilepicture) {
+    payload.append("profilepicture", formData.profilepicture);
   }
 
 
@@ -173,8 +188,8 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
          <div className="profile-container">
   <img
     src={
-      formData.profileImage
-        ? URL.createObjectURL(formData.profileImage)
+      formData.profilepicture
+        ? URL.createObjectURL(formData.profilepicture)
         : imagePreviewUrl || "/path-to-profile.jpg"
     }
     alt="User Profile"
@@ -201,15 +216,16 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
          <form className="profile-form" onSubmit={handleSubmit}>
   <div className="form-section personal">
     <h2>Personal Details</h2>
-    <input type="text" placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} />
-    <input type="text" placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleInputChange}/>
+    <input type="text" placeholder="First Name" name="fname" value={formData.fname} onChange={handleInputChange} />
+    <input type="text" placeholder="Last Name" name="lname" value={formData.lname} onChange={handleInputChange}/>
     <input type="email" placeholder="Email" name="email" value={formData.email} onChange={handleInputChange}/>
-    <input type="tel" placeholder="Phone" name="phone" value={formData.phone} onChange={handleInputChange}/>
+    <input type="tel" placeholder="phoneno" name="phoneno" value={formData.phoneno} onChange={handleInputChange}/>
+    <input type="date" placeholder="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleInputChange}/>
 
     {/* About Me Section */}
     <div className="form-section about-me">
   <h2>About Me</h2>
-  <textarea name="aboutMe" value={formData.aboutMe} placeholder="Tell us a bit about yourself..."  rows="6" onChange={handleInputChange}/>
+  <textarea name="bio" value={formData.bio} placeholder="Tell us a bit about yourself..."  rows="6" onChange={handleInputChange}/>
 </div>
 
   </div>
@@ -239,7 +255,7 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
 
 
   <h2>Preferences</h2>
-  <select name="ageRange" value={formData.ageRange} onChange={handleInputChange}>
+  <select name="agerange" value={formData.agerange} onChange={handleInputChange}>
     <option value="">Age Range</option>
     <option>18-21</option>
     <option>22-25</option>
@@ -260,7 +276,7 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
     <option>No</option>
   </select>
 
-  <select name="lateNights" value={formData.lateNights} onChange={handleInputChange}>
+  <select name="latenights" value={formData.latenights} onChange={handleInputChange}>
     <option value="">Late Nights?</option>
     <option>Yes</option>
     <option>No</option>
@@ -286,7 +302,7 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
     <option>Very Often</option>
   </select>
 
-  <select name="noiseTolerance" value={formData.noiseTolerance} onChange={handleInputChange}>
+  <select name="noisetolerance" value={formData.noisetolerance} onChange={handleInputChange}>
     <option value="">Noise Tolerance</option>
     <option>Low</option>
     <option>Medium</option>
