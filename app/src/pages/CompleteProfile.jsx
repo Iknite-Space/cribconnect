@@ -8,6 +8,8 @@ import {getCroppedImage} from '../utils/cropImageHelper';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
+import MessageBanner from '../assets/components/MessageBanner';
+
 
 
 
@@ -17,6 +19,7 @@ const CompleteProfile = () => {
    const fileInputRef = useRef(null);
    const navigate = useNavigate(); 
    const { token } = useContext(AuthContext);
+   const [message, setMessage] = useState('');
   
 const [imageSrc, setImageSrc] = useState(null);
 const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -37,7 +40,7 @@ const [phoneError, setPhoneError] = useState('');
     birthdate: '',
     bio: '',
     profile_picture: null,
-    preferences: {
+    habbits: {
       ageRange: '',
       gender: '',
       pet: '',
@@ -52,13 +55,13 @@ const [phoneError, setPhoneError] = useState('');
   });
 
 
-  // ✏️ Handles regular inputs and nested preference inputs
+  // ✏️ Handles regular inputs and nested habbit inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name in form.preferences) {
+    if (name in form.habbits) {
       setForm((prev) => ({
         ...prev,
-        preferences: { ...prev.preferences, [name]: value }
+        habbits: { ...prev.habbits, [name]: value }
       }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
@@ -137,6 +140,12 @@ const handleInputChanges = (e) => {
   setBio(value);
   setCharCount(value.length);
   setIsInvalid(value.length < 50 || value.length > 300);
+
+  // ✅ Sync with form state
+  setForm((prev) => ({
+    ...prev,
+    bio: value,
+  }));
 };
 
   
@@ -167,7 +176,7 @@ if (!isValidCameroonPhone(form.phonenum)) {
     formData.append("phoneno", form.phonenum); // 👈 rename to match backend
     formData.append("birthdate", form.birthdate);
     formData.append("bio", form.bio);
-    formData.append("preferences", JSON.stringify(form.preferences)); // JSON string
+    formData.append("habbits", JSON.stringify(form.habbits)); // JSON string
 
     if (form.profile_picture) {
       formData.append("profile_picture", form.profile_picture);
@@ -177,7 +186,7 @@ if (!isValidCameroonPhone(form.phonenum)) {
     }
      
     // Send to backend
-    const res = await fetch("http://localhost:8081/users/complete-profile", {
+    const res = await fetch("http://localhost:8084/users/complete-profile", {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -188,12 +197,14 @@ if (!isValidCameroonPhone(form.phonenum)) {
 
     const result = await res.json();
     if (res.ok) {
-      alert("🎉 Profile saved!");
+      setMessage("🎉 Profile saved!");
+      //alert("🎉 Profile saved!");
       navigate('/profile');
     } else {
       console.log(result)
      // console.error(result);
-      alert("⚠️ Error saving profile");
+     setMessage("⚠️ Error saving profile");
+     // alert("⚠️ Error saving profile");
     }
   } catch (error) {
     console.log("Submit error:", error);
@@ -286,7 +297,7 @@ if (!isValidCameroonPhone(form.phonenum)) {
 
 
 
-        <h3>Provide Your Roommate Preferences</h3>
+        <h3>Provide Your Roommate habbits</h3>
         <select name="ageRange" onChange={handleInputChange}>
           <option value="">Age Range</option>
           <option>18-21</option>
@@ -295,7 +306,7 @@ if (!isValidCameroonPhone(form.phonenum)) {
           <option>30-33</option>
         </select>
         <select name="gender" onChange={handleInputChange}>
-          <option value="">Gender Preference</option>
+          <option value="">Your Gender</option>
           <option>Male</option>
           <option>Female</option>
           <option>Any</option>
@@ -345,6 +356,7 @@ if (!isValidCameroonPhone(form.phonenum)) {
           <option>Any</option>
         </select>
         <button type="submit">Save Profile</button>
+        <MessageBanner message={message} clear={() => setMessage('')} />
       </form>
     </div>
   );

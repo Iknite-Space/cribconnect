@@ -8,6 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const {token} = useContext(AuthContext);
+  const [submitting, setSubmitting] = useState(false)
 
        const [formData, setFormData] = useState({
   fname: '',
@@ -30,14 +31,14 @@ const ProfilePage = () => {
 });
 
     //Example: GET from a server
-    const [imagePreviewUrl, setImagePreviewUrl] = useState(""); 
+  //  const [imagePreviewUrl, setImagePreviewUrl] = useState(""); 
 
   useEffect( () => {
     let isMounted = true
 
   const fetchProfile = async () => {
     try{
-   const response = await fetch("http://localhost:8081/user/profile",{
+   const response = await fetch("http://localhost:8084/user/profile",{
     method: "GET",
     headers: {
         Authorization: `Bearer ${token}`,
@@ -51,9 +52,21 @@ const ProfilePage = () => {
 
     const data = await response.json();
       // Convert backend date string to YYYY-MM-DD explicitly
-const formattedDate = new Date(data.birthdate)
-  .toISOString()
-  .slice(0, 10); // returns 'YYYY-MM-DD'
+let formattedDate = "";
+if (data.birthdate && typeof data.birthdate === "string") {
+  // Replace slashes with dashes in case the format is yyyy/mm/dd
+  const normalized = data.birthdate.replace(/\//g, "-");
+
+  const parsedDate = new Date(normalized);
+  if (!isNaN(parsedDate.getTime())) {
+    formattedDate = parsedDate.toISOString().slice(0, 10); // YYYY-MM-DD
+  } else {
+    console.warn("Invalid date:", data.birthdate);
+    formattedDate = ""; // fallback or default if needed
+  }
+}
+
+  
     console.log(data)
       if (isMounted) {
         //const userData = data.User;
@@ -66,9 +79,9 @@ const formattedDate = new Date(data.birthdate)
         birthdate: formattedDate,
         bio: data.bio,
         ...data.preferences,  // This assumes the data matches your formData keys
-       profilepicture: null  // file input stays null
+       profilepicture: data.profilepicture  // file input stays null
       }));
-      setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
+     // setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
       setIsLoading(false);  // turn off spinner
     }
   }
@@ -139,7 +152,9 @@ console.log('Progress:', progressPercent);
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+  if (submitting) return;
 
+  setSubmitting(true);
   const payload = new FormData();
 
   // Add all text fields
@@ -176,6 +191,8 @@ const handleSubmit = async (e) => {
     catch(err)  {
       console.error("Save error:", err);
       alert("❌ Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false)
     }
 };
 
@@ -188,9 +205,12 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
          <div className="profile-container">
   <img
     src={
-      formData.profilepicture
+      typeof formData.profilepicture === "string"
+      ? formData.profilepicture
+      : formData.profilepicture
         ? URL.createObjectURL(formData.profilepicture)
-        : imagePreviewUrl || "/path-to-profile.jpg"
+        : "/path-to-profile.jpg"
+        //: imagePreviewUrl || "/path-to-profile.jpg"
     }
     alt="User Profile"
     className="profile-pic"
@@ -327,10 +347,10 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
   <button
     type="submit"
     className="submit-btn"
-    disabled={progressPercent < 100}
+    disabled={progressPercent < 100 || submitting}
     onClick={handleSubmit}
   >
-    Save Profile
+    {submitting ? 'Saving...' : 'Save Profile'}
   </button>
 </div>
 

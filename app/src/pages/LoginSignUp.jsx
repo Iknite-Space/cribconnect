@@ -45,13 +45,13 @@ const handleSubmit = async (e, isSignUpMode) => {
     setSubmitting(true);
     try {
       const endpoint = isSignUpMode
-      ? "http://localhost:8081/users/register"
-      : "http://localhost:8081/user/login";  // double-check this path for consistency
+      ? "http://localhost:8084/users/register"
+      : "http://localhost:8084/users/login";  // double-check this path for consistency
         const isValidEmail = (email) => /^[A-Za-z0-9._%+-]+@gmail\.com$/.test(email);
       if (!isValidEmail(email)) {
           alert("Please enter a valid email address.");
          return;
-        }
+        };
        const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
