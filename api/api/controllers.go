@@ -140,6 +140,7 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	})
 
 }
+
 func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 
 	firebaseUIDRaw, _ := c.Get("firebase_uid")
@@ -156,15 +157,15 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 		return
 	}
 	bio := c.PostForm("bio")
-	preferencesStr := c.PostForm("preferences")
+	habbitsStr := c.PostForm("habbits")
 
-	var preferences PrefJson
-	err = json.Unmarshal([]byte(preferencesStr), &preferences)
+	var habbits PrefJson
+	err = json.Unmarshal([]byte(habbitsStr), &habbits)
 	if err != nil {
 		log.Fatalf("Error decoding JSON: %v", err)
 	}
 
-	preferencesJSON, err := json.Marshal(preferences)
+	habbitsJSON, err := json.Marshal(habbits)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -197,12 +198,12 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 
 	resp := repo.UpdateUserProfileParams{
 		UserID:         firebaseUID,
-		Fname:          fname,
-		Lname:          lname,
-		Phoneno:        phoneno,
+		Fname:          &fname,
+		Lname:          &lname,
+		Phoneno:        &phoneno,
 		Birthdate:      birthdate,
 		Bio:            bio,
-		Preferences:    preferencesJSON,
+		Habbits:        habbitsJSON,
 		ProfilePicture: profilePicture,
 	}
 
@@ -240,5 +241,41 @@ func (h *UserHandler) handleForgotPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset email sent"})
+
+}
+
+func (h *UserHandler) handleGetUser(c *gin.Context) {
+	firebaseUIDRaw, _ := c.Get("firebase_uid")
+	if firebaseUIDRaw == " " {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Id is required", "Id": firebaseUIDRaw})
+		return
+	}
+
+	firebaseUID := firebaseUIDRaw.(string)
+
+	user, errs := h.querier.GetUserById(c, firebaseUID)
+	if errs != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errs.Error()})
+		return
+	}
+
+	// Parse habbits JSON to struct (optional)
+	var habbits PrefJson
+	err := json.Unmarshal(user.Habbits, &habbits)
+	if err != nil {
+		log.Println("Failed to decode habbits:", err)
+	}
+
+	response := gin.H{
+		"fname":          user.Fname,
+		"lname":          user.Lname,
+		"email":          user.Email,
+		"phoneno":        user.Phoneno,
+		"birthdate":      user.Birthdate,
+		"bio":            user.Bio,
+		"habbits":        habbits,
+		"profilepicture": user.ProfilePicture,
+	}
+	c.JSON(http.StatusOK, response) //gin.H{"User": response}
 
 }
