@@ -36,7 +36,7 @@ const [phoneError, setPhoneError] = useState('');
   const [form, setForm] = useState({
     fname: '',
     lname: '',
-    phonenum: '',
+    phoneno: '',
     birthdate: '',
     bio: '',
     profile_picture: null,
@@ -160,7 +160,7 @@ const isValidCameroonPhone = (num) => {
   return pattern.test(num);
 };
 
-if (!isValidCameroonPhone(form.phonenum)) {
+if (!isValidCameroonPhone(form.phoneno)) {
  setPhoneError('Invalid phone number!');
   return;
 } else {
@@ -173,14 +173,14 @@ if (!isValidCameroonPhone(form.phonenum)) {
     const formData = new FormData();
     formData.append("fname", form.fname);
     formData.append("lname", form.lname);
-    formData.append("phoneno", form.phonenum); // 👈 rename to match backend
+    formData.append("phoneno", form.phoneno); // 👈 rename to match backend
     formData.append("birthdate", form.birthdate);
     formData.append("bio", form.bio);
     formData.append("habbits", JSON.stringify(form.habbits)); // JSON string
 
     if (form.profile_picture) {
       formData.append("profile_picture", form.profile_picture);
-      console.log(form.phonenum);
+      console.log(form.phoneno);
 
 
     }
@@ -222,12 +222,12 @@ if (!isValidCameroonPhone(form.phonenum)) {
         <PhoneInput country={'cm'} // Cameroon
            onlyCountries={['cm']} // Optional: force only Cameroon
            masks={{ cm: '.... ......' }}
-           value={form.phonenum}
+           value={form.phoneno}
            onChange={(phone) =>
-          setForm((prev) => ({ ...prev, phonenum: `+${phone}` }))
+          setForm((prev) => ({ ...prev, phoneno: `+${phone}` }))
                }
               inputProps={{
-              name: 'phonenum',
+              name: 'phoneno',
               required: true,
               autoFocus: false
               }}
