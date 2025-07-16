@@ -3,18 +3,21 @@ import '../styles/ProfilePage.css'
 import React, { useState, useEffect, useContext } from 'react';
 import LoadingSpinner from '../assets/components/LoadingSpinner';
 import { AuthContext } from '../context/AuthContext';
+import PhoneInput from 'react-phone-input-2';
 
 
 const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const {token} = useContext(AuthContext);
   const [submitting, setSubmitting] = useState(false)
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
 
        const [formData, setFormData] = useState({
   fname: '',
   lname: '',
   email: '',
-  phoneno: '',
+  phoneno: '237',
   birthdate: '',
   bio: '',
   agerange: '',
@@ -33,7 +36,15 @@ const ProfilePage = () => {
     //Example: GET from a server
   //  const [imagePreviewUrl, setImagePreviewUrl] = useState(""); 
 
+     const normalizePhone = (rawPhone) => {
+  if (typeof rawPhone === 'string' && rawPhone.startsWith('+')) {
+    return rawPhone.replace('+', ''); // Result: "237673990801"
+  }
+  return '237';
+};
+
   useEffect( () => {
+
     let isMounted = true
 
   const fetchProfile = async () => {
@@ -75,7 +86,7 @@ if (data.birthdate && typeof data.birthdate === "string") {
         fname: data.fname,
         lname: data.lname,
         email: data.email,  
-        phoneno: data.phoneno,
+        phoneno: normalizePhone(data.phoneno),
         birthdate: formattedDate,
         bio: data.bio,
         ...data.preferences,  // This assumes the data matches your formData keys
@@ -84,7 +95,10 @@ if (data.birthdate && typeof data.birthdate === "string") {
      // setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
       setIsLoading(false);  // turn off spinner
     }
+    console.log("Setting phone number:", normalizePhone(data.phoneno));
+
   }
+  
     catch(err) {
       
       console.error("Fetch error:", err);
@@ -159,10 +173,47 @@ const handleSubmit = async (e) => {
 
   // Add all text fields
   Object.entries(formData).forEach(([key, value]) => {
-    if (key !== "profilepicture") {
+    if (key !== "profilepicture" && key !== "phoneno") {
       payload.append(key, value);
     }
   });
+
+  // ✅ Format phonenum with leading "+" if missing
+const fullPhone = formData.phoneno.startsWith('+')
+  ? formData.phoneno
+  : `+${formData.phoneno}`;
+payload.append('phoneno', fullPhone);
+
+// Valid email check && ✅ Cameroonian phone number format validation
+const isValidEmail = (email) => /^[A-Za-z0-9._%+-]+@gmail\.com$/.test(email);
+const isValidCameroonPhone = (num) =>
+  /^(\+?237)((6(70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89))|(65[0-9])|(69[1-9])|(62[0-3]))\d{6}$/.test(num);
+
+const emailIsValid = isValidEmail(formData.email);
+const phoneIsValid = isValidCameroonPhone(formData.phoneno);
+
+setEmailError(emailIsValid ? '' : 'Please enter a valid email address.');
+setPhoneError(phoneIsValid ? '' : 'Invalid phone number!');
+
+if (!emailIsValid || !phoneIsValid) {
+  setSubmitting(false);
+  return;
+}
+
+   // Bundle preferences into one JSON string
+  const preferencesPayload = {
+    agerange: formData.agerange,
+    gender: formData.gender,
+    pet: formData.pet,
+    latenights: formData.latenights,
+    smoking: formData.smoking,
+    drinking: formData.drinking,
+    guests: formData.guests,
+    noisetolerance: formData.noisetolerance,
+    religion: formData.religion,
+    occupation: formData.occupation
+  };
+  payload.append("habbits", JSON.stringify(preferencesPayload));
 
   // Add image (if present)
   if (formData.profilepicture) {
@@ -173,8 +224,8 @@ const handleSubmit = async (e) => {
 
   // Example: POST to a server
   try {
-  const response = await fetch("/api/save-profile", {
-    method: "POST",
+  const response = await fetch("http://localhost:8084/user/profile", {
+    method: "PUT",
     headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -238,8 +289,42 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
     <h2>Personal Details</h2>
     <input type="text" placeholder="First Name" name="fname" value={formData.fname} onChange={handleInputChange} />
     <input type="text" placeholder="Last Name" name="lname" value={formData.lname} onChange={handleInputChange}/>
-    <input type="email" placeholder="Email" name="email" value={formData.email} onChange={handleInputChange}/>
-    <input type="tel" placeholder="phoneno" name="phoneno" value={formData.phoneno} onChange={handleInputChange}/>
+   <input
+  type="email"
+  name="email"
+  placeholder="Email"
+  value={formData.email}
+  required
+  onChange={(e) =>
+    setFormData((prev) => ({ ...prev, email: e.target.value }))
+  }
+/>
+    {emailError && <div className="error-message">{emailError}</div>}
+
+    <PhoneInput country={'cm'} // Cameroon
+           onlyCountries={['cm']} // Optional: force only Cameroon
+           masks={{ cm: '.... ......' }}
+           disableDropdown={true} 
+           countryCodeEditable={false}
+           value={formData.phoneno} // strip prefix for input box e.g. "237673990801"
+           onChange={(phone) =>{
+          //  const fullphone =  `+${phone}`;
+          setFormData((prev) => ({ ...prev, phoneno: phone })) // always attach prefix
+          console.log("Phone input value:", phone);
+
+              } }
+              inputProps={{
+              name: 'phoneno',
+              required: true,
+              autoFocus: false
+              }}
+              inputStyle={{
+    paddingLeft: '50px' // increases left padding so `+237` becomes visible
+  }}
+  placeholder="+237 6xx xxx xxx"
+        />
+        {phoneError && <div className="error-message">{phoneError}</div>}
+  
     <input type="date" placeholder="Birthdate" name="birthdate" value={formData.birthdate} onChange={handleInputChange}/>
 
     {/* About Me Section */}

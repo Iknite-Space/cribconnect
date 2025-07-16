@@ -176,6 +176,11 @@
 
 
 
+.error-message {
+  color: crimson;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
 
 
 
