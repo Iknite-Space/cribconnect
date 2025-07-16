@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
+	"firebase.google.com/go/auth"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware/utils"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
@@ -146,6 +148,9 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 	firebaseUIDRaw, _ := c.Get("firebase_uid")
 	firebaseUID := firebaseUIDRaw.(string)
 
+	firebaseEmailRaw, _ := c.Get("firebase_email")
+	firebaseEmail := firebaseEmailRaw.(string)
+
 	// 1. Parse form data
 	fname := c.PostForm("fname")
 	lname := c.PostForm("lname")
@@ -200,6 +205,7 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 		UserID:         firebaseUID,
 		Fname:          &fname,
 		Lname:          &lname,
+		Email:          firebaseEmail,
 		Phoneno:        &phoneno,
 		Birthdate:      birthdate,
 		Bio:            bio,
@@ -277,5 +283,103 @@ func (h *UserHandler) handleGetUser(c *gin.Context) {
 		"profilepicture": user.ProfilePicture,
 	}
 	c.JSON(http.StatusOK, response) //gin.H{"User": response}
+
+}
+
+func (h *UserHandler) handleUpdateUser(c *gin.Context) {
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+
+	// 🧹 Parse multipart form
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form data", "details": err.Error()})
+		return
+	}
+
+	// 1. Parse form data
+	fname := c.PostForm("fname")
+	lname := c.PostForm("lname")
+	email := c.PostForm("email")
+	phoneno := c.PostForm("phoneno")
+	birthdateStr := c.PostForm("birthdate")
+	birthdate, err := time.Parse("2006-01-02", birthdateStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid birthdate format"})
+		return
+	}
+	bio := c.PostForm("bio")
+
+	habbitsStr := c.Request.FormValue("habbits")
+	if strings.TrimSpace(habbitsStr) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Habits JSON is missing"})
+		return
+	}
+	// Use Firebase Admin SDK to update the user's email
+	params := (&auth.UserToUpdate{}).Email(email)
+	_, err = middleware.InitFirebaseClient().UpdateUser(c.Request.Context(), firebaseUID, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	var habbits PrefJson
+	if err := json.Unmarshal([]byte(habbitsStr), &habbits); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON", "details": err.Error()})
+		return
+	}
+
+	habbitsJSON, err := json.Marshal(habbits)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Handle Profile Picture Upload
+	var profilePicture *string
+	fileHeader, err := c.FormFile("profile_picture") // Get uploaded file from request
+	if err == nil {                                  // Check if file exists
+		file, err := fileHeader.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open profile picture"})
+			return
+		}
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Printf("error closing file: %v", err)
+			}
+		}()
+
+		// Save the profile picture using the helper function
+		filePath, err := h.service.SaveProfilePicture(file, firebaseUID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save profile picture"})
+			fmt.Println("error is here", err)
+			return
+		}
+		profilePicture = &filePath // Store the file path in the request object
+	}
+
+	resp := repo.UpdateUserProfileParams{
+		UserID:         firebaseUID,
+		Fname:          &fname,
+		Lname:          &lname,
+		Email:          email,
+		Phoneno:        &phoneno,
+		Birthdate:      birthdate,
+		Bio:            bio,
+		Habbits:        habbitsJSON,
+		ProfilePicture: profilePicture,
+	}
+
+	user, err := h.querier.UpdateUserProfile(c, resp)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 
 }

@@ -9,7 +9,7 @@ import (
 )
 
 type Querier interface {
-	GetUserById(ctx context.Context, userID string) (User, error)
+	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
 	// -- name: CreateMessage :one
 	// INSERT INTO message (thread, sender, content)
 	// VALUES ($1, $2, $3)

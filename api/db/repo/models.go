@@ -11,13 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Thread struct {
-	ID        string           `json:"id"`
-	Topic     string           `json:"topic"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
-	UpdatedAt pgtype.Timestamp `json:"updated_at"`
-}
-
 type User struct {
 	UserID         string           `json:"user_id"`
 	Fname          *string          `json:"fname"`

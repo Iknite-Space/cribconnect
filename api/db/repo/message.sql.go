@@ -9,17 +9,43 @@ import (
 	"context"
 	"encoding/json"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getUserById = `-- name: GetUserById :one
-SELECT user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at FROM users
+SELECT 
+  COALESCE(user_id, '') AS user_id,
+  COALESCE(fname, '') AS fname,
+  COALESCE(lname, '') AS lname,
+  COALESCE(birthdate, '2000-01-01') AS birthdate,
+  COALESCE(phoneno, '') AS phoneno,
+  COALESCE(email, '') AS email,
+  COALESCE(bio, '') AS bio,
+  COALESCE(habbits, '{}'::jsonb) AS habbits,
+  COALESCE(profile_picture, '') AS profile_picture,
+  COALESCE(created_at, now()) AS created_at
+FROM users
 WHERE user_id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetUserById(ctx context.Context, userID string) (User, error) {
+type GetUserByIdRow struct {
+	UserID         string           `json:"user_id"`
+	Fname          string           `json:"fname"`
+	Lname          string           `json:"lname"`
+	Birthdate      pgtype.Date      `json:"birthdate"`
+	Phoneno        string           `json:"phoneno"`
+	Email          string           `json:"email"`
+	Bio            string           `json:"bio"`
+	Habbits        json.RawMessage  `json:"habbits"`
+	ProfilePicture string           `json:"profile_picture"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+}
+
+func (q *Queries) GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error) {
 	row := q.db.QueryRow(ctx, getUserById, userID)
-	var i User
+	var i GetUserByIdRow
 	err := row.Scan(
 		&i.UserID,
 		&i.Fname,
@@ -82,11 +108,12 @@ UPDATE users
 SET
     fname = COALESCE($2, fname),
     lname = COALESCE($3, lname),
-    phoneno = COALESCE($4, phoneno),
-    birthdate = COALESCE($5, birthdate),
-    bio = COALESCE($6, bio),
-    habbits = COALESCE($7, preferences),
-    profile_picture = COALESCE($8, profile_picture)
+    email = COALESCE($4, email),
+    phoneno = COALESCE($5, phoneno),
+    birthdate = COALESCE($6, birthdate),
+    bio = COALESCE($7, bio),
+    habbits = COALESCE($8, habbits),
+    profile_picture = COALESCE($9, profile_picture)
 WHERE user_id = $1
 RETURNING user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at
 `
@@ -95,6 +122,7 @@ type UpdateUserProfileParams struct {
 	UserID         string          `json:"user_id"`
 	Fname          *string         `json:"fname"`
 	Lname          *string         `json:"lname"`
+	Email          string          `json:"email"`
 	Phoneno        *string         `json:"phoneno"`
 	Birthdate      time.Time       `json:"birthdate"`
 	Bio            string          `json:"bio"`
@@ -107,6 +135,7 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 		arg.UserID,
 		arg.Fname,
 		arg.Lname,
+		arg.Email,
 		arg.Phoneno,
 		arg.Birthdate,
 		arg.Bio,
