@@ -9,6 +9,7 @@ import (
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
 
@@ -29,9 +30,8 @@ func InitFirebaseClient() *auth.Client {
 	if firebaseClient != nil {
 		return firebaseClient
 	}
-	// added
 
-	opt := option.WithCredentialsFile("/home/speedy/Desktop/Roommate_Finder/cribconnect/api/api/middleware/roommate-finder-6f8ef-firebase-adminsdk-fbsvc-463d6d62c8.json")
+	opt := option.WithCredentials(&google.Credentials{})
 
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
