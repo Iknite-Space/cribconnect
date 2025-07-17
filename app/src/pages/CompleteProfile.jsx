@@ -186,7 +186,9 @@ if (!isValidCameroonPhone(form.phoneno)) {
     }
      
     // Send to backend
-    const res = await fetch("http://localhost:8084/users/complete-profile", {
+     
+    // http://localhost:8084
+    const res = await fetch("https://api.cribconnect.xyz/v1/users/complete-profile", {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,

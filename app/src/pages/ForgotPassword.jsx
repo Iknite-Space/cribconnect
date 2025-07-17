@@ -16,7 +16,9 @@ const ForgotPassword = () => {
       setSubmitting(true);
     setStatus(''); // reset status
     try {
-      const response = await fetch('http://localhost:8081/forgot-password', {
+     
+     //http://localhost:8081
+      const response = await fetch('https://api.cribconnect.xyz/v1/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

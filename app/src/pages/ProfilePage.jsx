@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import LoadingSpinner from '../assets/components/LoadingSpinner';
 import { AuthContext } from '../context/AuthContext';
 import PhoneInput from 'react-phone-input-2';
+import MessageBanner from '../assets/components/MessageBanner';
 
 
 const ProfilePage = () => {
@@ -12,6 +13,7 @@ const ProfilePage = () => {
   const [submitting, setSubmitting] = useState(false)
   const [phoneError, setPhoneError] = useState('');
   const [emailError, setEmailError] = useState('');
+   const [message, setMessage] = useState('');
 
        const [formData, setFormData] = useState({
   fname: '',
@@ -49,7 +51,9 @@ const ProfilePage = () => {
 
   const fetchProfile = async () => {
     try{
-   const response = await fetch("http://localhost:8084/user/profile",{
+      
+     // http://localhost:8084
+   const response = await fetch("https://api.cribconnect.xyz/v1/user/profile",{
     method: "GET",
     headers: {
         Authorization: `Bearer ${token}`,
@@ -72,13 +76,13 @@ if (data.birthdate && typeof data.birthdate === "string") {
   if (!isNaN(parsedDate.getTime())) {
     formattedDate = parsedDate.toISOString().slice(0, 10); // YYYY-MM-DD
   } else {
-    console.warn("Invalid date:", data.birthdate);
+   // console.warn("Invalid date:", data.birthdate);
     formattedDate = ""; // fallback or default if needed
   }
 }
 
   
-    console.log(data)
+   // console.log(data)
       if (isMounted) {
         //const userData = data.User;
       setFormData((prev) => ({
@@ -95,13 +99,13 @@ if (data.birthdate && typeof data.birthdate === "string") {
      // setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
       setIsLoading(false);  // turn off spinner
     }
-    console.log("Setting phone number:", normalizePhone(data.phoneno));
+    //console.log("Setting phone number:", normalizePhone(data.phoneno));
 
   }
   
     catch(err) {
       
-      console.error("Fetch error:", err);
+      //console.error("Fetch error:", err);
      if(isMounted) setIsLoading(false);  // still turn off spinner
     }
    };
@@ -224,7 +228,9 @@ if (!emailIsValid || !phoneIsValid) {
 
   // Example: POST to a server
   try {
-  const response = await fetch("http://localhost:8084/user/profile", {
+    
+    //http://localhost:8084/user/profile
+  const response = await fetch("https://api.cribconnect.xyz/v1/user/profile", {
     method: "PUT",
     headers: {
         Authorization: `Bearer ${token}`,
@@ -232,16 +238,17 @@ if (!emailIsValid || !phoneIsValid) {
     body: payload
   })
     if (!response.ok) {
-      alert("Failed to save profile");
+      setMessage("Failed to save profile");
+      
     }
      
-      const data = await response.json();
-      alert("✅ Profile saved successfully!");
-      console.log("Server response:", data);
+       await response.json();
+      setMessage("✅ Profile saved successfully!");
+     // console.log("Server response:", data);
     }
     catch(err)  {
-      console.error("Save error:", err);
-      alert("❌ Something went wrong. Please try again.");
+      //console.error("Save error:", err);
+      setMessage("❌ Something went wrong. Please try again.");
     } finally {
       setSubmitting(false)
     }
@@ -436,6 +443,7 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
     onClick={handleSubmit}
   >
     {submitting ? 'Saving...' : 'Save Profile'}
+    <MessageBanner message={message} clear={() => setMessage('')} />
   </button>
 </div>
 

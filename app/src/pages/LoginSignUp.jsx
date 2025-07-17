@@ -43,10 +43,12 @@ const handleSubmit = async (e, isSignUpMode) => {
     if (submitting) return;
 
     setSubmitting(true);
-    try {
+    try { 
+      //  "http://localhost:8084/v1/users/register"
+      // : "http://localhost:8084/v1/users/login"; 
       const endpoint = isSignUpMode
-      ? "http://localhost:8084/users/register"
-      : "http://localhost:8084/users/login";  // double-check this path for consistency
+      ? "https://api.cribconnect.xyz/v1/users/register"
+      : "https://api.cribconnect.xyz/v1/users/login";  // double-check this path for consistency
         const isValidEmail = (email) => /^[A-Za-z0-9._%+-]+@gmail\.com$/.test(email);
       if (!isValidEmail(email)) {
           alert("Please enter a valid email address.");
@@ -59,13 +61,13 @@ const handleSubmit = async (e, isSignUpMode) => {
     });
 
     const result = await response.json();
-    console.log(result);
+   // console.log(result);
 
     if (!response.ok) {
       throw new Error(result.message || "Something went wrong");
     }
 
-    console.log("Server response:", result);
+   // console.log("Server response:", result);
 
     if (result.id_token) {
         setToken(result.id_token); // <-- set here
@@ -75,7 +77,7 @@ const handleSubmit = async (e, isSignUpMode) => {
       navigate("/complete-profile");
     } else {
       setMessage("Welcome back! 👋");
-      navigate("/profile");
+      navigate("/dasboard");
     }
   } catch (err) {
     alert(err.message);
