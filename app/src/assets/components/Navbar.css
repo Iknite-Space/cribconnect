@@ -1,0 +1,23 @@
+.navbare {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 50px;
+  background-color: #003151;
+  color: white;
+}
+
+.navbare .logoe {
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.navbare ul {
+  display: flex;
+  list-style: none;
+  gap: 30px;
+}
+
+.navbare a {
+  color: white;
+  text-decoration: none;
+}

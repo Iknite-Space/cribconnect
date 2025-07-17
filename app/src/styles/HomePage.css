@@ -1,0 +1,72 @@
+.homepagee {
+  background-color: #FFFFFF;
+  color: #333;
+  font-family: 'Montserrat', sans-serif;
+}
+
+
+
+
+.heroe {
+  text-align: center;
+  padding: 80px 20px;
+  background: linear-gradient(45deg, #003151, #0E4C92);
+  color: white;
+}
+
+.heroe h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.heroe .cta-btne {
+  background-color: white;
+  color: #003151;
+  padding: 12px 30px;
+  font-weight: bold;
+  border: none;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.heroe .cta-btne:hover {
+  background-color: #FFD2CA;
+}
+
+.featurese {
+  display: flex;
+  justify-content: space-around;
+  margin: 60px 20px;
+  text-align: center;
+  gap: 20px;
+}
+
+.feature-boxe {
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.feature-boxe svg {
+  margin-bottom: 10px;
+  display: block;
+  align-self: center;
+}
+
+.how-it-workse {
+  background-color: #FFF5F6;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.how-it-workse ol {
+  text-align: left;
+  display: inline-block;
+  margin-top: 20px;
+}
+
+
+
+
