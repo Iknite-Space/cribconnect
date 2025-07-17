@@ -39,6 +39,15 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
 		return
 	}
+
+	// Ensures FIREBASEAPI_KEY is present
+	FireApiKey := os.Getenv("FIREBASEAPI_KEY")
+	if FireApiKey == "" {
+		//log.Println("Missing FIREBASEAPI_KEY")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
+		return
+	}
+
 	// Call Firebase REST API to create the user
 	payload := map[string]interface{}{
 		"email":             req.Email,
@@ -47,7 +56,7 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(
-		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s", os.Getenv("FIREBASEAPI_KEY")),
+		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s", FireApiKey),
 		"application/json",
 		bytes.NewBuffer(jsonPayload),
 	)
@@ -100,6 +109,15 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
 		return
 	}
+
+	// Ensures FIREBASEAPI_KEY is present
+	FireApiKey := os.Getenv("FIREBASEAPI_KEY")
+	if FireApiKey == "" {
+		//log.Println("Missing FIREBASEAPI_KEY")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
+		return
+	}
+
 	// Call Firebase REST API to create the user
 	payload := map[string]interface{}{
 		"email":             req.Email,
@@ -108,7 +126,7 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(
-		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s", os.Getenv("FIREBASEAPI_KEY")),
+		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s", FireApiKey),
 		"application/json",
 		bytes.NewBuffer(jsonPayload),
 	)
@@ -145,7 +163,11 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 
 func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 
-	firebaseUIDRaw, _ := c.Get("firebase_uid")
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
 	firebaseUID := firebaseUIDRaw.(string)
 
 	firebaseEmailRaw, _ := c.Get("firebase_email")
@@ -155,6 +177,7 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 	fname := c.PostForm("fname")
 	lname := c.PostForm("lname")
 	phoneno := c.PostForm("phoneno")
+	// Validate birthdate format
 	birthdateStr := c.PostForm("birthdate")
 	birthdate, err := time.Parse("2006-01-02", birthdateStr)
 	if err != nil {
@@ -162,6 +185,7 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 		return
 	}
 	bio := c.PostForm("bio")
+	//Parse JSON for habbits
 	habbitsStr := c.PostForm("habbits")
 
 	var habbits PrefJson
@@ -269,7 +293,8 @@ func (h *UserHandler) handleGetUser(c *gin.Context) {
 	var habbits PrefJson
 	err := json.Unmarshal(user.Habbits, &habbits)
 	if err != nil {
-		log.Println("Failed to decode habbits:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"Failed to decode habbits:": err.Error()})
+
 	}
 
 	response := gin.H{
