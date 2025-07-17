@@ -16,7 +16,7 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "https://api.cribconnect.xyz"},
+		AllowOrigins:     []string{"http://localhost:3000", "https://cribconnect.xyz"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
