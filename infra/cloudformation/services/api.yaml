@@ -60,6 +60,18 @@ Parameters:
     Default: "api"
 
 Resources:
+  FirebaseSecret:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Name: !Sub "/${EnvId}/firebase"
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: "placeholder"
+        PasswordLength: 30
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - Key: EnvId
+          Value: !Ref EnvId
 
   AppDatabaseSecret:
     Type: "AWS::SecretsManager::Secret"
@@ -133,6 +145,8 @@ Resources:
               ValueFrom: !Sub "${DbAdminSecretArn}:port::"
             - Name: DB_PASSWORD
               ValueFrom: !Sub "${AppDatabaseSecret}:password::"
+            - Name: FIREBASE_CONFIG
+              ValueFrom: !Sub "${FirebaseSecret}:::"
 
     # A role needed by ECS to Start the Ecs Service
   ExecutionRole:
@@ -162,6 +176,7 @@ Resources:
                 Resource:
                   - !Ref AppDatabaseSecret
                   - !Ref DbAdminSecretArn
+                  - !Ref FirebaseSecret
 
   # A role for the containers
   TaskRole:
