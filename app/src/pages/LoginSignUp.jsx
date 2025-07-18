@@ -64,7 +64,8 @@ const handleSubmit = async (e, isSignUpMode) => {
    // console.log(result);
 
     if (!response.ok) {
-      throw new Error(result.message || "Something went wrong");
+      console.log(result.message)
+      throw new Error(result.message || "Something went wrong here");
     }
 
    // console.log("Server response:", result);
