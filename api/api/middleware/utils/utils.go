@@ -2,13 +2,20 @@ package utils
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/smtp"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager" //
+
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
 func GetFirebaseApi_Key() string {
@@ -41,6 +48,58 @@ func GetFirebaseApi_Key() string {
 	return secretString
 
 	// Your code goes here.
+}
+
+func UploadProfilePicture(file multipart.File, userID string) (string, error) {
+	// ✅ Step 1: Initialize Cloudinary client
+	cld, err := cloudinary.NewFromParams("dh1rs2zgb", "795451961929344", "XOAJVGJt8XFAy1nfLLLSz9Wqdr4")
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize cloudinary: %w", err)
+	}
+
+	if closer, ok := file.(io.Closer); ok {
+		defer func() {
+			if err := closer.Close(); err != nil {
+				log.Printf("error closing file: %v", err)
+			}
+		}()
+	}
+
+	//  Upload to Cloudinary
+	publicID := "profile_" + userID // Use UID as identifier
+
+	uploadResult, err := cld.Upload.Upload(context.Background(), file, uploader.UploadParams{
+		PublicID:  publicID,
+		Folder:    "profile_pictures",
+		Overwrite: api.Bool(true), // overwrite if user re-uploads
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("error Upload failed")
+	}
+
+	fmt.Printf("upload Result %v", uploadResult)
+
+	//  Generate optimized URL
+	img, err := cld.Image("profile_pictures/" + publicID)
+	if err != nil {
+		return "", fmt.Errorf("failed to create image asset: %w", err)
+	}
+
+	img.Transformation = "f_auto,q_auto"
+	optimizedURL, err := img.String()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate optimized URL: %v", err)
+	}
+
+	//  Respond
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"uid":          uid,
+	// 	"profile_url":  optimizedURL,
+	// 	"original_url": uploadResult.SecureURL,
+	// })
+
+	return optimizedURL, nil
 }
 
 func SendEmail(to, subject, resetLink string) error {

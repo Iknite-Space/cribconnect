@@ -222,7 +222,7 @@ func (h *UserHandler) handleCompleteUserProfile(c *gin.Context) {
 		}()
 
 		// Save the profile picture using the helper function
-		filePath, err := h.service.SaveProfilePicture(file, firebaseUID)
+		filePath, err := utils.UploadProfilePicture(file, firebaseUID) //h.service.SaveProfilePicture(file, firebaseUID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save profile picture"})
 			fmt.Println("error is here", err)
