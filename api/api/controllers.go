@@ -41,12 +41,18 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	}
 
 	// Ensures FIREBASEAPI_KEY is present
-	FireApiKey := os.Getenv("FIREBASEAPI_KEY")
-	if FireApiKey == "" {
-		//log.Println("Missing FIREBASEAPI_KEY")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
-		return
-	}
+	// fire, err := utils.GetSecretFromSM("dev/FIREBASEAPI_KEY")
+	// if err != nil {
+	// 	log.Fatal("Failed to load FIREBASE key:", err)
+	// }
+	//
+	fire := utils.GetFirebaseApi_Key()
+	// FireApiKey := os.Getenv("FIREBASEAPI_KEY")
+	// if FireApiKey == "" {
+	// 	//log.Println("Missing FIREBASEAPI_KEY")
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
+	// 	return
+	// }
 
 	// Call Firebase REST API to create the user
 	payload := map[string]interface{}{
@@ -56,7 +62,7 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(
-		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s", FireApiKey),
+		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s", fire),
 		"application/json",
 		bytes.NewBuffer(jsonPayload),
 	)
