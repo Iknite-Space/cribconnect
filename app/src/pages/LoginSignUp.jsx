@@ -61,11 +61,11 @@ const handleSubmit = async (e, isSignUpMode) => {
     });
 
     const result = await response.json();
-   // console.log(result);
+    console.log(result);
 
     if (!response.ok) {
       console.log(result.message)
-      throw new Error(result.message || "Something went wrong here");
+      throw new Error(result.message ||result.error || "Something went wrong here");
     }
 
    // console.log("Server response:", result);
