@@ -16,7 +16,7 @@ const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const navigate = useNavigate(); 
 
- const { setToken} = useContext(AuthContext)
+ const { setToken, setRefreshToken} = useContext(AuthContext)
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false)
 
