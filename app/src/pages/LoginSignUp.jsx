@@ -78,7 +78,7 @@ const handleSubmit = async (e, isSignUpMode) => {
       navigate("/complete-profile");
     } else {
       setMessage("Welcome back! 👋");
-      navigate("/dasboard");
+      navigate("/complete-profile");
     }
   } catch (err) {
     alert(err.message);
