@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -46,7 +45,7 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	// 	log.Fatal("Failed to load FIREBASE key:", err)
 	// }
 	//
-	fire := utils.GetFirebaseApi_Key()
+	fire := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc" //utils.GetFirebaseApi_Key()
 	// FireApiKey := os.Getenv("FIREBASEAPI_KEY")
 	// if FireApiKey == "" {
 	// 	//log.Println("Missing FIREBASEAPI_KEY")
@@ -117,12 +116,13 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	}
 
 	// Ensures FIREBASEAPI_KEY is present
-	FireApiKey := os.Getenv("FIREBASEAPI_KEY")
-	if FireApiKey == "" {
-		//log.Println("Missing FIREBASEAPI_KEY")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
-		return
-	}
+	FireApiKey := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc"
+	//  os.Getenv("FIREBASEAPI_KEY")
+	// if FireApiKey == "" {
+	// 	//log.Println("Missing FIREBASEAPI_KEY")
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
+	// 	return
+	// }
 
 	// Call Firebase REST API to create the user
 	payload := map[string]interface{}{
@@ -384,7 +384,7 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 		}()
 
 		// Save the profile picture using the helper function
-		filePath, err := h.service.SaveProfilePicture(file, firebaseUID)
+		filePath, err := utils.UploadProfilePicture(file, firebaseUID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save profile picture"})
 			fmt.Println("error is here", err)
