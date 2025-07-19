@@ -18,7 +18,7 @@ import MessageBanner from '../assets/components/MessageBanner';
 const CompleteProfile = () => {
    const fileInputRef = useRef(null);
    const navigate = useNavigate(); 
-   const { token } = useContext(AuthContext);
+   const { token, logout} = useContext(AuthContext);
    const [message, setMessage] = useState('');
   
 const [imageSrc, setImageSrc] = useState(null);
@@ -187,7 +187,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
      
     // Send to backend
      
-    // http://localhost:8084
+    //   http://localhost:8081
     const res = await fetch("https://api.cribconnect.xyz/v1/users/complete-profile", {
       method: "PUT",
       headers: {
@@ -198,11 +198,16 @@ if (!isValidCameroonPhone(form.phoneno)) {
     console.log(token)
 
     const result = await res.json();
-    if (res.ok) {
+    if (res.status === 401) {
+    //  Unauthorized: likely expired or invalid token
+     setMessage("Session expired. Please log in again.");
+      logout(); // clears token & refresh token
+     navigate("/login");
+    } else if (res.ok) {
       setMessage("🎉 Profile saved!");
       //alert("🎉 Profile saved!");
       navigate('/profile');
-    } else {
+    } else{
       console.log(result)
      // console.error(result);
      setMessage("⚠️ Error saving profile");

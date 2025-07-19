@@ -16,7 +16,7 @@ const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const navigate = useNavigate(); 
 
- const { setToken} = useContext(AuthContext)
+ const { setToken, setRefreshToken} = useContext(AuthContext)
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false)
 
@@ -71,14 +71,15 @@ const handleSubmit = async (e, isSignUpMode) => {
    // console.log("Server response:", result);
 
     if (result.id_token) {
-        setToken(result.id_token); // <-- set here
+        setToken(result.id_token); // ✅ Used for API requests
+       setRefreshToken(result.refresh_token); // ✅ Used for background token refresh
     }
 
     if (isSignUpMode) {
       navigate("/complete-profile");
     } else {
       setMessage("Welcome back! 👋");
-      navigate("/dasboard");
+      navigate("/complete-profile");
     }
   } catch (err) {
     alert(err.message);
