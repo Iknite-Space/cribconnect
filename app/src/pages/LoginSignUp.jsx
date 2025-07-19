@@ -71,7 +71,8 @@ const handleSubmit = async (e, isSignUpMode) => {
    // console.log("Server response:", result);
 
     if (result.id_token) {
-        setToken(result.id_token); // <-- set here
+        setToken(result.id_token); // ✅ Used for API requests
+       setRefreshToken(result.refresh_token); // ✅ Used for background token refresh
     }
 
     if (isSignUpMode) {
