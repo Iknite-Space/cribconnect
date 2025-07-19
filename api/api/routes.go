@@ -25,12 +25,12 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 	// add routes
 
 	r.GET("//healthcheck", h.handleHealthcheck)
-	r.POST("v1/users/register", h.handleUserRegistration)
-	r.PUT("v1/users/complete-profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCompleteUserProfile)
-	r.POST("v1/users/login", h.handleUserLogin)
-	r.POST("v1/forgot-password", h.handleForgotPassword)
-	r.GET("v1/user/profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGetUser)
-	r.PUT("v1/user/profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleUpdateUser)
+	r.POST("/v1/users/register", h.handleUserRegistration)
+	r.PUT("/v1/users/complete-profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCompleteUserProfile)
+	r.POST("/v1/users/login", h.handleUserLogin)
+	r.POST("/v1/forgot-password", h.handleForgotPassword)
+	r.GET("/v1/user/profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGetUser)
+	r.PUT("/v1/user/profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleUpdateUser)
 	// r.POST("/message", h.handleCreateMessage)
 	// r.GET("/message/:id", h.handleGetMessage)
 	// r.DELETE("/message/:id", h.handleDeleteMessage)
