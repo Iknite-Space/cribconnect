@@ -78,9 +78,10 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	}()
 
 	var fbResp struct {
-		IDToken string `json:"idToken"`
-		LocalID string `json:"localId"`
-		Email   string `json:"email"`
+		IDToken      string `json:"idToken"`
+		RefreshToken string `json:"refreshToken"`
+		LocalID      string `json:"localId"`
+		Email        string `json:"email"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&fbResp); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding Firebase response"})
@@ -99,8 +100,9 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"user":     user,
-		"id_token": fbResp.IDToken, // You can return this so the client can use it for auth
+		"user":          user,
+		"id_token":      fbResp.IDToken, // You can return this so the client can use it for auth
+		"refresh_token": fbResp.RefreshToken,
 	})
 
 }
@@ -149,9 +151,10 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	}()
 
 	var fbResp struct {
-		IDToken string `json:"idToken"`
-		LocalID string `json:"localId"`
-		Email   string `json:"email"`
+		IDToken      string `json:"idToken"`
+		RefreshToken string `json:"refreshToken"`
+		LocalID      string `json:"localId"`
+		Email        string `json:"email"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&fbResp); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding Firebase response"})
@@ -159,10 +162,11 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "Login successful",
-		"id_token": fbResp.IDToken,
-		"uid":      fbResp.LocalID,
-		"email":    fbResp.Email,
+		"message":       "Login successful",
+		"id_token":      fbResp.IDToken,
+		"refresh_token": fbResp.RefreshToken,
+		"uid":           fbResp.LocalID,
+		"email":         fbResp.Email,
 	})
 
 }
