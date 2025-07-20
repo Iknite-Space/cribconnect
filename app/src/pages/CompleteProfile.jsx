@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 import MessageBanner from '../assets/components/MessageBanner';
+import Button from '../assets/components/Button';
 
 
 
@@ -19,7 +20,8 @@ const CompleteProfile = () => {
    const fileInputRef = useRef(null);
    const navigate = useNavigate(); 
    const { token, refreshIdToken, logout} = useContext(AuthContext);
-   const [message, setMessage] = useState('');
+   const [messageStatus, setMessageStatus] = useState({ message: '', type: 'info' });
+   const [submitting, setSubmitting] = useState(false)
   
 const [imageSrc, setImageSrc] = useState(null);
 const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -55,7 +57,7 @@ const [phoneError, setPhoneError] = useState('');
   });
 
 
-  // ✏️ Handles regular inputs and nested habbit inputs
+  //  Handles regular inputs and nested habbit inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name in form.habbits) {
@@ -68,7 +70,7 @@ const [phoneError, setPhoneError] = useState('');
     }
   };
 
-// 📸 Handle file upload, limit to 5MB, and create a preview
+//  Handle file upload, limit to 5MB, and create a preview
   const handleFileChange = (e) => {
 
     const file = e.target.files[0];
@@ -113,7 +115,7 @@ const file = new File([blob], `profile.${extension}`, { type: mimeType });
 };
 
 
-  // ❌ Remove/reset profile photo
+  //  Remove/reset profile photo
   const handleRemovePhoto = () => {
   setForm((prev) => ({
     ...prev,
@@ -153,8 +155,9 @@ const handleInputChanges = (e) => {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+  if (submitting) return;
 
-  // ✅ Cameroonian phone number format validation
+  //  Cameroonian phone number format validation
 const isValidCameroonPhone = (num) => {
   const pattern = /^\+237((6(70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85|86|87|88|89))|(65[0-9])|(69[1-9])|(62[0-3]))\d{6}$/;
   return pattern.test(num);
@@ -163,9 +166,10 @@ const isValidCameroonPhone = (num) => {
 if (!isValidCameroonPhone(form.phoneno)) {
  setPhoneError('Invalid phone number!');
   return;
-} else {
+} 
+
   setPhoneError(''); // clear error if valid
-}
+  setSubmitting(true);
 
   try {
    await refreshIdToken();
@@ -195,33 +199,36 @@ if (!isValidCameroonPhone(form.phoneno)) {
       },
       body: formData,
     });
-    console.log("Token used:", token);
 
-    const result = await res.json();
+    await res.json();
+   
     if (res.status === 401) {
     //  Unauthorized: likely expired or invalid token
-     setMessage("Session expired. Please log in again.");
+     setMessageStatus({message: "Session expired. Please log in again.", type: 'error' });
       logout(); // clears token & refresh token
      navigate("/login");
-    } else if (res.ok) {
-      setMessage("🎉 Profile saved!");
+    }
+    else if (res.status === 403) {
+  setMessageStatus({ message: 'Permission denied.', type: 'error' });
+    }
+    else if (res.ok) {
+      setMessageStatus({ message: 'Profile saved!', type: 'success' });
       navigate('/profile');
     } else{
-      console.log(result)
-     // console.error(result);
-     setMessage("⚠️ Error saving profile");
-     // alert("⚠️ Error saving profile");
+     setMessageStatus({ message: 'Error saving profile', type: 'error' });
+     navigate("/")
     }
   } catch (error) {
-    console.log("Submit error:", error);
-    alert("Something went wrong");
+    setMessageStatus({ message: 'Something went wrong!', type: 'error' });
+  } finally {
+    setSubmitting(false);
   }
 };
 
   return (
     <div className="profile-page">
-      <h2>Complete Your Profile</h2>
-      <form onSubmit={handleSubmit}>
+      <h2>Complete Your Profile 🧑‍💼</h2>
+    <form onSubmit={handleSubmit} className="myFormStyle">
         <h3>Personal Info</h3>
         <input name="fname" type="text" placeholder="First Name" required onChange={handleInputChange} />
         <input name="lname" type="text" placeholder="Last Name" required onChange={handleInputChange} />
@@ -238,7 +245,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
               autoFocus: false
               }}
         />
-        {phoneError && <div className="error-message">{phoneError}</div>}
+        {phoneError && <div className="error-messages">{phoneError}</div>}
 
         <input name="birthdate" type="date" required onChange={handleInputChange} />
         {/* <div className="bio-container"> */}
@@ -261,7 +268,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
          {/* </div> */}
 
         {/* 📸 Profile Photo Input + Preview + Remove */}
-      <label>Profile Picture</label>
+      <label>Upload Profile Picture</label>
       <input
         type="file"
         name="profile_picture"
@@ -303,38 +310,38 @@ if (!isValidCameroonPhone(form.phoneno)) {
 
 
 
-        <h3>Provide Your Roommate habbits</h3>
+        <h3>Provide Your Habits</h3>
         <select name="ageRange" onChange={handleInputChange}>
-          <option value="">Age Range</option>
+          <option value="">Your age range</option>
           <option>18-21</option>
           <option>22-25</option>
           <option>26-29</option>
           <option>30-33</option>
         </select>
         <select name="gender" onChange={handleInputChange}>
-          <option value="">Your Gender</option>
+          <option value="">Your gender</option>
           <option>Male</option>
           <option>Female</option>
-          <option>Any</option>
         </select>
         <select name="pet" onChange={handleInputChange}>
-          <option value="">Pet Friendly?</option>
+          <option value="">Are you pets friendly?</option>
           <option>Yes</option>
           <option>No</option>
         </select>
         <select name="lateNights" onChange={handleInputChange}>
-          <option value="">Late Nights?</option>
-          <option>Yes</option>
-          <option>No</option>
+          <option value="">Late nights?</option>
+          <option>Rarely</option>
+          <option>Sometimes</option>
+          <option>Often</option>
         </select>
         <select name="smoking" onChange={handleInputChange}>
-          <option value="">Smoking</option>
+          <option value="">Do you smoke?</option>
           <option>Yes</option>
           <option>No</option>
         </select>
         <select name="drinking" onChange={handleInputChange}>
-          <option value="">Drinking</option>
-          <option>No</option>
+          <option value="">How often do you drink?</option>
+          <option>Rarely</option>
           <option>Sometimes</option>
           <option>Often</option>
         </select>
@@ -342,7 +349,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
           <option value="">Guest Policy</option>
           <option>Rarely</option>
           <option>Sometimes</option>
-          <option>Very Often</option>
+          <option>Often</option>
         </select>
         <select name="noiseTolerance" onChange={handleInputChange}>
           <option value="">Noise Tolerance</option>
@@ -356,13 +363,19 @@ if (!isValidCameroonPhone(form.phoneno)) {
           <option>Moslem</option>
         </select>
         <select name="occupation" onChange={handleInputChange}>
-          <option value="">Ocuupation</option>
+          <option value="">Occupation</option>
           <option>Student</option>
           <option>Worker</option>
           <option>Any</option>
         </select>
-        <button type="submit">Save Profile</button>
-        <MessageBanner message={message} clear={() => setMessage('')} />
+
+        <MessageBanner
+         message={messageStatus.message} 
+        type={messageStatus.type}
+        clear={() => setMessageStatus('')} />
+        
+        <Button type="submit" disabled={submitting}>
+  {submitting ? 'Saving...' : 'Save Profile'}</Button>
       </form>
     </div>
   );
