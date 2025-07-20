@@ -18,7 +18,7 @@ import MessageBanner from '../assets/components/MessageBanner';
 const CompleteProfile = () => {
    const fileInputRef = useRef(null);
    const navigate = useNavigate(); 
-   const { token, logout} = useContext(AuthContext);
+   const { token, refreshIdToken, logout} = useContext(AuthContext);
    const [message, setMessage] = useState('');
   
 const [imageSrc, setImageSrc] = useState(null);
@@ -168,7 +168,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
 }
 
   try {
-
+   await refreshIdToken();
     // Prepare form data
     const formData = new FormData();
     formData.append("fname", form.fname);
@@ -195,7 +195,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
       },
       body: formData,
     });
-    console.log(token)
+    console.log("Token used:", token);
 
     const result = await res.json();
     if (res.status === 401) {
@@ -205,7 +205,6 @@ if (!isValidCameroonPhone(form.phoneno)) {
      navigate("/login");
     } else if (res.ok) {
       setMessage("🎉 Profile saved!");
-      //alert("🎉 Profile saved!");
       navigate('/profile');
     } else{
       console.log(result)
