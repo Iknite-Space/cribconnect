@@ -43,12 +43,10 @@ export const AuthProvider = ({ children }) => {
       if (data.id_token) {
         setToken(data.id_token);
         localStorage.setItem("token", data.id_token);
-        console.log("✅ Token refreshed proactively");
       } else {
         throw new Error("Failed to refresh ID token");
       }
     } catch (error) {
-      console.error("🔁 Token refresh failed:", error);
       logout(); // Optional: log out on failure
     }
   }, [refreshToken, logout]);

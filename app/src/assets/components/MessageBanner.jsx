@@ -1,20 +1,33 @@
-// components/MessageBanner.jsx
 import React, { useEffect } from 'react';
-import './MessageBanner.css'; // Optional: style separately
+import './MessageBanner.css';
 
-const MessageBanner = ({ message, clear }) => {
+
+
+const MessageBanner = ({ message, type = 'info', clear }) => {
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(() => clear(), 4000); // Auto-hide after 4s
+      const timer = setTimeout(() => clear(), 4000);
       return () => clearTimeout(timer);
     }
   }, [message, clear]);
 
   if (!message) return null;
 
+  const getIcon = (type) => {
+    switch (type) {
+      case 'error': return '❌';
+      case 'success': return '✅';
+      default: return 'ℹ️';
+    }
+  };
+
+  // Dynamic class based on type
+  const className = `top-left-message ${type}`;
+
   return (
-    <div className="top-left-message">
-      {message}
+    <div className={className}>
+       <span className="message-icon">{getIcon(type)}</span>
+      <span>{message}</span>
     </div>
   );
 };
