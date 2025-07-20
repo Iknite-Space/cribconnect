@@ -63,7 +63,7 @@ Resources:
   CloudinaryApiKey:
     Type: "AWS::SecretsManager::Secret"
     Properties:
-      Name: !Sub "${EnvId}/cloudinary"
+      Name: !Sub "/${EnvId}/cloudinary"
       
       Tags:
         - Key: EnvId
@@ -72,7 +72,7 @@ Resources:
   FirebaseApiKey:
     Type: "AWS::SecretsManager::Secret"
     Properties:
-      Name: !Sub "${EnvId}/FIREBASEAPI_KEY"
+      Name: !Sub "/${EnvId}/FIREBASEAPI_KEY"
       
       Tags:
         - Key: EnvId
