@@ -161,9 +161,9 @@ Resources:
               ValueFrom: !Sub "${AppDatabaseSecret}:password::"
             - Name: FIREBASE_CONFIG
               ValueFrom: !Sub "${FirebaseSecret}:::"
-            - Name: FIREBASEAPI_KEY
+            - Name: FIREBASEAPI_CONFIG
               ValueFrom: !Sub "${FirebaseApiKey}:::"
-            - Name: cloudinary
+            - Name: CLOUDINARY_CONFIG
               ValueFrom: !Sub "${CloudinaryApiKey}:::"
 
     # A role needed by ECS to Start the Ecs Service
