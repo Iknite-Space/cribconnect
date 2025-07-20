@@ -64,11 +64,7 @@ Resources:
     Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub "/${EnvId}/firebase"
-      GenerateSecretString:
-        SecretStringTemplate: '{}'
-        GenerateStringKey: "placeholder"
-        PasswordLength: 30
-        ExcludeCharacters: '"@/\'
+      
       Tags:
         - Key: EnvId
           Value: !Ref EnvId
