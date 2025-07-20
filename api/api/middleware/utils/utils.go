@@ -51,7 +51,7 @@ func GetFirebaseApi_Key() string {
 }
 
 func UploadProfilePicture(file multipart.File, userID string) (string, error) {
-	cloudinaryJSON := os.Getenv("cloudinary")
+	cloudinaryJSON := os.Getenv("CLOUDINARY_CONFIG")
 	if cloudinaryJSON == "" {
 		log.Fatalf("cloudinary config environment variable is missing or empty")
 	}

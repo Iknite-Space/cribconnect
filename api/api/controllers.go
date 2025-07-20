@@ -30,7 +30,7 @@ type PrefJson struct {
 	Occupation     string `json:"occupation"`
 }
 
-var firebaseApikey = os.Getenv("FIREBASEAPI_KEY")
+var firebaseApikey = os.Getenv("FIREBASEAPI_CONFIG")
 
 func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	var req struct {
