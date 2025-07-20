@@ -4,12 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
 
@@ -31,7 +31,12 @@ func InitFirebaseClient() *auth.Client {
 		return firebaseClient
 	}
 
-	opt := option.WithCredentials(&google.Credentials{})
+	firebaseJSON := os.Getenv("FIREBASE_CONFIG")
+	if firebaseJSON == "" {
+		log.Fatalf("FIREBASE_CONFIG environment variable is missing or empty")
+	}
+
+	opt := option.WithCredentialsJSON([]byte(firebaseJSON))
 
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
