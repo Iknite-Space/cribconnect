@@ -123,12 +123,13 @@ return (
              
              <Link to="/forgot-password" className="forgot-link">Forgot your password?</Link>
              <Button type="submit" disabled={submitting}>
-  {submitting ? 'Loggin In...' : 'Login'}</Button>
-              {message && (
+    {submitting ? 'Loggin In...' : 'Login'}</Button>
+           <MessageBanner message={message} clear={() => setMessage('')} />
+              {/* {message && (
              <div className="top-left-message">
                      {message}
                   </div>
-             )}
+             )} */}
            </form>
          </div>
 
