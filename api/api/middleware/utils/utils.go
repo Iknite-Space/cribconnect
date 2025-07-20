@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -9,49 +10,39 @@ import (
 	"net/smtp"
 	"os"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/secretsmanager" //
+	//
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
-func GetFirebaseApi_Key() string {
-	secretName := "dev/FIREBASEAPI_KEY"
-	region := "us-east-1"
-
-	config, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
-	if err != nil {
-		log.Fatal(err)
+func LoadEnvSecret(envVarName, field string) string {
+	raw := os.Getenv(envVarName)
+	if raw == "" {
+		log.Fatalf("Missing environment variable: %s", envVarName)
 	}
 
-	// Create Secrets Manager client
-	svc := secretsmanager.NewFromConfig(config)
-
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId:     aws.String(secretName),
-		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
+	// Attempt to parse as JSON
+	var parsed map[string]string
+	err := json.Unmarshal([]byte(raw), &parsed)
+	if err == nil {
+		val, ok := parsed[field]
+		if !ok {
+			log.Fatalf("Field %s not found in secret: %s", field, envVarName)
+		}
+		return val
 	}
 
-	result, err := svc.GetSecretValue(context.TODO(), input)
-	if err != nil {
-		// For a list of exceptions thrown, see
-		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-		log.Fatal(err.Error())
+	// Fallback: assume raw string value if JSON parsing fails
+	if field != "" {
+		log.Fatalf("Secret %s is raw but expected field '%s'", envVarName, field)
 	}
-
-	// Decrypts secret using the associated KMS key.
-	secretString := *result.SecretString
-
-	return secretString
-
-	// Your code goes here.
+	return raw
 }
 
 func UploadProfilePicture(file multipart.File, userID string) (string, error) {
-	cloudinaryJSON := os.Getenv("CLOUDINARY_CONFIG")
+	cloudinaryJSON := LoadEnvSecret("CLOUDINARY_CONFIG", "cloudinary")
 	if cloudinaryJSON == "" {
 		log.Fatalf("cloudinary config environment variable is missing or empty")
 	}
