@@ -60,23 +60,6 @@ Parameters:
     Default: "api"
 
 Resources:
-  CloudinaryApiKey:
-    Type: "AWS::SecretsManager::Secret"
-    Properties:
-      Name: !Sub "/${EnvId}/cloudinary"
-      
-      Tags:
-        - Key: EnvId
-          Value: !Ref EnvId
-
-  FirebaseApiKey:
-    Type: "AWS::SecretsManager::Secret"
-    Properties:
-      Name: !Sub "/${EnvId}/FIREBASEAPI_KEY"
-      
-      Tags:
-        - Key: EnvId
-          Value: !Ref EnvId
 
   FirebaseSecret:
     Type: "AWS::SecretsManager::Secret"
@@ -162,9 +145,9 @@ Resources:
             - Name: FIREBASE_CONFIG
               ValueFrom: !Sub "${FirebaseSecret}:::"
             - Name: FIREBASEAPI_CONFIG
-              ValueFrom: !Sub "${FirebaseApiKey}:::"
+              ValueFrom: arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/FIREBASEAPI_KEY-0voAFL
             - Name: CLOUDINARY_CONFIG
-              ValueFrom: !Sub "${CloudinaryApiKey}:::"
+              ValueFrom: arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/cloudinary-zObHUp
 
     # A role needed by ECS to Start the Ecs Service
   ExecutionRole:
@@ -195,8 +178,8 @@ Resources:
                   - !Ref AppDatabaseSecret
                   - !Ref DbAdminSecretArn
                   - !Ref FirebaseSecret
-                  - !Ref FirebaseApiKey
-                  - !Ref CloudinaryApiKey
+                  - !Ref arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/FIREBASEAPI_KEY-0voAFL
+                  - !Ref arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/cloudinary-zObHUp
 
   # A role for the containers
   TaskRole:
