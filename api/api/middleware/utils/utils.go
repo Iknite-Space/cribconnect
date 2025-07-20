@@ -51,8 +51,12 @@ func GetFirebaseApi_Key() string {
 }
 
 func UploadProfilePicture(file multipart.File, userID string) (string, error) {
+	cloudinaryJSON := os.Getenv("CLOUDINARY_CONFIG")
+	if cloudinaryJSON == "" {
+		log.Fatalf("cloudinary config environment variable is missing or empty")
+	}
 	// ✅ Step 1: Initialize Cloudinary client
-	cld, err := cloudinary.NewFromParams("dh1rs2zgb", "795451961929344", "XOAJVGJt8XFAy1nfLLLSz9Wqdr4")
+	cld, err := cloudinary.NewFromParams("dh1rs2zgb", "795451961929344", cloudinaryJSON)
 	if err != nil {
 		return "", fmt.Errorf("failed to initialize cloudinary: %w", err)
 	}

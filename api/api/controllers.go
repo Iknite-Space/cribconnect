@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -29,6 +30,8 @@ type PrefJson struct {
 	Occupation     string `json:"occupation"`
 }
 
+var firebaseApikey = os.Getenv("FIREBASEAPI_CONFIG")
+
 func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -45,7 +48,7 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	// 	log.Fatal("Failed to load FIREBASE key:", err)
 	// }
 	//
-	fire := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc" //utils.GetFirebaseApi_Key()
+	//fire := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc" //utils.GetFirebaseApi_Key()
 	// FireApiKey := os.Getenv("FIREBASEAPI_KEY")
 	// if FireApiKey == "" {
 	// 	//log.Println("Missing FIREBASEAPI_KEY")
@@ -61,7 +64,7 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(
-		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s", fire),
+		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s", firebaseApikey),
 		"application/json",
 		bytes.NewBuffer(jsonPayload),
 	)
@@ -118,7 +121,7 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	}
 
 	// Ensures FIREBASEAPI_KEY is present
-	FireApiKey := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc"
+	//FireApiKey := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc"
 	//  os.Getenv("FIREBASEAPI_KEY")
 	// if FireApiKey == "" {
 	// 	//log.Println("Missing FIREBASEAPI_KEY")
@@ -134,7 +137,7 @@ func (h *UserHandler) handleUserLogin(c *gin.Context) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(
-		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s", FireApiKey),
+		fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s", firebaseApikey),
 		"application/json",
 		bytes.NewBuffer(jsonPayload),
 	)
