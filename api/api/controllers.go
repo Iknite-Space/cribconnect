@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -30,7 +29,7 @@ type PrefJson struct {
 	Occupation     string `json:"occupation"`
 }
 
-var firebaseApikey = os.Getenv("FIREBASEAPI_CONFIG")
+var firebaseApikey = utils.LoadEnvSecret("FIREBASEAPI_CONFIG", "FIREBASEAPI_KEY")
 
 func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 	var req struct {
