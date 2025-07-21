@@ -93,6 +93,16 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, [logout]);
 
+  useEffect(() => {
+  if (auth.currentUser) {
+    auth.currentUser.getIdToken(true).then((freshToken) => {
+      setToken(freshToken);
+      setRefreshToken(auth.currentUser.refreshToken);
+    }).catch(() => logout());
+  }
+}, [logout]);
+
+
   return (
     <AuthContext.Provider
      value={{ 
