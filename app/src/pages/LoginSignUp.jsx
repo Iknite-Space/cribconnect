@@ -41,9 +41,9 @@ const handleSignUpPasswordChange = (e) => {
 
   setGoogleSigningIn(true);
   try {
-    const {token, user, isNewUser} = await loginWithGoogle();
+    const {token,refreshToken, user, isNewUser} = await loginWithGoogle();
 
-  //http://localhost:8082
+  //http://localhost:8082 
    const res = await fetch("https://api.cribconnect.xyz/v1/users/google-login", {
       method: "POST",
       headers: {
@@ -54,26 +54,11 @@ const handleSignUpPasswordChange = (e) => {
         email: user.email
       })
     });
-   
-    setToken(token)
-    if (!res.ok) {
-     let errorMsg = `Login failed: ${res.status}`;
-     try {
-      const errorData = await res.json();
-      if (errorData?.message) {
-        errorMsg =`Login failed: ${errorData.message}`;
-      }
-     } catch {
-      // response isn't valid JSON, fallback to status text
-     }
-     setMessageStatus({ message: errorMsg, type: "error" });
-     return;
-       }
-
+       
      // Safely parse backend response
-     //let data;
+     let responseData;
      try {
-      await res.json();
+      responseData = await res.json();
      } catch {
        setMessageStatus({
         message: "Unable to read server response. Please try again.",
@@ -81,6 +66,16 @@ const handleSignUpPasswordChange = (e) => {
       });
       return;
      }
+     
+     if (!res.ok) {
+          const errorMsg = responseData?.message
+         ? `Login failed: ${responseData.message}`
+         : `Login failed: ${res.status}`;
+         setMessageStatus({ message: errorMsg, type: "error" });
+           return;
+      }
+       setToken(token);
+       setRefreshToken(refreshToken);
 
    // Route based on new vs existing user
     if (isNewUser) {
