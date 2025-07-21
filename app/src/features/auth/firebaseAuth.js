@@ -12,9 +12,10 @@ export const loginWithGoogle = async () => {
   try{
      const result = await signInWithPopup(auth, provider);
   const token = await result.user.getIdToken();
+  const refreshToken = result.user.refreshToken;
   const user = result.user;
   const isNewUser = result._tokenResponse?.isNewUser;
-  return { token, user, isNewUser };
+  return { token, refreshToken, user, isNewUser };
 
   } catch (err){
      return { error: err.message } 
