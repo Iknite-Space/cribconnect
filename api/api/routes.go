@@ -26,7 +26,7 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 
 	r.GET("//healthcheck", h.handleHealthcheck)
 	r.POST("/v1/users/register", h.handleUserRegistration)
-	r.POST("/v1/user/google-login", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGoogleLogin)
+	r.POST("/v1/users/google-login", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGoogleLogin)
 	r.PUT("/v1/users/complete-profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCompleteUserProfile)
 	r.POST("/v1/users/login", h.handleUserLogin)
 	r.POST("/v1/forgot-password", h.handleForgotPassword)
