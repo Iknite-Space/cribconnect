@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,20 +41,6 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
 		return
 	}
-
-	// Ensures FIREBASEAPI_KEY is present
-	// fire, err := utils.GetSecretFromSM("dev/FIREBASEAPI_KEY")
-	// if err != nil {
-	// 	log.Fatal("Failed to load FIREBASE key:", err)
-	// }
-	//
-	//fire := "AIzaSyApDxpa0ialxo6_8xowtTG4TIBSm6AWvgc" //utils.GetFirebaseApi_Key()
-	// FireApiKey := os.Getenv("FIREBASEAPI_KEY")
-	// if FireApiKey == "" {
-	// 	//log.Println("Missing FIREBASEAPI_KEY")
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Server misconfigured"})
-	// 	return
-	// }
 
 	// Call Firebase REST API to create the user
 	payload := map[string]interface{}{
@@ -105,6 +92,60 @@ func (h *UserHandler) handleUserRegistration(c *gin.Context) {
 		"user":          user,
 		"id_token":      fbResp.IDToken, // You can return this so the client can use it for auth
 		"refresh_token": fbResp.RefreshToken,
+	})
+
+}
+
+func (h *UserHandler) handleGoogleLogin(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+
+	firebaseEmailRaw, _ := c.Get("firebase_email")
+	firebaseEmail := firebaseEmailRaw.(string)
+
+	// Optional: verify user exists on Firebase (defensive)
+	_, err := middleware.InitFirebaseClient().GetUser(c, firebaseUID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Firebase UID"})
+		return
+	}
+
+	// Check if user already exists in your Postgres DB
+	dbUser, err := h.querier.GetUserById(c, firebaseUID) //  You’ll need to define this query
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB lookup failed: " + err.Error()})
+		return
+	}
+	isNew := false
+	if err == sql.ErrNoRows {
+		isNew = true
+		// Store UID and email in your DB
+		newUserParams := repo.RegisterUserParams{
+			UserID: firebaseUID,
+			Email:  firebaseEmail,
+		}
+
+		_, err := h.querier.RegisterUser(c, newUserParams)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user: " + err.Error()})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user":   dbUser,
+		"is_new": isNew,
 	})
 
 }
