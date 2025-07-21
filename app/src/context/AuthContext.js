@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [logout]);
 
   return (
     <AuthContext.Provider

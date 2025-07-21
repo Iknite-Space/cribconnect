@@ -41,7 +41,7 @@ const handleSignUpPasswordChange = (e) => {
 
   setGoogleSigningIn(true);
   try {
-    const {token,refreshToken, user, isNewUser} = await loginWithGoogle();
+    const {token, user, isNewUser} = await loginWithGoogle();
 
   //http://localhost:8082 
    const res = await fetch("https://api.cribconnect.xyz/v1/users/google-login", {
