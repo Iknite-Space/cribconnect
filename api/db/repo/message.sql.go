@@ -13,6 +13,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getUserByFirebaseId = `-- name: GetUserByFirebaseId :one
+SELECT user_id, email FROM users
+WHERE user_id = $1
+LIMIT 1
+`
+
+type GetUserByFirebaseIdRow struct {
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+}
+
+func (q *Queries) GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error) {
+	row := q.db.QueryRow(ctx, getUserByFirebaseId, userID)
+	var i GetUserByFirebaseIdRow
+	err := row.Scan(&i.UserID, &i.Email)
+	return i, err
+}
+
 const getUserById = `-- name: GetUserById :one
 SELECT 
   COALESCE(user_id, '') AS user_id,
