@@ -106,9 +106,10 @@ func (h *UserHandler) handleGoogleLogin(c *gin.Context) {
 		return
 	}
 
+	// Extract Firebase UID and Email from context
 	firebaseUIDRaw, exists := c.Get("firebase_uid")
 	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase UID is required"})
 		return
 	}
 	firebaseUID := firebaseUIDRaw.(string)
@@ -116,56 +117,46 @@ func (h *UserHandler) handleGoogleLogin(c *gin.Context) {
 	firebaseEmailRaw, _ := c.Get("firebase_email")
 	firebaseEmail := firebaseEmailRaw.(string)
 
-	// Optional: verify user exists on Firebase (defensive)
-	_, err := middleware.InitFirebaseClient().GetUser(c, firebaseUID)
-	if err != nil {
+	// Defensive Firebase user existence check
+	if _, err := middleware.InitFirebaseClient().GetUser(c, firebaseUID); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Firebase UID"})
 		return
 	}
 
-	// Check if user already exists in your Postgres DB
-	dbUser, err := h.querier.GetUserById(c, firebaseUID) //  You’ll need to define this query
-	isNew := false
-
+	// Check if user exists in DB
+	dbUser, err := h.querier.GetUserByFirebaseId(c, firebaseUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-
-			// Store UID and email in your DB
+			// New user: register them
 			newUserParams := repo.RegisterUserParams{
 				UserID: firebaseUID,
 				Email:  firebaseEmail,
 			}
-
-			_, err := h.querier.RegisterUser(c, newUserParams)
-			if err != nil {
-				log.Println("User registration error:", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user: " + err.Error()})
+			if _, regErr := h.querier.RegisterUser(c, newUserParams); regErr != nil {
+				log.Println("Registration error:", regErr)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register new user"})
 				return
-
 			}
-			isNew := true
-
 			c.JSON(http.StatusOK, gin.H{
-				"user":   dbUser,
-				"is_new": isNew,
+				"user": gin.H{
+					"user_id": firebaseUID,
+					"email":   firebaseEmail,
+				},
+				"is_new": true,
 			})
 			return
-
-		} else {
-			// Existing user found
-			c.JSON(http.StatusOK, gin.H{
-				"user":   dbUser,
-				"is_new": isNew,
-				"here":   "here i am",
-			})
-
 		}
-	} else {
-		log.Println("DB lookup error:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB lookup failed: "})
+
+		// Unexpected DB error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database query failed"})
 		return
 	}
 
+	// Existing user found
+	c.JSON(http.StatusOK, gin.H{
+		"user":   dbUser,
+		"is_new": false,
+	})
 }
 
 func (h *UserHandler) handleUserLogin(c *gin.Context) {

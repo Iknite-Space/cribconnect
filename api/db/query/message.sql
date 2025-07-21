@@ -22,6 +22,11 @@ INSERT INTO users (user_id,email)
 VALUES ($1, $2)
 RETURNING user_id,email;
 
+-- name: GetUserByFirebaseId :one
+SELECT user_id, email FROM users
+WHERE user_id = $1
+LIMIT 1;
+
 -- name: GetUserById :one
 SELECT 
   COALESCE(user_id, '') AS user_id,
