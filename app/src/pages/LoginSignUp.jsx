@@ -1,7 +1,7 @@
 //LoginSignup.jsx 
 import React, { useContext, useState } from 'react'; 
 import { FcGoogle } from 'react-icons/fc';
-import '../styles/LoginSignup.css'; // for styling
+import '../styles/LoginSignup.css'; 
 import { useNavigate } from 'react-router-dom'; 
 import { Link } from 'react-router-dom';
 import {  loginWithGoogle } from '../features/auth/firebaseAuth';
@@ -13,8 +13,6 @@ import { evaluatePasswordStrength } from '../utils/passwordStrength';
 
 const LoginSignup = () => { 
  const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-// const [email, setEmail] = useState('');
-//  const [password, setPassword] = useState('');
 const [signUpEmail, setSignUpEmail] = useState('');
 const [signUpPassword, setSignUpPassword] = useState('');
 const [signInEmail, setSignInEmail] = useState('');
@@ -30,6 +28,7 @@ const [signUpStrength, setSignUpStrength] = useState({ level: '', color: '' });
  const { setToken, setRefreshToken} = useContext(AuthContext);
   const [messageStatus, setMessageStatus] = useState({ message: '', type: 'info' });
   const [submitting, setSubmitting] = useState(false);
+  const [googleSigningIn, setGoogleSigningIn] = useState(false);
 
 const handleSignUpPasswordChange = (e) => {
   const value = e.target.value;
@@ -38,10 +37,13 @@ const handleSignUpPasswordChange = (e) => {
 };
  
  const handleGoogleSignIn = async () => {
+  if (googleSigningIn) return;
+
+  setGoogleSigningIn(true);
   try {
     const {token, user, isNewUser} = await loginWithGoogle();
-    console.log(token,user,isNewUser)
 
+  //http://localhost:8082
    const res = await fetch("https://api.cribconnect.xyz/v1/users/google-login", {
       method: "POST",
       headers: {
@@ -52,7 +54,7 @@ const handleSignUpPasswordChange = (e) => {
         email: user.email
       })
     });
-    // const data = await res.json();
+   
 
     if (!res.ok) {
      let errorMsg = `Login failed: ${res.status}`;
@@ -69,9 +71,9 @@ const handleSignUpPasswordChange = (e) => {
        }
 
      // Safely parse backend response
-     let data;
+     //let data;
      try {
-      data = await res.json();
+      await res.json();
      } catch {
        setMessageStatus({
         message: "Unable to read server response. Please try again.",
@@ -80,28 +82,21 @@ const handleSignUpPasswordChange = (e) => {
       return;
      }
 
-       // Validate required fields
-    if (!data.token || !data.email) {
-     setMessageStatus({
-       message: "Login failed: missing token or email from backend.",
-      type: "error"
-      });
-     return;
-   }
-
    // Route based on new vs existing user
     if (isNewUser) {
       setMessageStatus({ message: "Signup successful!", type: 'success' });
       setTimeout(() => navigate("/complete-profile"), 1500);
     } else {
-      navigate("/dashboard");
        setMessageStatus({message: `Welcome ${user.displayName}! 🎉`, type: "success"});
+       setTimeout(() => navigate("/dashboard"), 1500);
     }
   } catch (error) {
     setMessageStatus({
       message: "Google sign-in failed. Please try again or check your internet connection.",
       type: "error"
     });
+  }finally {
+    setGoogleSigningIn(false);
   }
 };
 
@@ -242,7 +237,7 @@ return (
               </div>
              <div className="social-signin">
              <p className="or-text">or sign in with Google</p>
-             <Button  id="google-signin-btn" onClick={handleGoogleSignIn} ><FcGoogle size={20} /></Button>
+             <Button  id="google-signin-btn" onClick={handleGoogleSignIn} disabled={googleSigningIn} ><FcGoogle size={20} /></Button>
              </div>
              
              <Link to="/forgot-password" className="forgot-link">Forgot your password?</Link>
