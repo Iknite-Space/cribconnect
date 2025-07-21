@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -101,7 +102,7 @@ func (h *UserHandler) handleGoogleLogin(c *gin.Context) {
 		Email string `json:"email" binding:"required,email"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email"})
 		return
 	}
 
@@ -124,29 +125,46 @@ func (h *UserHandler) handleGoogleLogin(c *gin.Context) {
 
 	// Check if user already exists in your Postgres DB
 	dbUser, err := h.querier.GetUserById(c, firebaseUID) //  You’ll need to define this query
-	if err != nil && err != sql.ErrNoRows {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB lookup failed: " + err.Error()})
+	isNew := false
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+
+			// Store UID and email in your DB
+			newUserParams := repo.RegisterUserParams{
+				UserID: firebaseUID,
+				Email:  firebaseEmail,
+			}
+
+			_, err := h.querier.RegisterUser(c, newUserParams)
+			if err != nil {
+				log.Println("User registration error:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user: " + err.Error()})
+				return
+
+			}
+			isNew := true
+
+			c.JSON(http.StatusOK, gin.H{
+				"user":   dbUser,
+				"is_new": isNew,
+			})
+			return
+
+		} else {
+			// Existing user found
+			c.JSON(http.StatusOK, gin.H{
+				"user":   dbUser,
+				"is_new": isNew,
+				"here":   "here i am",
+			})
+
+		}
+	} else {
+		log.Println("DB lookup error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB lookup failed: "})
 		return
 	}
-	isNew := false
-	if err == sql.ErrNoRows {
-		isNew = true
-		// Store UID and email in your DB
-		newUserParams := repo.RegisterUserParams{
-			UserID: firebaseUID,
-			Email:  firebaseEmail,
-		}
-
-		_, err := h.querier.RegisterUser(c, newUserParams)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user: " + err.Error()})
-			return
-		}
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"user":   dbUser,
-		"is_new": isNew,
-	})
 
 }
 
