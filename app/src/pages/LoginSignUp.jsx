@@ -39,16 +39,69 @@ const handleSignUpPasswordChange = (e) => {
  
  const handleGoogleSignIn = async () => {
   try {
-    const result = await loginWithGoogle();
-    const {isNewUser} = result._tokenResponse;
+    const {token, user, isNewUser} = await loginWithGoogle();
+    console.log(token,user,isNewUser)
 
+   const res = await fetch("https://api.cribconnect.xyz/v1/users/google-login", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: user.email
+      })
+    });
+    // const data = await res.json();
+
+    if (!res.ok) {
+     let errorMsg = `Login failed: ${res.status}`;
+     try {
+      const errorData = await res.json();
+      if (errorData?.message) {
+        errorMsg =`Login failed: ${errorData.message}`;
+      }
+     } catch {
+      // response isn't valid JSON, fallback to status text
+     }
+     setMessageStatus({ message: errorMsg, type: "error" });
+     return;
+       }
+
+     // Safely parse backend response
+     let data;
+     try {
+      data = await res.json();
+     } catch {
+       setMessageStatus({
+        message: "Unable to read server response. Please try again.",
+        type: "error"
+      });
+      return;
+     }
+
+       // Validate required fields
+    if (!data.token || !data.email) {
+     setMessageStatus({
+       message: "Login failed: missing token or email from backend.",
+      type: "error"
+      });
+     return;
+   }
+
+   // Route based on new vs existing user
     if (isNewUser) {
-      navigate('/complete-profile');
+      setMessageStatus({ message: "Signup successful!", type: 'success' });
+      setTimeout(() => navigate("/complete-profile"), 1500);
     } else {
-      // setMessage(`Welcome ${result.user.displayName}! 🎉`);
+      navigate("/dashboard");
+       setMessageStatus({message: `Welcome ${user.displayName}! 🎉`, type: "success"});
     }
   } catch (error) {
-    //setMessage(error.message);
+    setMessageStatus({
+      message: "Google sign-in failed. Please try again or check your internet connection.",
+      type: "error"
+    });
   }
 };
 
