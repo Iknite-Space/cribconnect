@@ -55,7 +55,7 @@ const handleSignUpPasswordChange = (e) => {
       })
     });
    
-
+    setToken(token)
     if (!res.ok) {
      let errorMsg = `Login failed: ${res.status}`;
      try {
