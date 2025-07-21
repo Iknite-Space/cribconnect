@@ -1,4 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../services/firebase";
 
 export const AuthContext = createContext();
 
@@ -16,6 +18,7 @@ export const AuthProvider = ({ children }) => {
     else localStorage.removeItem("refresh_token");
   }, [token, refreshToken]);
 
+  // Logout and cleanup
   const logout = useCallback(() => {
     setToken(null);
     setRefreshToken(null);
@@ -25,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [refreshIntervalId]);
 
+  // Refresh ID token using refresh token
   const refreshIdToken = useCallback(async () => {
     if (!refreshToken) return;
     try {
@@ -64,6 +68,30 @@ export const AuthProvider = ({ children }) => {
       if (refreshIntervalId) clearInterval(refreshIntervalId);
     };
   }, [refreshToken, refreshIdToken, refreshIntervalId]);
+
+
+
+   // ✨ Firebase Google Sign-In listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const freshToken = await user.getIdToken(true);
+          const googleRefreshToken = user.refreshToken;
+
+          setToken(freshToken);
+          setRefreshToken(googleRefreshToken);
+        } catch (err) {
+          console.error("Failed to get Firebase token:", err);
+          logout();
+        }
+      } else {
+        logout();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <AuthContext.Provider

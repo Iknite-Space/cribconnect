@@ -74,8 +74,6 @@ const handleSignUpPasswordChange = (e) => {
          setMessageStatus({ message: errorMsg, type: "error" });
            return;
       }
-       setToken(token);
-       setRefreshToken(refreshToken);
 
    // Route based on new vs existing user
     if (isNewUser) {
