@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebase";
 
@@ -7,7 +7,8 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
   const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem("refresh_token") || null);
-  const [refreshIntervalId, setRefreshIntervalId] = useState(null);
+  const [authReady, setAuthReady] = useState(false); // ✅ New flag for frontend routing
+  const refreshIntervalRef = useRef(null); // ✅ Use ref for cleanup safety
 
   // Keep token in sync with localStorage
   useEffect(() => {
@@ -22,13 +23,13 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     setToken(null);
     setRefreshToken(null);
-    if (refreshIntervalId) {
-      clearInterval(refreshIntervalId);
-      setRefreshIntervalId(null);
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
     }
-  }, [refreshIntervalId]);
+  }, []);
 
-  // Refresh ID token using refresh token
+  // Refresh ID token using refresh token (for backend auth)
   const refreshIdToken = useCallback(async () => {
     if (!refreshToken) return;
     try {
@@ -51,27 +52,25 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Failed to refresh ID token");
       }
     } catch (error) {
-      logout(); // Optional: log out on failure
+      logout();
     }
   }, [refreshToken, logout]);
 
-  // Setup refresh timer every 50 min
+  // Set up refresh timer
   useEffect(() => {
-    if (refreshToken && !refreshIntervalId) {
+    if (refreshToken && !refreshIntervalRef.current) {
       const intervalId = setInterval(() => {
         refreshIdToken();
-      }, 50 * 60 * 1000); // 50 minutes
-      setRefreshIntervalId(intervalId);
+      }, 50 * 60 * 1000); // every 50 minutes
+      refreshIntervalRef.current = intervalId;
     }
 
-     return () => {
-      if (refreshIntervalId) clearInterval(refreshIntervalId);
+    return () => {
+      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
     };
-  }, [refreshToken, refreshIdToken, refreshIntervalId]);
+  }, [refreshToken, refreshIdToken]);
 
-
-
-   // ✨ Firebase Google Sign-In listener
+  // Handle Firebase Google Sign-In only
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -88,31 +87,24 @@ export const AuthProvider = ({ children }) => {
       } else {
         logout();
       }
+      setAuthReady(true); // ✅ Mark auth as ready
     });
 
     return () => unsubscribe();
   }, [logout]);
 
-  useEffect(() => {
-  if (auth.currentUser) {
-    auth.currentUser.getIdToken(true).then((freshToken) => {
-      setToken(freshToken);
-      setRefreshToken(auth.currentUser.refreshToken);
-    }).catch(() => logout());
-  }
-}, [logout]);
-
-
   return (
     <AuthContext.Provider
-     value={{ 
+      value={{
         token,
         setToken,
         refreshToken,
         setRefreshToken,
         logout,
-        refreshIdToken, 
-      }}>
+        refreshIdToken,
+        authReady, // ✅ expose readiness flag
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

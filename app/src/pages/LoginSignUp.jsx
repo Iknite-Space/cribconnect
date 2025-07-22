@@ -122,6 +122,7 @@ const handleSubmit = async (e, isSignUpMode, email, password) => {
        
        const response = await fetch(endpoint, {
       method: "POST",
+      credentials: 'include', // 🔥 crucial
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }) // properly closed object
     });
@@ -138,8 +139,9 @@ const handleSubmit = async (e, isSignUpMode, email, password) => {
     if (result.id_token) {
         setToken(result.id_token); // Used for API requests
        setRefreshToken(result.refresh_token); // Used for background token refresh
+    } else {
+      console.warn("Missing id_token");
     }
-
     if (isSignUpMode) {
        setMessageStatus({ message: "Signup successful!", type: 'success' });
       setTimeout(() => navigate("/complete-profile"), 1500);
