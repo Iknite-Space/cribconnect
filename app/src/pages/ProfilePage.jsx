@@ -93,7 +93,7 @@ if (data.birthdate && typeof data.birthdate === "string") {
         phoneno: normalizePhone(data.phoneno),
         birthdate: formattedDate,
         bio: data.bio,
-        ...data.preferences,  // This assumes the data matches your formData keys
+        ...data.habbits,  // This assumes the data matches your formData keys
        profilepicture: data.profilepicture  // file input stays null
       }));
      // setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
@@ -117,6 +117,18 @@ if (data.birthdate && typeof data.birthdate === "string") {
 
 const handleFileChange = (e) => {
   const file = e.target.files[0];
+   if (!file) return;
+
+   const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert("Profile photo must be 5MB or smaller.");
+      return;
+    }
+
+    const reader = new FileReader();
+      reader.readAsDataURL(file);
+    console.log("Selected file:", file);
+
   if (file) {
     setFormData((prev) => ({
       ...prev,
@@ -155,13 +167,13 @@ const preferenceFields = [
   'drinking', 'guests', 'noisetolerance', 'religion', 'occupation'
 ];
 
-const filledPreferences = preferenceFields.filter(field => formData[field] !== '');
-const isPreferencesComplete = filledPreferences.length >= preferenceFields.length;
+const filledhabbits = preferenceFields.filter(field => formData[field] !== '');
+const ishabbitsComplete = filledhabbits.length >= preferenceFields.length;
 
 const completedSections =
   (isPersonalComplete ? 1 : 0) +
   (isAboutMeComplete ? 1 : 0) +
-  (isPreferencesComplete ? 1 : 0) +
+  (ishabbitsComplete ? 1 : 0) +
   (isprofilepictureComplete);
 
 const progressPercent = Math.floor((completedSections / 4) * 100);
@@ -204,8 +216,8 @@ if (!emailIsValid || !phoneIsValid) {
   return;
 }
 
-   // Bundle preferences into one JSON string
-  const preferencesPayload = {
+   // Bundle habbits into one JSON string
+  const habbitsPayload = {
     agerange: formData.agerange,
     gender: formData.gender,
     pet: formData.pet,
@@ -217,7 +229,7 @@ if (!emailIsValid || !phoneIsValid) {
     religion: formData.religion,
     occupation: formData.occupation
   };
-  payload.append("habbits", JSON.stringify(preferencesPayload));
+  payload.append("habbits", JSON.stringify(habbitsPayload));
 
   // Add image (if present)
   if (formData.profilepicture) {
@@ -336,13 +348,13 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
 
     {/* About Me Section */}
     <div className="form-section about-me">
-  <h2>About Me</h2>
+  <h2>Bio</h2>
   <textarea name="bio" value={formData.bio} placeholder="Tell us a bit about yourself..."  rows="6" onChange={handleInputChange}/>
 </div>
 
   </div>
 
-  <div className="form-section preferences">
+  <div className="form-section habbits">
           {!isLoading && progressPercent > 0 && (
   <div className="progress-banner">
     <div className="progress-bar">
@@ -366,9 +378,9 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
 )}
 
 
-  <h2>Preferences</h2>
+  <h2>About You 😎</h2>
   <select name="agerange" value={formData.agerange} onChange={handleInputChange}>
-    <option value="">Age Range</option>
+    <option value="" disabled>Your age range</option>
     <option>18-21</option>
     <option>22-25</option>
     <option>26-29</option>
@@ -376,59 +388,59 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
   </select>
 
   <select name="gender" value={formData.gender} onChange={handleInputChange}>
-    <option value="">Gender Preference</option>
+    <option value="" disabled>Your gender</option>
     <option>Male</option>
     <option>Female</option>
-    <option>Any</option>
   </select>
 
   <select name="pet" value={formData.pet} onChange={handleInputChange}>
-    <option value="">Pet Friendly?</option>
+    <option value="" disabled>Are you pets friendly?</option>
     <option>Yes</option>
     <option>No</option>
   </select>
 
   <select name="latenights" value={formData.latenights} onChange={handleInputChange}>
-    <option value="">Late Nights?</option>
-    <option>Yes</option>
-    <option>No</option>
+    <option value="" disabled>Late Nights?</option>
+    <option>Rarely</option>
+    <option>Sometimes</option>
+    <option>Often</option>
   </select>
 
   <select name="smoking" value={formData.smoking} onChange={handleInputChange}>
-    <option value="">Smoking</option>
+    <option value="" disabled>Do you smoke?</option>
     <option>Yes</option>
     <option>No</option>
   </select>
 
   <select name="drinking" value={formData.drinking} onChange={handleInputChange}>
-    <option value="">Drinking</option>
-    <option>No</option>
+    <option value="" disabled>How often do you drink?</option>
+    <option>Rarely</option>
     <option>Sometimes</option>
     <option>Often</option>
   </select>
 
   <select name="guests" value={formData.guests} onChange={handleInputChange}>
-    <option value="">Guest Policy</option>
+    <option value="" disabled>Guest Policy</option>
     <option>Rarely</option>
     <option>Sometimes</option>
-    <option>Very Often</option>
+    <option>Often</option>
   </select>
 
   <select name="noisetolerance" value={formData.noisetolerance} onChange={handleInputChange}>
-    <option value="">Noise Tolerance</option>
+    <option value="" disabled>Noise Tolerance</option>
     <option>Low</option>
     <option>Medium</option>
     <option>High</option>
   </select>
 
   <select name="religion" value={formData.religion} onChange={handleInputChange}>
-    <option value="">Religion</option>
+    <option value="" disabled>Religion</option>
     <option>Christian</option>
     <option>Moslem</option>
   </select>
 
   <select name="occupation" value={formData.occupation} onChange={handleInputChange}>
-    <option value="">Occupation</option>
+    <option value="" disabled>Occupation</option>
     <option>Student</option>
     <option>Worker</option>
     <option>Any</option>
@@ -442,7 +454,7 @@ if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
     disabled={progressPercent < 100 || submitting}
     onClick={handleSubmit}
   >
-    {submitting ? 'Saving...' : 'Save Profile'}
+    {submitting ? 'Updating...' : 'Update Profile'}
     <MessageBanner message={message} clear={() => setMessage('')} />
   </button>
 </div>
