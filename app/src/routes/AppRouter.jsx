@@ -6,6 +6,7 @@ import ForgotPassword from '../pages/ForgotPassword';
 import ProfilePage from '../pages/ProfilePage';
 import PrivateRoute from './PrivateRoute';
 import HomePage from '../pages/HomePage';
+import Dashboard from '../pages/Dashboard';
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -15,6 +16,7 @@ const AppRouter = () => (
       <Route path="/complete-profile" element={<PrivateRoute> <CompleteProfile /></PrivateRoute>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/profile" element={<PrivateRoute> <ProfilePage /> </PrivateRoute>} />
+      <Route path="/dashboard" element={<Dashboard />} />
       {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
   </Router>
