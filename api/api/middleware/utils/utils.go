@@ -9,12 +9,14 @@ import (
 	"mime/multipart"
 	"net/smtp"
 	"os"
+	"time"
 
 	//
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func LoadEnvSecret(envVarName, field string) string {
@@ -137,4 +139,27 @@ func SendEmail(to, subject, resetLink string) error {
 		[]byte(msg),
 	)
 	return err
+}
+
+func CalculateAge(birthdate pgtype.Date) int {
+	if !birthdate.Valid {
+		return 0 // or any default/fallback
+	}
+
+	now := time.Now()
+	birth := birthdate.Time
+
+	age := now.Year() - birth.Year()
+	if now.YearDay() < birth.YearDay() {
+		age-- // hasn't had birthday yet this year
+	}
+
+	return age
+}
+
+func SafeString(ptr *string, fallback string) string {
+	if ptr != nil {
+		return *ptr
+	}
+	return fallback
 }
