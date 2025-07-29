@@ -13,6 +13,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getAllUsers = `-- name: GetAllUsers :many
+SELECT user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at
+FROM users
+`
+
+func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, getAllUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Fname,
+			&i.Lname,
+			&i.Birthdate,
+			&i.Phoneno,
+			&i.Email,
+			&i.Bio,
+			&i.Habbits,
+			&i.ProfilePicture,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByFirebaseId = `-- name: GetUserByFirebaseId :one
 SELECT user_id, email FROM users
 WHERE user_id = $1

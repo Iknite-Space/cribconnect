@@ -32,6 +32,7 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 	r.POST("/v1/forgot-password", h.handleForgotPassword)
 	r.GET("/v1/user/profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGetUser)
 	r.PUT("/v1/user/profile", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleUpdateUser)
+	r.GET("/v1/users/profiles", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGetAllUsers)
 	// r.POST("/message", h.handleCreateMessage)
 	// r.GET("/message/:id", h.handleGetMessage)
 	// r.DELETE("/message/:id", h.handleDeleteMessage)

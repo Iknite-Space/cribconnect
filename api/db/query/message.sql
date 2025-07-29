@@ -27,6 +27,10 @@ SELECT user_id, email FROM users
 WHERE user_id = $1
 LIMIT 1;
 
+-- name: GetAllUsers :many
+SELECT *
+FROM users;
+
 -- name: GetUserById :one
 SELECT 
   COALESCE(user_id, '') AS user_id,
