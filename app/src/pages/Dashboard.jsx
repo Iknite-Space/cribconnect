@@ -117,7 +117,8 @@ useEffect(() => {
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        const response = await fetch("http://localhost:8082/v1/users/profiles", {
+        //http://localhost:8082
+        const response = await fetch("https://api.cribconnect.xyz/v1/users/profiles", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
