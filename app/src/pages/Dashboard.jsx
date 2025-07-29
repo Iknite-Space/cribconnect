@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import Navbar from '../assets/components/Navbar';
 import Footer from "../assets/components/Footer";
 import "../styles/Dashboard.css"
@@ -39,7 +40,7 @@ function Dashboard() {
   const [noiseTolerance, setNoiseTolerance] = useState("");
   const [religion, setReligion] = useState("");
   const [occupation, setOccupation] = useState("");
-  const [token, setToken] = useState("");
+const { setToken, setRefreshToken} = useContext(AuthContext);
 
   const [messageStatus, setMessageStatus] = useState({ message: '', type: 'info' });
 
@@ -126,6 +127,7 @@ useEffect(() => {
           }
         });
         setToken(token);
+        setRefreshToken(token)
 
         if (!response.ok) {
           setMessageStatus({
