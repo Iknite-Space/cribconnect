@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import Navbar from '../assets/components/Navbar';
 import Footer from "../assets/components/Footer";
 import "../styles/Dashboard.css"
@@ -39,30 +40,10 @@ function Dashboard() {
   const [noiseTolerance, setNoiseTolerance] = useState("");
   const [religion, setReligion] = useState("");
   const [occupation, setOccupation] = useState("");
-  const [token, setToken] = useState("");
+  const { token, refreshIdToken} = useContext(AuthContext);
 
   const [messageStatus, setMessageStatus] = useState({ message: '', type: 'info' });
 
-//   const handleCloseModal = () => {
-//   setData({
-//     fname: "",
-//     lname: "",
-//     profile_picture: "",
-//     bio: "",
-//     preferences: {
-//       Age_range: "",
-//       Gender: "",
-//       Pet: "",
-//       Late_Nights: "",
-//       Smoking: "",
-//       Drinking: "",
-//       Guests_policy: "",
-//       noise_tolerance: "",
-//       Religion: "",
-//       Occupation: ""
-//     }
-//   });
-// };
 
 const resetData = () => {
   setData({
@@ -117,6 +98,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchListings = async () => {
       try {
+        await refreshIdToken();
         //http://localhost:8082
         const response = await fetch("https://api.cribconnect.xyz/v1/users/profiles", {
           method: "GET",
@@ -125,7 +107,6 @@ useEffect(() => {
             Authorization: `Bearer ${token}`
           }
         });
-        setToken(token);
 
         if (!response.ok) {
           setMessageStatus({
@@ -149,7 +130,7 @@ useEffect(() => {
     };
 
     fetchListings();
-  }, [token]);
+  }, [token, refreshIdToken]);
 
 
 
