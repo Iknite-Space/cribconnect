@@ -35,6 +35,7 @@ type UserResponse struct {
 	UserID         string   `json:"user_id"`
 	Fname          string   `json:"fname"`
 	Lname          string   `json:"lname"`
+	Age            int      `json:"birthdate"`
 	Bio            string   `json:"bio"`
 	Habbits        PrefJson `json:"habbits"`
 	ProfilePicture string   `json:"profilepicture"`
@@ -480,13 +481,6 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 
 }
 
-func safeString(ptr *string, fallback string) string {
-	if ptr != nil {
-		return *ptr
-	}
-	return fallback
-}
-
 func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
 	users, err := h.querier.GetAllUsers(c)
 	if err != nil {
@@ -524,11 +518,12 @@ func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
 
 		formattedUsers = append(formattedUsers, UserResponse{
 			UserID:         user.UserID,
-			Fname:          safeString(user.Fname, "unspecified"),
-			Lname:          safeString(user.Lname, "unspecified"),
-			Bio:            safeString(&user.Bio, "unspecified"),
+			Fname:          utils.SafeString(&user.Fname, "unspecified"),
+			Lname:          utils.SafeString(&user.Lname, "unspecified"),
+			Age:            utils.CalculateAge(user.Birthdate),
+			Bio:            utils.SafeString(&user.Bio, "unspecified"),
 			Habbits:        habits,
-			ProfilePicture: safeString(user.ProfilePicture, "unspecified"),
+			ProfilePicture: utils.SafeString(&user.ProfilePicture, "unspecified"),
 		})
 	}
 

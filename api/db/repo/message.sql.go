@@ -14,19 +14,42 @@ import (
 )
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at
+SELECT 
+  COALESCE(user_id, '') AS user_id,
+  COALESCE(fname, '') AS fname,
+  COALESCE(lname, '') AS lname,
+  COALESCE(birthdate, '2000-01-01') AS birthdate,
+  COALESCE(phoneno, '') AS phoneno,
+  COALESCE(email, '') AS email,
+  COALESCE(bio, '') AS bio,
+  COALESCE(habbits, '{}'::jsonb) AS habbits,
+  COALESCE(profile_picture, '') AS profile_picture,
+  COALESCE(created_at, now()) AS created_at
 FROM users
 `
 
-func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
+type GetAllUsersRow struct {
+	UserID         string           `json:"user_id"`
+	Fname          string           `json:"fname"`
+	Lname          string           `json:"lname"`
+	Birthdate      pgtype.Date      `json:"birthdate"`
+	Phoneno        string           `json:"phoneno"`
+	Email          string           `json:"email"`
+	Bio            string           `json:"bio"`
+	Habbits        json.RawMessage  `json:"habbits"`
+	ProfilePicture string           `json:"profile_picture"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+}
+
+func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
 	rows, err := q.db.Query(ctx, getAllUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []User{}
+	items := []GetAllUsersRow{}
 	for rows.Next() {
-		var i User
+		var i GetAllUsersRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.Fname,
