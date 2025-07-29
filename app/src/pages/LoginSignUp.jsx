@@ -146,7 +146,7 @@ const handleSubmit = async (e, isSignUpMode, email, password) => {
        setMessageStatus({ message: "Signup successful!", type: 'success' });
       setTimeout(() => navigate("/complete-profile"), 1500);
     } else {
-      navigate("/profile");
+      navigate("/dashboard");
       setMessageStatus({ message: "Welcome back! 👋", type: 'success' });
       
     }
