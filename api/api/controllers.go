@@ -490,7 +490,7 @@ func safeString(ptr *string, fallback string) string {
 func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
 	users, err := h.querier.GetAllUsers(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		c.JSON(http.StatusInternalServerError, gin.H{"Failed to fetch users": err.Error()})
 		return
 	}
 
