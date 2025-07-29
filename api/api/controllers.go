@@ -31,6 +31,15 @@ type PrefJson struct {
 	Occupation     string `json:"occupation"`
 }
 
+type UserResponse struct {
+	UserID         string   `json:"user_id"`
+	Fname          string   `json:"fname"`
+	Lname          string   `json:"lname"`
+	Bio            string   `json:"bio"`
+	Habbits        PrefJson `json:"habbits"`
+	ProfilePicture string   `json:"profilepicture"`
+}
+
 var firebaseApikey = utils.LoadEnvSecret("FIREBASEAPI_CONFIG", "FIREBASEAPI_KEY")
 
 func (h *UserHandler) handleUserRegistration(c *gin.Context) {
@@ -469,4 +478,59 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 
+}
+
+func safeString(ptr *string, fallback string) string {
+	if ptr != nil {
+		return *ptr
+	}
+	return fallback
+}
+
+func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
+	users, err := h.querier.GetAllUsers(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "here"})
+		return
+	}
+
+	var formattedUsers []UserResponse
+
+	for _, user := range users {
+		var habits PrefJson
+
+		// Check if preferences JSONB is present and valid
+		if len(user.Habbits) > 0 {
+			err := json.Unmarshal(user.Habbits, &habits)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"Failed to decode habits:": err.Error()})
+				return
+			}
+		} else {
+			// Provide default values if preferences are missing
+			habits = PrefJson{
+				AgeRange:       "unspecified",
+				Gender:         "unspecified",
+				Pet:            "unspecified",
+				LateNights:     "unspecified",
+				Smoking:        "unspecified",
+				Drinking:       "unspecified",
+				Guests:         "unspecified",
+				NoiseTolerance: "unspecified",
+				Religion:       "unspecified",
+				Occupation:     "unspecified",
+			}
+		}
+
+		formattedUsers = append(formattedUsers, UserResponse{
+			UserID:         user.UserID,
+			Fname:          safeString(user.Fname, "unspecified"),
+			Lname:          safeString(user.Lname, "unspecified"),
+			Bio:            safeString(&user.Bio, "unspecified"),
+			Habbits:        habits,
+			ProfilePicture: safeString(user.ProfilePicture, "unspecified"),
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"users": formattedUsers})
 }

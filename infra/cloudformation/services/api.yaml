@@ -148,6 +148,8 @@ Resources:
               ValueFrom: arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/FIREBASEAPI_KEY-0voAFL
             - Name: CLOUDINARY_CONFIG
               ValueFrom: arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/cloudinary-zObHUp
+            - Name: CRIBCONNECT_GMAIL_CONFIG
+              ValueFrom: arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/cribconnect_gmail-zv1fxF
 
     # A role needed by ECS to Start the Ecs Service
   ExecutionRole:
@@ -180,6 +182,7 @@ Resources:
                   - !Ref FirebaseSecret
                   - "arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/FIREBASEAPI_KEY-0voAFL"
                   - "arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/cloudinary-zObHUp"
+                  - "arn:aws:secretsmanager:us-east-1:761526718406:secret:/dev/cribconnect_gmail-zv1fxF"
 
   # A role for the containers
   TaskRole:

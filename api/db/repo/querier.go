@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	GetAllUsers(ctx context.Context) ([]User, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
 	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
 	// -- name: CreateMessage :one

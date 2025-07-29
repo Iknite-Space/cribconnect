@@ -99,7 +99,7 @@ func UploadProfilePicture(file multipart.File, userID string) (string, error) {
 
 func SendEmail(to, subject, resetLink string) error {
 	from := "cribconnect358@gmail.com"
-	password := os.Getenv("CRIBCONNECT_GMAIL_APP_PASSWORD") // 🔐 moved sensitive data to env
+	password := LoadEnvSecret("CRIBCONNECT_GMAIL_CONFIG", "CRIBCONNECT_GMAIL_APP_PASSWORD") // 🔐 moved sensitive data to env
 
 	msg := "MIME-Version: 1.0\r\n" +
 		"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
