@@ -88,6 +88,7 @@ button.resets {
 }
 
 .result-cards {
+  position: relative;
   background-color: white;
   border-radius: 12px;
   padding: 2rem;
@@ -97,6 +98,8 @@ button.resets {
   margin: 0 auto;      
   font-size: 1.1rem;   
   transition: transform 0.2s ease;
+  padding-bottom: 3rem; /* ensures space for button */
+  overflow: hidden;
 }
 
 .result-cards, .results-containers {
@@ -292,4 +295,67 @@ button.resets {
   button.resets {
     font-size: 0.85rem;
   }
+}
+
+.match-buttons {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: #0066ff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  pointer-events: none; 
+}
+
+.result-cards:hover .match-buttons {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.birthdate-labels {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 4px;
+  display: block;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  font-size: 1rem;
+}
+
+.pagination-controls button {
+  padding: 0.4rem 0.8rem;
+  background-color: #0077ff;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  background-color: #005fcc;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.match-result {
+  margin-left: 1rem;
+  font-weight: bold;
+  color: #4caf50; /* or red if error */
 }

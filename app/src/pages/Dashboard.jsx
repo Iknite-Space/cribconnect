@@ -11,6 +11,7 @@ function Dashboard() {
   const [data, setData] = useState({
     fname: "",
     lname: "",
+    birthdate: "",
     profile_picture: "",
     bio: "",
     preferences: {
@@ -26,8 +27,34 @@ function Dashboard() {
       Occupation: ""
     }
   });
-  const [listings, setListings] = useState([]);
+  const [submitting, setSubmitting] = useState(false)
+  const [matchResults, setMatchResults] = useState({});
+
+  const categoryColorMap = {
+  "Poor": "#f44336",
+  "Good": "#ff9800",
+  "Very Good": "#ffc107",
+  "Excellent": "#4caf50"
+};
+
+    const [listings, setListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const resultsPerPage = 7; // adjust to your layout vibe
+
+  const indexOfLastResult = currentPage * resultsPerPage;
+  const indexOfFirstResult = indexOfLastResult - resultsPerPage;
+  const currentListings = filteredListings.slice(indexOfFirstResult, indexOfLastResult);
+
+  const totalPages = Math.ceil(filteredListings.length / resultsPerPage);
+  const handlePageChange = (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages) {
+    setCurrentPage(newPage);
+  }
+};
+
 
   /*Filtering options*/
   const [ageRange, setAgeRange] = useState("");
@@ -49,6 +76,7 @@ const resetData = () => {
   setData({
     fname: "",
     lname: "",
+    birthdate: "",
     profile_picture: "",
     bio: "",
     preferences: {
@@ -99,7 +127,7 @@ useEffect(() => {
     const fetchListings = async () => {
       try {
         await refreshIdToken();
-        //http://localhost:8082
+        //   http://localhost:8082
         const response = await fetch("https://api.cribconnect.xyz/v1/users/profiles", {
           method: "GET",
           headers: {
@@ -107,7 +135,6 @@ useEffect(() => {
             Authorization: `Bearer ${token}`
           }
         });
-
         if (!response.ok) {
           setMessageStatus({
           message: `Server error: ${response.status}`,
@@ -117,7 +144,7 @@ useEffect(() => {
        
         const responseData = await response.json();
         const users = responseData.users;
-
+        console.log(responseData)
         setListings(users);           
       setFilteredListings(users);   // Display all by default
 
@@ -136,6 +163,7 @@ useEffect(() => {
 
   const handleApplyFilter = async (e) => {
     e.preventDefault();
+    setCurrentPage(1); // Reset to first page
 
     const filterPayload = {
       ageRange,
@@ -192,7 +220,55 @@ useEffect(() => {
     setOccupation("");
 
     setFilteredListings(listings);
+    setCurrentPage(1); // Reset to first page
   };
+
+
+  const handleMatch = async (userId_2) => {
+    if (submitting) return;
+    setSubmitting(true);
+  try {  //https://api.cribconnect.xyz
+    const response = await fetch("http://localhost:8082/v1/match", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ userId_2  })
+    });
+
+    if (!response.ok) {
+      setMessageStatus({
+        message: "Couldn't calculate match.",
+        type: "error"
+      });
+      return;
+    }
+
+    const matchData = await response.json();
+    setMessageStatus({
+      message: `Match Score: ${matchData.score}% — ${matchData.comment || "Compatibility calculated!"}`,
+      type: "success"
+    });
+
+    setMatchResults((prev) => ({
+      ...prev,
+      [userId_2]: {
+        score: matchData.score,
+        category: matchData.category //|| "Compatibility calculated!"
+      }
+    }));
+  } catch (error) {
+    setMessageStatus({
+      message: "Something went wrong while matching.",
+      type: "error"
+    });
+  }
+  finally {
+     setSubmitting(false);
+  }
+};
+
   return (
     <>
          <MessageBanner
@@ -379,15 +455,18 @@ useEffect(() => {
 
           {/* === Results Section === */}
           <div className='results-containers'>
-            {filteredListings.map((listing) => (
+             {Array.isArray(filteredListings) && filteredListings.length > 0 ? (
+             currentListings.map((listing) => (
     <div key={listing.user_id} className='result-cards'>
-      <img
-        src={"https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753276159/profile_pictures/profile_ZpDR76714KZK0s5JWkT676UKaJi1.jpg"}
+      <img 
+        src={ listing.profilepicture && listing.profilepicture !== "" ? listing.profilepicture 
+          : "https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753801839/finder_logo_awoliq.png"}
         alt={"Click to view"}
         className='clickable-imgs'
          onClick={() => setData({
     fname: listing.fname,
     lname: listing.lname,
+    // age: listing.age,
     profile_picture: listing.profilepicture,
     bio: listing.bio,
     // preferences: {
@@ -406,20 +485,33 @@ useEffect(() => {
       />
       <p className='name-labels'>
         <strong>{listing.fname} {listing.lname}</strong>
+         <p className="birthdate-labels">🌟 {listing.birthdate} years</p>
       </p>
-      {/* <p>{listing.bio}</p> */}
-    </div>
-  ))}
-          </div>
 
-          {/* === Reset Listings Button ===
-          {filteredListings && filteredListings.length < listings.length && (
-            <div className='reset-btn-containers'>
-              <button className='reset-btns' onClick={handleReset}>
-                🔄 Show All Listings
-              </button>
-            </div>
-          )} */}
+       <button
+    className="match-buttons"
+    onClick={() => handleMatch(listing.user_id)}
+  >
+     {submitting ? 'Matching...' : 'Match'}
+  </button>
+        {matchResults[listing.user_id] && (
+          <span  className="match-result"
+            style={{
+              marginLeft: "1rem",
+              fontWeight: "bold",
+              color: categoryColorMap[matchResults[listing.user_id].category]
+            }}
+          >
+            {matchResults[listing.user_id].score}% - {matchResults[listing.user_id].category}
+        </span>
+      )}
+    </div>
+  ))
+) :
+        ( 
+    <p>No listings available at the moment.</p>
+  )}
+           </div>
 
            {data.fname !== "" && (
         <div
@@ -444,8 +536,9 @@ useEffect(() => {
               </span>
             </div>
 
-            <img
-              src={"https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753276159/profile_pictures/profile_ZpDR76714KZK0s5JWkT676UKaJi1.jpg"}
+            <img //"https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753276159/profile_pictures/profile_ZpDR76714KZK0s5JWkT676UKaJi1.jpg"
+              src={data.profile_picture && data.profile_picture !== "" ? data.profile_picture 
+          : "https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753801839/finder_logo_awoliq.png"}
               alt={"Photos"}
             />
 
@@ -458,6 +551,27 @@ useEffect(() => {
             </p>
             <button>Message</button>
           </div>
+        </div>
+
+      )}
+
+          {totalPages > 1 && (
+        <div className="pagination-controls">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            ⬅ Previous
+          </button>
+          <span>
+            Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next ➡
+          </button>
         </div>
       )}
 
