@@ -163,3 +163,69 @@ func SafeString(ptr *string, fallback string) string {
 	}
 	return fallback
 }
+
+type PrefJson struct {
+	AgeRange       string `json:"agerange"`
+	Gender         string `json:"gender"`
+	Pet            string `json:"pet"`
+	LateNights     string `json:"latenights"`
+	Smoking        string `json:"smoking"`
+	Drinking       string `json:"drinking"`
+	Guests         string `json:"guests"`
+	NoiseTolerance string `json:"noisetolerance"`
+	Religion       string `json:"religion"`
+	Occupation     string `json:"occupation"`
+}
+
+func CalculateMatchScore(p1, p2 PrefJson) int {
+	total := 0
+	max := 10
+
+	if p1.AgeRange == p2.AgeRange {
+		total += 1
+	}
+	if p1.Gender == p2.Gender {
+		total += 1
+	}
+	if p1.Pet == p2.Pet {
+		total += 1
+	}
+	if p1.LateNights == p2.LateNights {
+		total += 1
+	}
+	if p1.Smoking == p2.Smoking {
+		total += 1
+	}
+	if p1.Drinking == p2.Drinking {
+		total += 1
+	}
+	if p1.Guests == p2.Guests {
+		total += 1
+	}
+	if p1.NoiseTolerance == p2.NoiseTolerance {
+		total += 1
+	}
+	if p1.Religion == p2.Religion {
+		total += 1
+	}
+	if p1.Occupation == p2.Occupation {
+		total += 1
+	}
+
+	return int((float64(total) / float64(max)) * 100)
+}
+
+func InterpretScore(score int) (string, string) {
+	switch {
+	case score >= 80:
+		return "Excellent", "You're aligned on core lifestyle values."
+	case score >= 60:
+		return "Very Good", "You both value cleanliness and budget."
+	case score >= 40:
+		return "Good", "Some lifestyle overlap, but some friction points."
+	case score >= 20:
+		return "Fair", "Your preferences are fairly different."
+	default:
+		return "Poor", "You're night and day—but maybe opposites attract?"
+	}
+}
