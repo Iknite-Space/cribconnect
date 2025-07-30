@@ -220,12 +220,12 @@ func InterpretScore(score int) (string, string) {
 	case score >= 80:
 		return "Excellent", "You're aligned on core lifestyle values."
 	case score >= 60:
-		return "Very Good", "You both value cleanliness and budget."
+		return "Very Good", "Good compatibility across key areas."
 	case score >= 40:
 		return "Good", "Some lifestyle overlap, but some friction points."
 	case score >= 20:
 		return "Fair", "Your preferences are fairly different."
 	default:
-		return "Poor", "You're night and day—but maybe opposites attract?"
+		return "Poor", "You're night and day but maybe opposites attract?"
 	}
 }
