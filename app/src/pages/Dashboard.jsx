@@ -27,6 +27,16 @@ function Dashboard() {
       Occupation: ""
     }
   });
+  const [submitting, setSubmitting] = useState(false)
+  const [matchResults, setMatchResults] = useState({});
+
+  const categoryColorMap = {
+  "Poor": "#f44336",
+  "Good": "#ff9800",
+  "Very Good": "#ffc107",
+  "Excellent": "#4caf50"
+};
+
     const [listings, setListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
   
@@ -214,17 +224,17 @@ useEffect(() => {
   };
 
 
-  const handleMatch = async (matchedUserId) => {
-  try {
-    const response = await fetch("https://api.cribconnect.xyz/v1/match", {
+  const handleMatch = async (userId_2) => {
+    if (submitting) return;
+    setSubmitting(true);
+  try {  //https://api.cribconnect.xyz
+    const response = await fetch("http://localhost:8082/v1/match", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({
-        user_id: matchedUserId // or include both users if needed
-      })
+      body: JSON.stringify({ userId_2  })
     });
 
     if (!response.ok) {
@@ -236,17 +246,26 @@ useEffect(() => {
     }
 
     const matchData = await response.json();
-    console.log("Match result:", matchData);
-
     setMessageStatus({
       message: `Match Score: ${matchData.score}% — ${matchData.comment || "Compatibility calculated!"}`,
       type: "success"
     });
+
+    setMatchResults((prev) => ({
+      ...prev,
+      [userId_2]: {
+        score: matchData.score,
+        category: matchData.category //|| "Compatibility calculated!"
+      }
+    }));
   } catch (error) {
     setMessageStatus({
       message: "Something went wrong while matching.",
       type: "error"
     });
+  }
+  finally {
+     setSubmitting(false);
   }
 };
 
@@ -473,8 +492,19 @@ useEffect(() => {
     className="match-buttons"
     onClick={() => handleMatch(listing.user_id)}
   >
-    Match
+     {submitting ? 'Matching...' : 'Match'}
   </button>
+        {matchResults[listing.user_id] && (
+          <span  className="match-result"
+            style={{
+              marginLeft: "1rem",
+              fontWeight: "bold",
+              color: categoryColorMap[matchResults[listing.user_id].category]
+            }}
+          >
+            {matchResults[listing.user_id].score}% - {matchResults[listing.user_id].category}
+        </span>
+      )}
     </div>
   ))
 ) :

@@ -353,3 +353,9 @@ button.resets {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.match-result {
+  margin-left: 1rem;
+  font-weight: bold;
+  color: #4caf50; /* or red if error */
+}
