@@ -229,3 +229,40 @@ func InterpretScore(score int) (string, string) {
 		return "Poor", "You're night and day but maybe opposites attract?"
 	}
 }
+
+func CleanPrefs(prefs PrefJson) map[string]string {
+	cleaned := make(map[string]string)
+
+	if prefs.AgeRange != "" {
+		cleaned["agerange"] = prefs.AgeRange
+	}
+	if prefs.Gender != "" {
+		cleaned["gender"] = prefs.Gender
+	}
+	if prefs.Pet != "" {
+		cleaned["pet"] = prefs.Pet
+	}
+	if prefs.LateNights != "" {
+		cleaned["latenights"] = prefs.LateNights
+	}
+	if prefs.Smoking != "" {
+		cleaned["smoking"] = prefs.Smoking
+	}
+	if prefs.Drinking != "" {
+		cleaned["drinking"] = prefs.Drinking
+	}
+	if prefs.Guests != "" {
+		cleaned["guests"] = prefs.Guests
+	}
+	if prefs.NoiseTolerance != "" {
+		cleaned["noisetolerance"] = prefs.NoiseTolerance
+	}
+	if prefs.Religion != "" {
+		cleaned["religion"] = prefs.Religion
+	}
+	if prefs.Occupation != "" {
+		cleaned["occupation"] = prefs.Occupation
+	}
+
+	return cleaned
+}

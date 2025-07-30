@@ -585,3 +585,33 @@ func (h *UserHandler) handleCalculateMatch(c *gin.Context) {
 		"comment":  comment,
 	})
 }
+
+func (h *UserHandler) handleFilterListings(c *gin.Context) {
+	var filters utils.PrefJson
+
+	if err := c.ShouldBindJSON(&filters); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter payload"})
+		return
+	}
+
+	fmt.Println("filters:", filters)
+	rawPrefs := utils.CleanPrefs(filters)
+	fmt.Println("rawfilters:", rawPrefs)
+
+	prefsJsonBytes, err := json.Marshal(rawPrefs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal preferences"})
+		fmt.Println(" I am here")
+		return
+	}
+	fmt.Println("prefs:", string(prefsJsonBytes))
+	// Query filtered users based on preferences
+	users, err := h.querier.FilterUsersByPreferences(c, prefsJsonBytes)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch filtered users"})
+		fmt.Println(" Now here", err.Error())
+		return
+	}
+	fmt.Println("users:", users)
+	c.JSON(http.StatusOK, gin.H{"users": users})
+}
