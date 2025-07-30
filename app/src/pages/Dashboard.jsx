@@ -32,6 +32,7 @@ function Dashboard() {
 
   const categoryColorMap = {
   "Poor": "#f44336",
+  "Fair": "#9c27b0",
   "Good": "#ff9800",
   "Very Good": "#ffc107",
   "Excellent": "#4caf50"
@@ -236,7 +237,6 @@ useEffect(() => {
       },
       body: JSON.stringify({ userId_2  })
     });
-
     if (!response.ok) {
       setMessageStatus({
         message: "Couldn't calculate match.",
