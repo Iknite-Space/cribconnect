@@ -531,7 +531,6 @@ func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
 }
 
 func (h *UserHandler) handleCalculateMatch(c *gin.Context) {
-	fmt.Println("Got here")
 	firebaseUIDRaw, _ := c.Get("firebase_uid")
 	if firebaseUIDRaw == " " {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Id is required", "Id": firebaseUIDRaw})
@@ -539,7 +538,6 @@ func (h *UserHandler) handleCalculateMatch(c *gin.Context) {
 	}
 
 	firebaseUID := firebaseUIDRaw.(string)
-	fmt.Println("user1:", firebaseUID)
 	type MatchRequest struct {
 		UserID2 string `json:"userId_2" binding:"required"`
 	}
@@ -550,19 +548,15 @@ func (h *UserHandler) handleCalculateMatch(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("user2:", req.UserID2)
-
 	habbits1, err := h.querier.GetUserHabbits(c, firebaseUID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User 1 not found"})
-		fmt.Println("here")
 		return
 	}
 
 	habbits2, err := h.querier.GetUserHabbits(c, req.UserID2)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User 2 not found"})
-		log.Println("No it is here")
 		return
 	}
 
@@ -594,24 +588,18 @@ func (h *UserHandler) handleFilterListings(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("filters:", filters)
 	rawPrefs := utils.CleanPrefs(filters)
-	fmt.Println("rawfilters:", rawPrefs)
 
 	prefsJsonBytes, err := json.Marshal(rawPrefs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal preferences"})
-		fmt.Println(" I am here")
 		return
 	}
-	fmt.Println("prefs:", string(prefsJsonBytes))
 	// Query filtered users based on preferences
 	users, err := h.querier.FilterUsersByPreferences(c, prefsJsonBytes)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch filtered users"})
-		fmt.Println(" Now here", err.Error())
 		return
 	}
-	fmt.Println("users:", users)
 	c.JSON(http.StatusOK, gin.H{"users": users})
 }
