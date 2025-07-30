@@ -64,7 +64,7 @@ function Dashboard() {
   const [lateNights, setLateNights] = useState("");
   const [smoking, setSmoking] = useState("");
   const [drinking, setDrinking] = useState("");
-  const [guestsPolicy, setGuestsPolicy] = useState("");
+  const [guests, setguests] = useState("");
   const [noiseTolerance, setNoiseTolerance] = useState("");
   const [religion, setReligion] = useState("");
   const [occupation, setOccupation] = useState("");
@@ -173,7 +173,7 @@ useEffect(() => {
       lateNights,
       smoking,
       drinking,
-      guestsPolicy,
+      guests,
       noiseTolerance,
       religion,
       occupation
@@ -182,8 +182,8 @@ useEffect(() => {
   Object.entries(filterPayload).filter(([_, v]) => v !== "")
 );
 
-    try {
-      const response = await fetch("http://localhost:5000/api/filter", {
+    try { //http://localhost:8082
+      const response = await fetch("https://api.cribconnect.xyz/v1/filter", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -198,9 +198,8 @@ useEffect(() => {
         type: "error"
       });
       const data = await response.json();
-      setFilteredListings(data);
+    setFilteredListings(Array.isArray(data.users) ? data.users : []);
     } catch (error) {
-      console.error("Error sending filters:", error);
        setMessageStatus({
         message: "Something went wrong while filtering listings.",
         type: "error"
@@ -215,7 +214,7 @@ useEffect(() => {
     setLateNights("");
     setSmoking("");
     setDrinking("");
-    setGuestsPolicy("");
+    setguests("");
     setNoiseTolerance("");
     setReligion("");
     setOccupation("");
@@ -300,7 +299,6 @@ useEffect(() => {
               id='age-options'
               value={ageRange}
               onChange={(e) => {
-                console.log(e.target.value);
                 setAgeRange(e.target.value);
               }}
             >
@@ -351,9 +349,9 @@ useEffect(() => {
               <option value='' disabled>
                 Late Nights
               </option>
-              <option value='Yes'>Yes</option>
+              <option value='Rarely'>Rarely</option>
               <option value='Sometimes'>Sometimes</option>
-              <option value='No'>No</option>
+              <option value='Often'>Often</option>
             </select>
 
             <select
@@ -380,24 +378,24 @@ useEffect(() => {
               <option value='' disabled>
                 Drinking
               </option>
-              <option value='Yes'>Yes</option>
+              <option value='Rarely'>Rarely</option>
               <option value='Sometimes'>Sometimes</option>
-              <option value='No'>No</option>
+              <option value='Often'>Often</option>
             </select>
 
             <select
               id='guests-policy-options'
-              value={guestsPolicy}
+              value={guests}
               onChange={(e) => {
-                setGuestsPolicy(e.target.value);
+                setguests(e.target.value);
               }}
             >
               <option value='' disabled>
                 Guests Policy
               </option>
-              <option value='Often'>Often</option>
-              <option value='Very Often'>Very Often</option>
               <option value='Rarely'>Rarely</option>
+              <option value='Sometimes'>Sometimes</option>
+              <option value='Often'>Often</option>
             </select>
 
             <select
@@ -427,7 +425,6 @@ useEffect(() => {
               </option>
               <option value='Christian'>Christian</option>
               <option value='Muslim'>Muslim</option>
-              <option value='Others'>Others</option>
             </select>
 
             <select
@@ -442,6 +439,7 @@ useEffect(() => {
               </option>
               <option value='Student'>Student</option>
               <option value='Worker'>Worker</option>
+              <option value='Any'>Any</option>
             </select>
 
             <button className='filters' onClick={handleApplyFilter}>
@@ -485,7 +483,7 @@ useEffect(() => {
       />
       <p className='name-labels'>
         <strong>{listing.fname} {listing.lname}</strong>
-         <p className="birthdate-labels">🌟 {listing.birthdate} years</p>
+         <span className="birthdate-labels">🌟 {listing.birthdate} years</span>
       </p>
 
        <button
