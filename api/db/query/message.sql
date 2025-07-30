@@ -71,3 +71,8 @@ SET
     profile_picture = COALESCE($9, profile_picture)
 WHERE user_id = $1
 RETURNING *;
+
+-- name: GetUserHabbits :one
+SELECT habbits
+FROM users
+WHERE user_id = $1;

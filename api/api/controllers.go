@@ -529,3 +529,59 @@ func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"users": formattedUsers})
 }
+
+func (h *UserHandler) handleCalculateMatch(c *gin.Context) {
+	fmt.Println("Got here")
+	firebaseUIDRaw, _ := c.Get("firebase_uid")
+	if firebaseUIDRaw == " " {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Id is required", "Id": firebaseUIDRaw})
+		return
+	}
+
+	firebaseUID := firebaseUIDRaw.(string)
+	fmt.Println("user1:", firebaseUID)
+	type MatchRequest struct {
+		UserID2 string `json:"userId_2" binding:"required"`
+	}
+
+	var req MatchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	fmt.Println("user2:", req.UserID2)
+
+	habbits1, err := h.querier.GetUserHabbits(c, firebaseUID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User 1 not found"})
+		fmt.Println("here")
+		return
+	}
+
+	habbits2, err := h.querier.GetUserHabbits(c, req.UserID2)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User 2 not found"})
+		log.Println("No it is here")
+		return
+	}
+
+	var prefs1, prefs2 utils.PrefJson
+	if err := json.Unmarshal(habbits1, &prefs1); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error parsing user 1 preferences"})
+		return
+	}
+	if err := json.Unmarshal(habbits2, &prefs2); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error parsing user 2 preferences"})
+		return
+	}
+
+	score := utils.CalculateMatchScore(prefs1, prefs2)
+	category, comment := utils.InterpretScore(score)
+
+	c.JSON(http.StatusOK, gin.H{
+		"score":    score,
+		"category": category,
+		"comment":  comment,
+	})
+}

@@ -138,6 +138,19 @@ func (q *Queries) GetUserById(ctx context.Context, userID string) (GetUserByIdRo
 	return i, err
 }
 
+const getUserHabbits = `-- name: GetUserHabbits :one
+SELECT habbits
+FROM users
+WHERE user_id = $1
+`
+
+func (q *Queries) GetUserHabbits(ctx context.Context, userID string) (json.RawMessage, error) {
+	row := q.db.QueryRow(ctx, getUserHabbits, userID)
+	var habbits json.RawMessage
+	err := row.Scan(&habbits)
+	return habbits, err
+}
+
 const registerUser = `-- name: RegisterUser :one
 
 
