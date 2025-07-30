@@ -227,8 +227,8 @@ useEffect(() => {
   const handleMatch = async (userId_2) => {
     if (submitting) return;
     setSubmitting(true);
-  try {  //https://api.cribconnect.xyz
-    const response = await fetch("http://localhost:8082/v1/match", {
+  try {  // http://localhost:8082
+    const response = await fetch("https://api.cribconnect.xyz/v1/match", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
