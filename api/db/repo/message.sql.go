@@ -13,6 +13,66 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const filterUsersByPreferences = `-- name: FilterUsersByPreferences :many
+SELECT 
+ COALESCE(user_id, '') AS user_id,
+  COALESCE(fname, '') AS fname,
+  COALESCE(lname, '') AS lname,
+  COALESCE(birthdate, '2000-01-01') AS birthdate,
+  COALESCE(phoneno, '') AS phoneno,
+  COALESCE(email, '') AS email,
+  COALESCE(bio, '') AS bio,
+  COALESCE(habbits, '{}'::jsonb) AS habbits,
+  COALESCE(profile_picture, '') AS profile_picture,
+  COALESCE(created_at, now()) AS created_at
+  FROM users
+WHERE habbits @> $1::jsonb
+`
+
+type FilterUsersByPreferencesRow struct {
+	UserID         string           `json:"user_id"`
+	Fname          string           `json:"fname"`
+	Lname          string           `json:"lname"`
+	Birthdate      pgtype.Date      `json:"birthdate"`
+	Phoneno        string           `json:"phoneno"`
+	Email          string           `json:"email"`
+	Bio            string           `json:"bio"`
+	Habbits        json.RawMessage  `json:"habbits"`
+	ProfilePicture string           `json:"profile_picture"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+}
+
+func (q *Queries) FilterUsersByPreferences(ctx context.Context, dollar_1 []byte) ([]FilterUsersByPreferencesRow, error) {
+	rows, err := q.db.Query(ctx, filterUsersByPreferences, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []FilterUsersByPreferencesRow{}
+	for rows.Next() {
+		var i FilterUsersByPreferencesRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Fname,
+			&i.Lname,
+			&i.Birthdate,
+			&i.Phoneno,
+			&i.Email,
+			&i.Bio,
+			&i.Habbits,
+			&i.ProfilePicture,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllUsers = `-- name: GetAllUsers :many
 SELECT 
   COALESCE(user_id, '') AS user_id,

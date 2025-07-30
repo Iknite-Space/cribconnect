@@ -10,6 +10,7 @@ import (
 )
 
 type Querier interface {
+	FilterUsersByPreferences(ctx context.Context, dollar_1 []byte) ([]FilterUsersByPreferencesRow, error)
 	GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
 	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
