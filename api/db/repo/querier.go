@@ -6,12 +6,14 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 )
 
 type Querier interface {
 	GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
 	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
+	GetUserHabbits(ctx context.Context, userID string) (json.RawMessage, error)
 	// -- name: CreateMessage :one
 	// INSERT INTO message (thread, sender, content)
 	// VALUES ($1, $2, $3)
