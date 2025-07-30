@@ -76,3 +76,18 @@ RETURNING *;
 SELECT habbits
 FROM users
 WHERE user_id = $1;
+
+-- name: FilterUsersByPreferences :many
+SELECT 
+ COALESCE(user_id, '') AS user_id,
+  COALESCE(fname, '') AS fname,
+  COALESCE(lname, '') AS lname,
+  COALESCE(birthdate, '2000-01-01') AS birthdate,
+  COALESCE(phoneno, '') AS phoneno,
+  COALESCE(email, '') AS email,
+  COALESCE(bio, '') AS bio,
+  COALESCE(habbits, '{}'::jsonb) AS habbits,
+  COALESCE(profile_picture, '') AS profile_picture,
+  COALESCE(created_at, now()) AS created_at
+  FROM users
+WHERE habbits @> $1::jsonb;
