@@ -86,6 +86,7 @@ SELECT
   COALESCE(profile_picture, '') AS profile_picture,
   COALESCE(created_at, now()) AS created_at
 FROM users
+WHERE user_id != $1
 `
 
 type GetAllUsersRow struct {
@@ -101,8 +102,8 @@ type GetAllUsersRow struct {
 	CreatedAt      pgtype.Timestamp `json:"created_at"`
 }
 
-func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
-	rows, err := q.db.Query(ctx, getAllUsers)
+func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsersRow, error) {
+	rows, err := q.db.Query(ctx, getAllUsers, userID)
 	if err != nil {
 		return nil, err
 	}

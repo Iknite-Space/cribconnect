@@ -482,7 +482,15 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) handleGetAllUsers(c *gin.Context) {
-	users, err := h.querier.GetAllUsers(c)
+	firebaseUIDRaw, _ := c.Get("firebase_uid")
+	if firebaseUIDRaw == " " {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Id is required", "Id": firebaseUIDRaw})
+		return
+	}
+
+	firebaseUID := firebaseUIDRaw.(string)
+
+	users, err := h.querier.GetAllUsers(c, firebaseUID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"Failed to fetch users": err.Error()})
 		return
