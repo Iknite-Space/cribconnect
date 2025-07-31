@@ -39,7 +39,8 @@ SELECT
   COALESCE(habbits, '{}'::jsonb) AS habbits,
   COALESCE(profile_picture, '') AS profile_picture,
   COALESCE(created_at, now()) AS created_at
-FROM users;
+FROM users
+WHERE user_id != $1;
 
 -- name: GetUserById :one
 SELECT 
