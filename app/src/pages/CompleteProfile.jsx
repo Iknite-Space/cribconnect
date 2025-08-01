@@ -213,10 +213,10 @@ if (!isValidCameroonPhone(form.phoneno)) {
     }
     else if (res.ok) {
       setMessageStatus({ message: 'Profile saved!', type: 'success' });
-      navigate('/profile');
+      navigate('/dashboard');
     } else{
      setMessageStatus({ message: 'Error saving profile', type: 'error' });
-     navigate("/")
+     navigate("/profile")
     }
   } catch (error) {
     setMessageStatus({ message: 'Something went wrong!', type: 'error' });
