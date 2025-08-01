@@ -1,35 +1,90 @@
-import React, { createContext, useState, useEffect, useCallback, useRef } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
-  const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem("refresh_token") || null);
-  const [authReady, setAuthReady] = useState(false); // ✅ New flag for frontend routing
-  const refreshIntervalRef = useRef(null); // ✅ Use ref for cleanup safety
+  const [token, setToken] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(null);
+  const [loginSource, setLoginSource] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const refreshIntervalRef = useRef(null);
 
-  // Keep token in sync with localStorage
-  useEffect(() => {
-    if (token) localStorage.setItem("token", token);
-    else localStorage.removeItem("token");
-
-    if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
-    else localStorage.removeItem("refresh_token");
-  }, [token, refreshToken]);
-
-  // Logout and cleanup
-  const logout = useCallback(() => {
-    setToken(null);
-    setRefreshToken(null);
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
+  const fetchUserProfile = useCallback(async (idToken) => {
+    try {
+      const res = await fetch("https://api.cribconnect.xyz/v1/user/profile", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      const data = await res.json();
+      setProfile(data);
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
     }
   }, []);
 
-  // Refresh ID token using refresh token (for backend auth)
+  // Bootstrap stored token for backend login
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedRefresh = localStorage.getItem("refresh_token");
+    const storedSource = localStorage.getItem("login_source");
+
+    if (storedToken && storedRefresh && storedSource === "backend") {
+      setToken(storedToken);
+      setRefreshToken(storedRefresh);
+      setLoginSource(storedSource);
+      fetchUserProfile(storedToken);
+      setAuthReady(true);
+    }
+  }, [fetchUserProfile]);
+
+  // Sync tokens to localStorage
+  useEffect(() => {
+    if (token) localStorage.setItem("token", token);
+    if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
+    if (loginSource) localStorage.setItem("login_source", loginSource);
+  }, [token, refreshToken, loginSource]);
+
+  // Set authReady based on token + source
+  useEffect(() => {
+    const valid = token && (loginSource === "backend" || loginSource === "google");
+    setAuthReady(!!valid);
+  }, [token, loginSource]);
+
+  const logout = useCallback(async () => {
+    try {
+      if (loginSource === "google") {
+        await signOut(auth);
+      }
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("login_source");
+
+      setToken(null);
+      setRefreshToken(null);
+      setLoginSource(null);
+      setProfile(null);
+
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  }, [loginSource]);
+
   const refreshIdToken = useCallback(async () => {
     if (!refreshToken) return;
     try {
@@ -52,46 +107,49 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Failed to refresh ID token");
       }
     } catch (error) {
+      console.warn("Token refresh failed:", error);
       logout();
     }
   }, [refreshToken, logout]);
 
-  // Set up refresh timer
   useEffect(() => {
     if (refreshToken && !refreshIntervalRef.current) {
       const intervalId = setInterval(() => {
         refreshIdToken();
-      }, 50 * 60 * 1000); // every 50 minutes
+      }, 50 * 60 * 1000);
       refreshIntervalRef.current = intervalId;
     }
 
     return () => {
-      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
     };
   }, [refreshToken, refreshIdToken]);
 
-  // Handle Firebase Google Sign-In only
+  // Firebase Google login listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (loginSource === "backend") return; 
       if (user) {
         try {
           const freshToken = await user.getIdToken(true);
-          const googleRefreshToken = user.refreshToken;
-
           setToken(freshToken);
-          setRefreshToken(googleRefreshToken);
+          setLoginSource("google");
+          await fetchUserProfile(freshToken);
+          setAuthReady(true);
         } catch (err) {
-          console.error("Failed to get Firebase token:", err);
+          console.error("Firebase token error:", err);
           logout();
         }
       } else {
         logout();
       }
-      setAuthReady(true); // ✅ Mark auth as ready
     });
 
     return () => unsubscribe();
-  }, [logout]);
+  }, [fetchUserProfile, logout, loginSource]);
 
   return (
     <AuthContext.Provider
@@ -100,9 +158,14 @@ export const AuthProvider = ({ children }) => {
         setToken,
         refreshToken,
         setRefreshToken,
+        loginSource,
+        setLoginSource,
         logout,
         refreshIdToken,
-        authReady, // ✅ expose readiness flag
+        authReady,
+        profile,
+        fetchUserProfile,
+        setProfile,
       }}
     >
       {children}

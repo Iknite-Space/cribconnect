@@ -15,9 +15,114 @@
   display: flex;
   list-style: none;
   gap: 30px;
+  align-items: center;
 }
 
 .navbare a {
   color: white;
   text-decoration: none;
+}
+
+/* Navbar.css */
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-profile-pic {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: 8px;
+  border: 2px solid white;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.navbar-profile-pic:hover {
+  transform: scale(1.08);
+}
+
+.navbar-link-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+
+/* Side panel base styles */
+.side-panel {
+  position: absolute;
+  top: 70px; /* adjust based on navbar height */
+  right: 20px;
+  width: 240px;
+  background-color: #00243a;
+  color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: fadeSlide 0.3s ease forwards;
+}
+
+/* Smooth slide animation */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Side panel header */
+.side-panel-header {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* Side panel links */
+.side-panel ul {
+  list-style: none;
+  padding: 0;
+  flex: 1;
+}
+
+.side-panel ul li {
+  margin-bottom: 18px;
+}
+
+.side-panel a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.side-panel a:hover {
+  text-decoration: underline;
+}
+
+/* Logout button anchored at bottom */
+.side-panel-logout {
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Add hover effect */
+.side-panel-logout:hover {
+  color: #ff4c4c;
 }

@@ -25,7 +25,7 @@ const [signUpStrength, setSignUpStrength] = useState({ level: '', color: '' });
 
  const navigate = useNavigate(); 
 
- const { setToken, setRefreshToken} = useContext(AuthContext);
+ const { setToken, setRefreshToken, fetchUserProfile, setLoginSource} = useContext(AuthContext);
   const [messageStatus, setMessageStatus] = useState({ message: '', type: 'info' });
   const [submitting, setSubmitting] = useState(false);
   const [googleSigningIn, setGoogleSigningIn] = useState(false);
@@ -139,6 +139,9 @@ const handleSubmit = async (e, isSignUpMode, email, password) => {
     if (result.id_token) {
         setToken(result.id_token); // Used for API requests
        setRefreshToken(result.refresh_token); // Used for background token refresh
+       setLoginSource("backend"); 
+       await fetchUserProfile(result.id_token);
+       
     } else {
       console.warn("Missing id_token");
     }
