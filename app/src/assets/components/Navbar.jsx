@@ -49,7 +49,7 @@ const Navbar = () => {
       </nav>
 
       {/* Side Panel */}
-      {authReady && panelOpen && (
+      {authReady && panelOpen && profile && (
         <div className="side-panel">
           <div className="side-panel-header">Welcome, {profile.fname}</div>
           <ul>
