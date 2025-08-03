@@ -130,7 +130,6 @@ const handleSubmit = async (e, isSignUpMode, email, password) => {
     const result = await response.json();
 
     if (!response.ok) {
-      console.log(result.message)
       const msg = result.message ||result.err || "Something went wrong!";
     setMessageStatus({ message: `${msg}`, type: 'error' });
     return;
