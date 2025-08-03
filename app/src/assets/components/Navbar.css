@@ -1,9 +1,12 @@
+/* 🎯 Base Navbar Layout */
 .navbare {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 20px 50px;
   background-color: #003151;
   color: white;
+  flex-wrap: wrap;
 }
 
 .navbare .logoe {
@@ -11,20 +14,23 @@
   font-size: 24px;
 }
 
+/* 🧭 Navigation List */
 .navbare ul {
   display: flex;
   list-style: none;
   gap: 30px;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 .navbare a {
   color: white;
   text-decoration: none;
+  font-size: 16px;
 }
 
-/* Navbar.css */
-
+/* 🧑‍💼 Profile Container */
 .navbar-user {
   display: flex;
   align-items: center;
@@ -55,10 +61,10 @@
   padding: 0;
 }
 
-/* Side panel base styles */
+/* 📱 Side Panel Styles */
 .side-panel {
   position: absolute;
-  top: 70px; /* adjust based on navbar height */
+  top: 70px;
   right: 20px;
   width: 240px;
   background-color: #00243a;
@@ -70,29 +76,23 @@
   animation: fadeSlide 0.3s ease forwards;
 }
 
-/* Smooth slide animation */
+/* ✨ Panel Animation */
 @keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Side panel header */
+/* 🧩 Panel Header & Links */
 .side-panel-header {
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 20px;
 }
 
-/* Side panel links */
 .side-panel ul {
   list-style: none;
   padding: 0;
+  margin: 0;
   flex: 1;
 }
 
@@ -110,7 +110,7 @@
   text-decoration: underline;
 }
 
-/* Logout button anchored at bottom */
+/* 🚪 Logout Button */
 .side-panel-logout {
   background: none;
   border: none;
@@ -122,7 +122,42 @@
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Add hover effect */
 .side-panel-logout:hover {
   color: #ff4c4c;
+}
+
+@media screen and (max-width: 768px) {
+  .navbare {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 30px;
+  }
+
+  .navbare ul {
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .navbare .logoe {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .navbar-profile-pic {
+    width: 40px;
+    height: 40px;
+  }
+
+  .side-panel {
+    right: 10px;
+    width: 90%;
+    top: 60px;
+    font-size: 15px;
+  }
+
+  .side-panel-header {
+    font-size: 20px;
+  }
 }
