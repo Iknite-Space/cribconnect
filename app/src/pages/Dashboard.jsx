@@ -43,7 +43,7 @@ function Dashboard() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const resultsPerPage = 7; // adjust to your layout vibe
+  const resultsPerPage = 14; // adjust to your layout vibe
 
   const indexOfLastResult = currentPage * resultsPerPage;
   const indexOfFirstResult = indexOfLastResult - resultsPerPage;
@@ -71,6 +71,7 @@ function Dashboard() {
   const [religion, setReligion] = useState("");
   const [occupation, setOccupation] = useState("");
   const { token, refreshIdToken } = useContext(AuthContext);
+  
 
   const [messageStatus, setMessageStatus] = useState({
     message: "",
@@ -167,6 +168,8 @@ function Dashboard() {
     e.preventDefault();
     setCurrentPage(1); // Reset to first page
 
+    if (submitting) return;
+
     const filterPayload = {
       ageRange,
       gender,
@@ -182,6 +185,8 @@ function Dashboard() {
     const cleanedPayload = Object.fromEntries(
       Object.entries(filterPayload).filter(([_, v]) => v !== "")
     );
+
+    setSubmitting(true);
 
     try {
       //http://localhost:8082
@@ -206,6 +211,8 @@ function Dashboard() {
         message: "Something went wrong while filtering listings.",
         type: "error",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -443,11 +450,11 @@ function Dashboard() {
               <option value="Any">Any</option>
             </select>
 
-            <button className="filters" onClick={handleApplyFilter}>
-              Apply Filter
+            <button className="filters"  disabled={submitting} onClick={handleApplyFilter}>
+              {submitting ? 'Filtering...' : 'Apply Filter'}
             </button>
             <button className="resets" onClick={handleReset}>
-              Reset
+               Reset
             </button>
           </div>
         </main>

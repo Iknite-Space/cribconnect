@@ -60,6 +60,7 @@ const Navbar = ({onFeaturesClick, onHowClick}) => {
           <div className="side-panel-header">Welcome, {profile.fname}</div>
           <ul>
             <li><Link to="/profile">View Profile 👤</Link></li>
+            <li><Link to="/dashboard">Search 🔍</Link></li>
             <li><Link to="/chats">Chats 💬</Link></li>
             <li><Link to="/listings">My Listings 🏠👥</Link></li>
             <li><Link to="/settings">Settings ⚙️</Link></li>

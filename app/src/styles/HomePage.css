@@ -50,7 +50,7 @@
 
 /* 🌟 Feature Section Styling */
 .features-container {
-  background: linear-gradient(to right, #003151, #4d74a7);
+  background: linear-gradient(to right, #003151, #0E4C92);
   padding: 80px 30px;
 }
 
@@ -109,13 +109,13 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   color: #FF4B2B;
 }
 
-/* 🚀 Suggested Roommates Section */
+/* Suggested Roommates Section */
 .roommate-grid-container {
   min-height: 300px;
   transition: transform 0.3s ease, opacity 0.3s ease;
   overflow: hidden;
   padding: 40px 20px;
-  background: linear-gradient(to right, #003151, #4d74a7);
+  background: linear-gradient(to right, #003151, #0E4C92);
 }
 
 .roommate-grid h2 {
