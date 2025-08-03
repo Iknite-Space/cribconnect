@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import './Navbar.css';
 // import { ThemeContext } from '../../context/ThemeContext';
 
-const Navbar = ({onFeaturesClick}) => {
+const Navbar = ({onFeaturesClick, onHowClick}) => {
   const { profile, logout, authReady } = useContext(AuthContext);
   const [panelOpen, setPanelOpen] = useState(false);
   // const { toggleTheme, theme } = useContext(ThemeContext);
@@ -22,7 +22,7 @@ const Navbar = ({onFeaturesClick}) => {
                 }}>Features</a></li>
               <li><a href="#howe" onClick={(e) => {
                   e.preventDefault(); // prevent default jump behavior
-                  onFeaturesClick();
+                  onHowClick();
                 }}>How It Works</a></li>
             </>
           ) : null}

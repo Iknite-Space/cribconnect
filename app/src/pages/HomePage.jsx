@@ -85,9 +85,15 @@ const HomePage = () => {
   }, [roommates, slots, updatedIndexes]);
 
   const featureRef = useRef(null);
+  const howRef = useRef(null);
+  
   const scrollToFeatures = () => {
     featureRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const scrollToHow = () => {
+  howRef.current?.scrollIntoView({ behavior: 'smooth' });
+};
 
 
  return (
@@ -96,7 +102,7 @@ const HomePage = () => {
       
         {/* 🧭 Navbar Section */}
         <div className="navbar-container">
-          <Navbar onFeaturesClick={scrollToFeatures} />
+          <Navbar onFeaturesClick={scrollToFeatures} onHowClick={scrollToHow}/>
         </div>
 
         {/* 🦸 Hero Section */}
@@ -142,7 +148,7 @@ const HomePage = () => {
 
       {/* 🌟 Features Section */}
       <div className="features-container">
-        <section ref={featureRef} id="#howe" className="featurese">
+        <section ref={howRef} id="#howe" className="featurese">
           <div className="feature-boxe">
             <FaUserFriends size={40} color="#043b6bff" />
             <h3>Personality Matching</h3>
