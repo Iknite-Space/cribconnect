@@ -22,19 +22,15 @@
   padding: 1rem;
 }
 
-/* Headings */
-/* .titles {
-  font-size: 2.2rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  color: #333;
-  text-align: center;
-} */
+
+.search-contents .preferencess {
+  background: linear-gradient(to right, #4d74a7, #a7c6ee);
+}
+
 
 /* Filter Section */
 .preferencess {
-  /* position: sticky; */
-  top: 0;                      /* Distance from top */
+  top: 0;                      
   z-index: 10;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -58,21 +54,36 @@ select {
 select,
 button.filters,
 button.resets {
-  padding: 0.6rem;
+  /* padding: 0.6rem; */
+  padding: 10px 24px;
   border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 0.9rem;
+  font-weight: bold;
 }
 
 button.filters {
   background-color: #007bff;
   color: white;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  cursor: pointer;
+  border:none;
 }
 
 button.resets {
   background-color: #6c757d;
   color: white;
   background-color: red;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  cursor: pointer;
+  border:none;
+}
+
+button.filters:hover {
+  transform: scale(1.08);
+}
+button.resets:hover {
+  transform: scale(1.08);
 }
 
 /* Listings Grid */
@@ -80,13 +91,31 @@ button.resets {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1.5rem;
-  padding: 2rem;
-  background-color: #ffffff;
-  border-radius: 10px;
+  padding: 40px 20px;
+  background: linear-gradient(to right, #003151, #4d74a7);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   align-items: stretch;
 }
 
+.results-containers p {
+  text-align: center;
+  font-size: clamp(1rem, 4vw, 1.25rem); 
+  color: white;
+  font-weight: 600;
+  line-height: 1.6;
+  max-width: 600px;
+  
+}
+
+.results-containers p span {
+  text-align: center;
+  font-size: clamp(0.8rem, 3.8vw, 1rem); 
+  color: black;
+  font-weight: 600;
+  line-height: 1.6;
+  max-width: 600px;
+  
+}
 .result-cards {
   position: relative;
   background-color: white;
@@ -98,7 +127,7 @@ button.resets {
   margin: 0 auto;      
   font-size: 1.1rem;   
   transition: transform 0.2s ease;
-  padding-bottom: 3rem; /* ensures space for button */
+  padding-bottom: 3rem; 
   overflow: hidden;
 }
 
@@ -108,7 +137,7 @@ button.resets {
 
 
 .result-cards:hover {
-  transform: scale(1.03); /* Add subtle hover effect */
+  transform: scale(1.03); 
 }
 
 .clickable-imgs {
@@ -126,8 +155,10 @@ button.resets {
 
 .name-labels, .result-cards p {
   overflow: hidden;
+  font-size: clamp(0.8rem, 3.8vw, 1rem); 
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: black;
 }
 
 .connect-btns {
@@ -156,30 +187,62 @@ button.resets {
 
 /* More Options */
 .more-options {
-  margin-top: 1rem;
+   background: linear-gradient(to right, #003151, #4d74a7);
 }
 
 .more-options-titless {
+  margin-top: 1rem;
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #444;
+  color: #ffffff;
+  padding: 10px 0px;
 }
 
 .more-options-grids {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  padding: 10px 20px;
+  margin-bottom: 1rem;
 }
 
 .option-cards {
-  flex: 1;
-  min-width: 220px;
-  background-color: #e9ecef;
-  padding: 1rem;
-  border-radius: 8px;
+  background: #e9ecef;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 30px 20px;
+  max-width: 100%;
+  flex:1 1 280px;
+  transition: transform 0.3s ease;
   text-decoration: none;
-  color: #212529;
-  transition: background 0.3s ease;
+}
+
+.option-cards h3 {
+font-size: clamp(0.8rem, 1.8vw, 1.9rem);
+
+}
+
+.option-cards p {
+     font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 550;
+  color: #003151;
+  background-color: #fdfdfd;
+  padding: 20px 30px;
+  border-left: 6px solid #31dbde;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  margin: 20px 0;
+}
+@keyframes pulseGlow {
+  from {
+    box-shadow: 0 0 10px #31dbde80;
+  }
+  to {
+    box-shadow: 0 0 20px #31dbdecc;
+  }
 }
 
 .option-cards:hover {
@@ -190,6 +253,11 @@ button.resets {
 .support-link-bottoms {
   margin: 2rem 0;
   text-align: center;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.support-link-bottoms:hover {
+  transform: scale(1.08);
 }
 
 .action-cards {
@@ -274,6 +342,10 @@ button.resets {
     grid-template-columns: repeat(3, 1fr);
     padding: 1rem;
   }
+
+  .option-cards {
+    padding: 40px 20px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -294,6 +366,17 @@ button.resets {
   button.filters,
   button.resets {
     font-size: 0.85rem;
+  }
+
+  .option-cards {
+    padding: 40px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+ .option-cards {
+    flex-direction: column;
+    align-items: center;
   }
 }
 

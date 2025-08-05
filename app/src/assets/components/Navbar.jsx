@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import './Navbar.css';
 // import { ThemeContext } from '../../context/ThemeContext';
 
-const Navbar = () => {
+const Navbar = ({onFeaturesClick, onHowClick}) => {
   const { profile, logout, authReady } = useContext(AuthContext);
   const [panelOpen, setPanelOpen] = useState(false);
   // const { toggleTheme, theme } = useContext(ThemeContext);
@@ -16,8 +16,14 @@ const Navbar = () => {
         <ul>
           {!authReady || !profile ? (
             <>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#how">How It Works</a></li>
+              <li><a href="#featurese" onClick={(e) => {
+                  e.preventDefault(); // prevent default jump behavior
+                  onFeaturesClick();
+                }}>Features</a></li>
+              <li><a href="#howe" onClick={(e) => {
+                  e.preventDefault(); // prevent default jump behavior
+                  onHowClick();
+                }}>How It Works</a></li>
             </>
           ) : null}
 
@@ -49,11 +55,12 @@ const Navbar = () => {
       </nav>
 
       {/* Side Panel */}
-      {authReady && panelOpen && (
+      {authReady && panelOpen && profile && (
         <div className="side-panel">
           <div className="side-panel-header">Welcome, {profile.fname}</div>
           <ul>
             <li><Link to="/profile">View Profile 👤</Link></li>
+            <li><Link to="/dashboard">Search 🔍</Link></li>
             <li><Link to="/chats">Chats 💬</Link></li>
             <li><Link to="/listings">My Listings 🏠👥</Link></li>
             <li><Link to="/settings">Settings ⚙️</Link></li>

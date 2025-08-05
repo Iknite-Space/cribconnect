@@ -133,6 +133,14 @@ const file = new File([blob], `profile.${extension}`, { type: mimeType });
   }
 };
 
+  const today = new Date();
+const eighteenYearsAgo = new Date(
+  today.getFullYear() - 18,
+  today.getMonth(),
+  today.getDate()
+);
+const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
+
 
 //Bio text area 
  
@@ -213,7 +221,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
     }
     else if (res.ok) {
       setMessageStatus({ message: 'Profile saved!', type: 'success' });
-      navigate('/dashboard');
+      setTimeout(() => navigate("/dashboard"), 1500);
     } else{
      setMessageStatus({ message: 'Error saving profile', type: 'error' });
      navigate("/profile")
@@ -247,7 +255,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
         />
         {phoneError && <div className="error-messages">{phoneError}</div>}
 
-        <input name="birthdate" type="date" required onChange={handleInputChange} />
+        <input name="birthdate" type="date" required onChange={handleInputChange} max={maxDate} />
         {/* <div className="bio-container"> */}
         <textarea
              name="bio"
@@ -312,58 +320,58 @@ if (!isValidCameroonPhone(form.phoneno)) {
 
         <h3>Tell us about yourself</h3>
         <select name="ageRange" onChange={handleInputChange}>
-          <option value="" disabled> Your age range</option>
+          <option value="default" hidden> Your age range</option>
           <option>18-21</option>
           <option>22-25</option>
           <option>26-29</option>
           <option>30-33</option>
         </select>
         <select name="gender" onChange={handleInputChange}>
-          <option value="" disabled>Your gender</option>
+          <option value="default" hidden>Your gender</option>
           <option>Male</option>
           <option>Female</option>
         </select>
         <select name="pet" onChange={handleInputChange}>
-          <option value="" disabled>Are you pets friendly?</option>
+          <option value="" hidden>Are you pets friendly?</option>
           <option>Yes</option>
           <option>No</option>
         </select>
         <select name="lateNights" onChange={handleInputChange}>
-          <option value="" disabled>Late nights?</option>
+          <option value="" hidden>Late nights?</option>
           <option>Rarely</option>
           <option>Sometimes</option>
           <option>Often</option>
         </select>
         <select name="smoking" onChange={handleInputChange}>
-          <option value="" disabled>Do you smoke?</option>
+          <option value="" hidden>Do you smoke?</option>
           <option>Yes</option>
           <option>No</option>
         </select>
         <select name="drinking" onChange={handleInputChange}>
-          <option value="" disabled>How often do you drink?</option>
+          <option value="" hidden>How often do you drink?</option>
           <option>Rarely</option>
           <option>Sometimes</option>
           <option>Often</option>
         </select>
         <select name="guests" onChange={handleInputChange}>
-          <option value="" disabled>Guest Policy</option>
+          <option value="" hidden>Guest Policy</option>
           <option>Rarely</option>
           <option>Sometimes</option>
           <option>Often</option>
         </select>
         <select name="noiseTolerance" onChange={handleInputChange}>
-          <option value="" disabled>Noise Tolerance</option>
+          <option value="" hidden>Noise Tolerance</option>
           <option>Low</option>
           <option>Medium</option>
           <option>High</option>
         </select>
         <select name="religion" onChange={handleInputChange}>
-          <option value="" disabled>Religion</option>
+          <option value="" hidden>Religion</option>
           <option>Christian</option>
           <option>Moslem</option>
         </select>
         <select name="occupation" onChange={handleInputChange}>
-          <option value="" disabled>Occupation</option>
+          <option value="" hidden>Occupation</option>
           <option>Student</option>
           <option>Worker</option>
           <option>Any</option>
