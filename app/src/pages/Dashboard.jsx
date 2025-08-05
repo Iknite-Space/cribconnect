@@ -27,6 +27,7 @@ function Dashboard() {
       Occupation: "",
     },
   });
+  const [viewDetails,setViewDetails] = useState(false)
   const [submitting, setSubmitting] = useState(false);
   const [matchResults, setMatchResults] = useState({});
 
@@ -98,6 +99,7 @@ function Dashboard() {
         Occupation: "",
       },
     });
+    setViewDetails(false)
   };
 
   useEffect(() => {
@@ -472,9 +474,9 @@ function Dashboard() {
                   }
                   alt={"Click to view"}
                   className="clickable-imgs"
-                  onClick={() =>
+                  onClick={() =>{
                     setData({
-                      fname: listing.fname,
+                      fname: listing.fname ?? "",
                       lname: listing.lname,
                       // age: listing.age,
                       profile_picture: listing.profilepicture,
@@ -491,13 +493,14 @@ function Dashboard() {
                       //   Religion: listing.habbits.religion,
                       //   Occupation: listing.habbits.occupation
                       // }
-                    })
-                  }
+                    });
+                    setViewDetails(true)
+                  }}
                 />
                 <p className="name-labels">
-                  <strong>
-                    {listing.fname} {listing.lname}
-                  </strong>
+                  <p>
+                    {listing.fname.length === 0 && listing.lname === 0 ? "Anonymous" : `${listing.fname} ${listing.fname.length !== 0 ? listing.lname && listing.lname[0] + '.' : listing.lname}`}
+                  </p>
                   <span className="birthdate-labels">
                     🌟 {listing.birthdate} years
                   </span>
@@ -532,12 +535,13 @@ function Dashboard() {
           )}
         </div>
 
-        {data.fname !== "" && (
+        {viewDetails  && (
           <div
             className="modal-overlays"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 resetData();
+              
               }
             }}
           >
