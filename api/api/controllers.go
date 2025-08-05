@@ -609,5 +609,45 @@ func (h *UserHandler) handleFilterListings(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch filtered users"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"users": users})
+
+	var formattedUsers []UserResponse
+	for _, user := range users {
+		var habits PrefJson
+
+		// Check if preferences JSONB is present and valid
+		if len(user.Habbits) > 0 {
+			err := json.Unmarshal(user.Habbits, &habits)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"Failed to decode habits:": err.Error()})
+				return
+			}
+		} else {
+			// Provide default values if preferences are missing
+			habits = PrefJson{
+				AgeRange:       "unspecified",
+				Gender:         "unspecified",
+				Pet:            "unspecified",
+				LateNights:     "unspecified",
+				Smoking:        "unspecified",
+				Drinking:       "unspecified",
+				Guests:         "unspecified",
+				NoiseTolerance: "unspecified",
+				Religion:       "unspecified",
+				Occupation:     "unspecified",
+			}
+		}
+
+		formattedUsers = append(formattedUsers, UserResponse{
+			UserID:         user.UserID,
+			Fname:          utils.SafeString(&user.Fname, "unspecified"),
+			Lname:          utils.SafeString(&user.Lname, "unspecified"),
+			Age:            utils.CalculateAge(user.Birthdate),
+			Bio:            utils.SafeString(&user.Bio, "unspecified"),
+			Habbits:        habits,
+			ProfilePicture: utils.SafeString(&user.ProfilePicture, "unspecified"),
+		})
+
+	}
+
+	c.JSON(http.StatusOK, gin.H{"users": formattedUsers})
 }
