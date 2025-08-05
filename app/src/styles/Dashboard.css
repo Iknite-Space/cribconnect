@@ -7,7 +7,7 @@
 
 /* Layout Containers */
 .search-containers {
-  padding: 2rem;
+  padding: 1rem;
   background-color: #f8f9fa;
   font-family: 'Segoe UI', sans-serif;
    display: flex;
@@ -73,7 +73,7 @@ button.filters {
 button.resets {
   background-color: #6c757d;
   color: white;
-  background-color: red;
+  background-color: rgb(221, 113, 13);
   transition: transform 0.3s ease, background-color 0.3s ease;
   cursor: pointer;
   border:none;
@@ -88,13 +88,13 @@ button.resets:hover {
 
 /* Listings Grid */
 .results-containers {
-  display: grid;
+  display: grid; 
   grid-template-columns: repeat(7, 1fr);
   gap: 1.5rem;
   padding: 40px 20px;
   background: linear-gradient(to right, #003151, #4d74a7);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  align-items: stretch;
+  /* align-items: stretch; */
 }
 
 .results-containers p {
@@ -117,14 +117,13 @@ button.resets:hover {
   
 }
 .result-cards {
-  position: relative;
   background-color: white;
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   text-align: center;
   min-height: 300px;
-  margin: 0 auto;      
+  height: 100%;
   font-size: 1.1rem;   
   transition: transform 0.2s ease;
   padding-bottom: 3rem; 
@@ -156,9 +155,16 @@ button.resets:hover {
 .name-labels, .result-cards p {
   overflow: hidden;
   font-size: clamp(0.8rem, 3.8vw, 1rem); 
-  text-overflow: ellipsis;
   white-space: nowrap;
   color: black;
+}
+.name-labels p {
+  max-width: 20ch;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
+  height: 25px;
+  margin: 0;
+  padding: 0;
 }
 
 .connect-btns {
