@@ -437,9 +437,7 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 	// Handle Profile Picture Upload
 	var profilePicture *string
 	fileHeader, err := c.FormFile("profile_picture") // Get uploaded file from request
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open profile picture"})
-	} else { // Check if file exists
+	if err == nil {                                  // Check if file exists
 		file, err := fileHeader.Open()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open profile picture"})
