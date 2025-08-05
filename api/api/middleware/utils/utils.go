@@ -14,7 +14,6 @@ import (
 	//
 
 	"github.com/cloudinary/cloudinary-go/v2"
-	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -65,10 +64,13 @@ func UploadProfilePicture(file multipart.File, userID string) (string, error) {
 	//  Upload to Cloudinary
 	publicID := "profile_" + userID // Use UID as identifier
 
+	overwrite := new(bool)
+	*overwrite = true
+
 	uploadResult, err := cld.Upload.Upload(context.Background(), file, uploader.UploadParams{
 		PublicID:  publicID,
 		Folder:    "profile_pictures",
-		Overwrite: api.Bool(true), // overwrite if user re-uploads
+		Overwrite: overwrite, // overwrite if user re-uploads
 	})
 
 	if err != nil {
