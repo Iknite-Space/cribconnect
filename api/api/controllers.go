@@ -435,9 +435,11 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 	}
 
 	// Handle Profile Picture Upload
-	var profilePicture *string
+	var profilePicture string
 	fileHeader, err := c.FormFile("profile_picture") // Get uploaded file from request
-	if err == nil {                                  // Check if file exists
+	if err != nil {
+		log.Println("No profile picture uploaded:", err)
+	} else { // Check if file exists
 		file, err := fileHeader.Open()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open profile picture"})
@@ -456,7 +458,7 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 			fmt.Println("error is here", err)
 			return
 		}
-		profilePicture = &filePath // Store the file path in the request object
+		profilePicture = filePath // Store the file path in the request object
 	}
 
 	resp := repo.UpdateUserProfileParams{
@@ -468,7 +470,7 @@ func (h *UserHandler) handleUpdateUser(c *gin.Context) {
 		Birthdate:      birthdate,
 		Bio:            bio,
 		Habbits:        habbitsJSON,
-		ProfilePicture: profilePicture,
+		ProfilePicture: &profilePicture,
 	}
 
 	user, err := h.querier.UpdateUserProfile(c, resp)

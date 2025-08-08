@@ -14,6 +14,7 @@ import (
 	//
 
 	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -64,20 +65,16 @@ func UploadProfilePicture(file multipart.File, userID string) (string, error) {
 	//  Upload to Cloudinary
 	publicID := "profile_" + userID // Use UID as identifier
 
-	overwrite := new(bool)
-	*overwrite = true
-
 	uploadResult, err := cld.Upload.Upload(context.Background(), file, uploader.UploadParams{
-		PublicID:  publicID,
-		Folder:    "profile_pictures",
-		Overwrite: overwrite, // overwrite if user re-uploads
+		PublicID:   publicID,
+		Folder:     "profile_pictures",
+		Overwrite:  api.Bool(true), // overwrite if user re-uploads
+		Invalidate: api.Bool(true),
 	})
 
 	if err != nil {
 		return "", fmt.Errorf("error Upload failed")
 	}
-
-	fmt.Printf("upload Result %v", uploadResult)
 
 	//  Generate optimized URL
 	img, err := cld.Image("profile_pictures/" + publicID)
@@ -85,18 +82,12 @@ func UploadProfilePicture(file multipart.File, userID string) (string, error) {
 		return "", fmt.Errorf("failed to create image asset: %w", err)
 	}
 
+	img.Version = uploadResult.Version
 	img.Transformation = "f_auto,q_auto"
 	optimizedURL, err := img.String()
 	if err != nil {
 		return "", fmt.Errorf("failed to generate optimized URL: %v", err)
 	}
-
-	//  Respond
-	// c.JSON(http.StatusOK, gin.H{
-	// 	"uid":          uid,
-	// 	"profile_url":  optimizedURL,
-	// 	"original_url": uploadResult.SecureURL,
-	// })
 
 	return optimizedURL, nil
 }
