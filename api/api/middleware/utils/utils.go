@@ -69,7 +69,7 @@ func UploadProfilePicture(file multipart.File, userID string) (string, error) {
 		PublicID:   publicID,
 		Folder:     "profile_pictures",
 		Overwrite:  api.Bool(true), // overwrite if user re-uploads
-		Invalidate: true,
+		Invalidate: api.Bool(true),
 	})
 
 	if err != nil {
