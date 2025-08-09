@@ -36,7 +36,7 @@ function useFetch(url) {
     };
 
     fetchData();
-  }, [token]); // Empty dependency array = runs once on component mount
+  }, [token, url]); // Empty dependency array = runs once on component mount
   return { data, loading, error };
 }
 

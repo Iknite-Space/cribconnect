@@ -1,5 +1,4 @@
 import useMessages from "../hooks/useMessages";
-import { useState } from "react";
 import "./Messages.css";
 
 const Messages = ({ threadId }) => {
