@@ -43,12 +43,32 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
-select {
-  padding: 0.6rem;
-  border-radius: 6px;
+.form-field {
+  position: relative;
+  margin-bottom: 0.2rem;
+}
+
+.form-field select {
+width: 100%;
+  padding: 0.75rem 0.5rem;
+  font-size: 1rem;
   border: 1px solid #ccc;
-  font-size: 0.9rem;
-  background-color: #fdfdfd;
+  border-radius: 4px;
+  background: white;
+}
+
+.form-field label {
+  position: absolute;
+  top: 0;              
+  left: 0.75rem;       
+  transform: translateY(-50%);
+  background: white;
+  padding: 0 0.25rem;
+  font-size: 0.85rem;
+  font-size: large;
+  font-weight: 700;
+  color: #555;
+  pointer-events: none; 
 }
 
 select,

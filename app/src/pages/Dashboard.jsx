@@ -288,7 +288,7 @@ function Dashboard() {
         clear={() => setMessageStatus({ message: "", type: "info" })}
       />
       <Navbar />
-      {/* Blurred content when modal is active */}
+      
       <div
         className={`search-containers ${
           data.fname !== "" ? "modal-actives" : ""
@@ -305,6 +305,8 @@ function Dashboard() {
               list='age-options'
               placeholder='Age-Range'
             /> */}
+            <div className="form-field">
+             <label htmlFor="agerange">Age Range</label>
             <select
               id="age-options"
               value={ageRange}
@@ -313,14 +315,17 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Age Range
+                
               </option>
               <option value="18-21">18-21</option>
               <option value="22-25">22-25</option>
               <option value="26-29">26-29</option>
               <option value="30-33">30-33</option>
             </select>
+            </div>
 
+            <div className="form-field">
+             <label htmlFor="gender">Gender</label>
             <select
               id="gender-options"
               value={gender}
@@ -329,12 +334,15 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Gender
+                
               </option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
+            </div>
 
+            <div className="form-field">
+             <label htmlFor="pets">Pets</label>
             <select
               id="pets-options"
               value={pet}
@@ -343,12 +351,14 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Pets
+                
               </option>
               <option value="Yes">Yes</option>
               <option value="No">No</option>
             </select>
-
+            </div>
+            <div className="form-field">
+             <label htmlFor="pets">Late Nights</label>
             <select
               id="late-nights-options"
               value={lateNights}
@@ -357,13 +367,16 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Late Nights
+                
               </option>
               <option value="Rarely">Rarely</option>
               <option value="Sometimes">Sometimes</option>
               <option value="Often">Often</option>
             </select>
+            </div>
 
+            <div className="form-field">
+             <label htmlFor="smoking">Smoking</label>
             <select
               id="smoking-options"
               value={smoking}
@@ -372,12 +385,15 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Smoking
+               
               </option>
               <option value="Yes">Yes</option>
               <option value="No">No</option>
             </select>
+            </div>
 
+              <div className="form-field">
+             <label htmlFor="drinking">Drinking</label>
             <select
               id="drinking-options"
               value={drinking}
@@ -386,13 +402,16 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Drinking
+                
               </option>
               <option value="Rarely">Rarely</option>
               <option value="Sometimes">Sometimes</option>
               <option value="Often">Often</option>
             </select>
+              </div>
 
+              <div className="form-field">
+             <label htmlFor="guestspolicy">Guests Policy</label>
             <select
               id="guests-policy-options"
               value={guests}
@@ -401,13 +420,16 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Guests Policy
+               
               </option>
               <option value="Rarely">Rarely</option>
               <option value="Sometimes">Sometimes</option>
               <option value="Often">Often</option>
             </select>
+              </div>
 
+               <div className="form-field">
+             <label htmlFor="noisetolerance">Noise Tolerance</label>
             <select
               id="noise-tolerance-options"
               value={noiseTolerance}
@@ -416,13 +438,16 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Noise Tolerance
+        
               </option>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
             </select>
+              </div>
 
+               <div className="form-field">
+             <label htmlFor="religion">Religion</label>
             <select
               id="religion-options"
               value={religion}
@@ -431,12 +456,15 @@ function Dashboard() {
               }}
             >
               <option value="" disabled>
-                Religion
+                
               </option>
               <option value="Christian">Christian</option>
               <option value="Muslim">Muslim</option>
             </select>
+              </div>
 
+               <div className="form-field">
+             <label htmlFor="occupation">Occupation</label>
             <select
               id="occupation-options"
               value={occupation}
@@ -444,13 +472,14 @@ function Dashboard() {
                 setOccupation(e.target.value);
               }}
             >
-              <option value="" disabled>
-                Occupation
+              <option value="" disabled >
+                
               </option>
               <option value="Student">Student</option>
               <option value="Worker">Worker</option>
-              <option value="Any">Any</option>
             </select>
+            </div>
+
 
             <button className="filters"  disabled={submitting} onClick={handleApplyFilter}>
               {submitting ? 'Filtering...' : 'Apply Filter'}
@@ -562,7 +591,7 @@ function Dashboard() {
                 </span>
               </div>
 
-              <img //"https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753276159/profile_pictures/profile_ZpDR76714KZK0s5JWkT676UKaJi1.jpg"
+              <img 
                 src={
                   data.profile_picture && data.profile_picture !== ""
                     ? data.profile_picture

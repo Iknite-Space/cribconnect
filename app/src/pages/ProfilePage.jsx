@@ -12,7 +12,7 @@ const ProfilePage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ message: "", type: 'info' });
 
   const [formData, setFormData] = useState({
     fname: "",
@@ -43,9 +43,6 @@ const eighteenYearsAgo = new Date(
 const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
 
 
-  //Example: GET from a server
-  //  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-
   const normalizePhone = (rawPhone) => {
     if (typeof rawPhone === "string" && rawPhone.startsWith("+")) {
       return rawPhone.replace("+", ""); // Result: "237673990801"
@@ -70,7 +67,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
         );
 
         if (!response.ok) {
-          alert("Failed to fetch profile");
+          setMessage({message: "Failed to fetch profile", type: "error"});
         }
 
         const data = await response.json();
@@ -125,7 +122,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
 
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert("Profile photo must be 5MB or smaller.");
+      setMessage({message:"Profile photo must be 5MB or smaller.", type: "info"});
       return;
     }
 
@@ -140,6 +137,17 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
       }));
     }
   };
+//  const [charCount, setCharCount] = useState(0);
+//  const [isInvalid, setIsInvalid] = useState(false); 
+ 
+  const handleBioChanges = (e) => {
+  const value = e.target.value;
+
+  setFormData((prev) => ({
+    ...prev,
+    bio: value,
+  }));
+};
 
   const handleInputChange = (e) => {
     setFormData((prev) => ({
@@ -153,7 +161,10 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
     formData.fname && formData.lname && formData.email && formData.phoneno
   );
 
-  const isAboutMeComplete = Boolean(formData.bio);
+ const trimmedBio = formData.bio.trim()
+const bioLength  = trimmedBio.length;
+const isBioComplete = bioLength >= 30 && bioLength <= 300;
+const isBioInvalid  = bioLength > 0 && !isBioComplete;
 
   const isprofilepictureComplete = Boolean(formData.profilepicture);
 
@@ -177,12 +188,29 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
 
   const completedSections =
     (isPersonalComplete ? 1 : 0) +
-    (isAboutMeComplete ? 1 : 0) +
+    (isBioComplete ? 1 : 0) +
     (ishabbitsComplete ? 1 : 0) +
     isprofilepictureComplete;
 
   const progressPercent = Math.floor((completedSections / 4) * 100);
-  console.log("Progress:", progressPercent);
+  
+   const [feedback, setFeedback] = useState("");
+  useEffect(() => {
+        const missing = [];
+    if (!isPersonalComplete)      missing.push("Personal Details");
+    if (!isBioComplete)        missing.push("Bio");
+    if (!ishabbitsComplete)        missing.push("About Me");
+    if (!isprofilepictureComplete) missing.push("Profile Picture");
+
+    if (missing.length > 0) {
+      // Show an inline message listing exactly what’s incomplete
+      setFeedback(
+        `To update please complete the following sections: ${missing.join(", ")}.`
+      );
+      return;
+    }
+    setFeedback("");
+  }, [isPersonalComplete,isBioComplete,ishabbitsComplete,isprofilepictureComplete])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -240,7 +268,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
 
     // Add image (if present)
     if (formData.profilepicture) {
-      payload.append("profilepicture", formData.profilepicture);
+      payload.append("profile_picture", formData.profilepicture);
     }
 
     // Example: POST to a server
@@ -257,15 +285,15 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
         }
       );
       if (!response.ok) {
-        setMessage("Failed to save profile");
+        setMessage({message:"Failed to save profile", type: "error"});
       }
 
-      await response.json();
-      setMessage("✅ Profile saved successfully!");
+       await response.json();
+      setMessage({message:"✅ Profile saved successfully!", type: "success"});
       // console.log("Server response:", data);
     } catch (err) {
       //console.error("Save error:", err);
-      setMessage("❌ Something went wrong. Please try again.");
+      setMessage({message:"❌ Something went wrong. Please try again.", type: "error"});
     } finally {
       setSubmitting(false);
     }
@@ -275,7 +303,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
   return (
     <>
       <header className="hero">
-        <h1>Make Changes To Suit Your Taste</h1>
+        <h1>The changes you make will determine your potential roommate(s)</h1>
         <div className="profile-container">
           <img
             src={
@@ -305,7 +333,6 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
           </label>
         </div>
       </header>
-
       <form className="profile-form" onSubmit={handleSubmit}>
         <div className="form-section personal">
           <h2>Personal Details</h2>
@@ -337,13 +364,12 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
 
           <PhoneInput
             country={"cm"} // Cameroon
-            onlyCountries={["cm"]} // Optional: force only Cameroon
+            onlyCountries={["cm"]} 
             masks={{ cm: ".... ......" }}
             disableDropdown={true}
             countryCodeEditable={false}
-            value={formData.phoneno} // strip prefix for input box e.g. "237673990801"
+            value={formData.phoneno}
             onChange={(phone) => {
-              //  const fullphone =  `+${phone}`;
               setFormData((prev) => ({ ...prev, phoneno: phone })); // always attach prefix
               console.log("Phone input value:", phone);
             }}
@@ -353,7 +379,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
               autoFocus: false,
             }}
             inputStyle={{
-              paddingLeft: "50px", // increases left padding so `+237` becomes visible
+              paddingLeft: "50px", 
             }}
             placeholder="+237 6xx xxx xxx"
           />
@@ -376,9 +402,17 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
               value={formData.bio}
               placeholder="Tell us a bit about yourself..."
               rows="6"
-              onChange={handleInputChange}
+              onChange={handleBioChanges}
             />
           </div>
+             <div className="char-feedback">
+               {bioLength} / 300
+              {isBioInvalid && (
+                <span className="feedback">
+                  Your bio must be between 30 and 300 non‐whitespace characters.
+                </span>
+              )}
+            </div>
         </div>
 
         <div className="form-section habbits">
@@ -405,144 +439,60 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
               </p>
             </div>
           )}
-
+        
           <h2>About You 😎</h2>
-          <select
-            name="agerange"
-            value={formData.agerange}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Your age range
-            </option>
-            <option>18-21</option>
-            <option>22-25</option>
-            <option>26-29</option>
-            <option>30-33</option>
-          </select>
-
-          <select
-            name="gender"
-            value={formData.gender}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Your gender
-            </option>
-            <option>Male</option>
-            <option>Female</option>
-          </select>
-
-          <select name="pet" value={formData.pet} onChange={handleInputChange}>
-            <option value="" disabled>
-              Are you pets friendly?
-            </option>
-            <option>Yes</option>
-            <option>No</option>
-          </select>
-
-          <select
-            name="latenights"
-            value={formData.latenights}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Late Nights?
-            </option>
-            <option>Rarely</option>
-            <option>Sometimes</option>
-            <option>Often</option>
-          </select>
-
-          <select
-            name="smoking"
-            value={formData.smoking}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Do you smoke?
-            </option>
-            <option>Yes</option>
-            <option>No</option>
-          </select>
-
-          <select
-            name="drinking"
-            value={formData.drinking}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              How often do you drink?
-            </option>
-            <option>Rarely</option>
-            <option>Sometimes</option>
-            <option>Often</option>
-          </select>
-
-          <select
-            name="guests"
-            value={formData.guests}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Guest Policy
-            </option>
-            <option>Rarely</option>
-            <option>Sometimes</option>
-            <option>Often</option>
-          </select>
-
-          <select
-            name="noisetolerance"
-            value={formData.noisetolerance}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Noise Tolerance
-            </option>
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-          </select>
-
-          <select
-            name="religion"
-            value={formData.religion}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Religion
-            </option>
-            <option>Christian</option>
-            <option>Moslem</option>
-          </select>
-
-          <select
-            name="occupation"
-            value={formData.occupation}
-            onChange={handleInputChange}
-          >
-            <option value="" disabled>
-              Occupation
-            </option>
-            <option>Student</option>
-            <option>Worker</option>
-            <option>Any</option>
-          </select>
+          <div className="preferences">
+             {[
+               { name: 'agerange', placeholder: 'Your age range', options: ['18-21', '22-25', '26-29', '30-33'] },
+               { name: 'gender', placeholder: 'Your gender', options: ['Male', 'Female'] },
+               { name: 'pet', placeholder: 'Pets friendly?', options: ['Yes', 'No'] },
+               { name: 'latenights', placeholder: 'Late nights?', options: ['Rarely', 'Sometimes', 'Often'] },
+               { name: 'smoking', placeholder: 'Do you smoke?', options: ['Yes', 'No'] },
+               { name: 'drinking', placeholder: 'How often do you drink?', options: ['Rarely', 'Sometimes', 'Often'] },
+               { name: 'guests', placeholder: 'Guest Policy', options: ['Rarely', 'Sometimes', 'Often'] },
+               { name: 'noisetolerance', placeholder: 'Noise Tolerance', options: ['Low', 'Medium', 'High'] },
+               { name: 'religion', placeholder: 'Religion', options: ['Christian', 'Muslim'] },
+               { name: 'occupation', placeholder: 'Occupation', options: ['Student', 'Worker'] },
+             ].map(field => (
+                 <div className="select-field" key={field.name}>
+                  <label htmlFor={field.name}>{field.placeholder}</label>
+               <select
+                 id={field.name}
+                 name={field.name}
+                 value={formData[field.name]}
+                 onChange={handleInputChange}
+               >
+                 <option value="" hidden>
+                 </option>
+                 {field.options.map(opt => (
+                   <option key={opt} value={opt}>{opt}</option>
+                 ))}
+               </select>
+               </div>
+             ))}
+           </div>
+          
         </div>
-
+    </form>
         <div className="submit-wrapper">
           <button
-            type="submit"
             className="submit-btn"
             disabled={progressPercent < 100 || submitting}
             onClick={handleSubmit}
           >
             {submitting ? "Updating..." : "Update Profile"}
-            <MessageBanner message={message} clear={() => setMessage("")} />
           </button>
+          
+            <MessageBanner 
+            message={message.message} 
+            type={message.type} 
+            clear={() => setMessage({ message: "", type: "info" })} />
+          
+             {feedback && (
+            <p className="feedback">{feedback}</p>
+            )}
+          
         </div>
-      </form>
     </>
   );
 };
