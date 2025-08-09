@@ -1,0 +1,7 @@
+.message-page {
+  /* padding: 90px 20px 60px; */
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
