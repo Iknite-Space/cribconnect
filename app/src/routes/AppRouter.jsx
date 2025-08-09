@@ -18,12 +18,12 @@ const AppRouter = () => (
   <Router>
     <Routes>
       {/* <Route path="/" element={<Home />} /> */}
-      <Route path="/h" element={ <HomePage/>} />
+      <Route path="/" element={ <HomePage/>} />
       <Route path="/login" element={<LoginSignup/>} />
       <Route path="/complete-profile" element={<PrivateRoute> <CompleteProfile /></PrivateRoute>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/profile" element={<PrivateRoute> <ProfilePage /> </PrivateRoute>} />
-      <Route path="/" element={<MessagePage /> } />
+      <Route path="/chats" element={<MessagePage /> } />
       <Route path="/dashboard" element={<PrivateRoute> <Dashboard /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute> <SettingsPage /></PrivateRoute>} />
       {/* <Route path="*" element={<NotFound />} /> */}
