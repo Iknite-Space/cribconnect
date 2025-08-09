@@ -20,12 +20,14 @@ function useFetch(url) {
         });
         if (!response.ok) {
           setError({
-            message: "Something went wrong",
-            type: "error"
+            message: `Something went wrong. ${response.status}`,
+            type: "error",
+            code: response.status
           });
+        } else {
+          const responseData = await response.json();
+          setData(responseData);
         }
-        const responseData = await response.json();
-        setData(responseData);
       } catch (err) {
         setError(err);
       } finally {
