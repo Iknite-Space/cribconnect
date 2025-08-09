@@ -1,6 +1,5 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import '../styles/CompleteProfile.css';
-//npm install react-phone-input-2
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import Cropper from 'react-easy-crop'
@@ -129,7 +128,7 @@ const file = new File([blob], `profile.${extension}`, { type: mimeType });
   setZoom(1);
 
   if (fileInputRef.current) {
-    fileInputRef.current.value = ''; // ❌ fully clears the file selection
+    fileInputRef.current.value = ''; //  fully clears the file selection
   }
 };
 
@@ -143,13 +142,16 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
 
 
 //Bio text area 
- 
+ useEffect(() => {
+  // Trim only for counting, not for the stored value
+  const trimmed = form.bio.trim();
+  setCharCount(trimmed.length);
+  setIsInvalid(trimmed.length > 0 && (trimmed.length < 30 || trimmed.length > 300));
+}, [form.bio]);
 
 const handleInputChanges = (e) => {
   const value = e.target.value;
   setBio(value);
-  setCharCount(value.length);
-  setIsInvalid(value.length < 50 || value.length > 300);
 
   // ✅ Sync with form state
   setForm((prev) => ({
@@ -197,7 +199,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
 
     }
      
-    // Send to backend
+
      
     //   http://localhost:8081
     const res = await fetch("https://api.cribconnect.xyz/v1/users/complete-profile", {
@@ -209,7 +211,7 @@ if (!isValidCameroonPhone(form.phoneno)) {
     });
 
     await res.json();
-   
+   console.log(res)
     if (res.status === 401) {
     //  Unauthorized: likely expired or invalid token
      setMessageStatus({message: "Session expired. Please log in again.", type: 'error' });
@@ -237,26 +239,27 @@ if (!isValidCameroonPhone(form.phoneno)) {
     <div className="profile-page">
       <h2>Complete Your Profile 🧑‍💼</h2>
     <form onSubmit={handleSubmit} className="myFormStyle">
+      <div className='personal-info'>
         <h3>Personal Info</h3>
         <input name="fname" type="text" placeholder="First Name" required onChange={handleInputChange} />
         <input name="lname" type="text" placeholder="Last Name" required onChange={handleInputChange} />
         <PhoneInput country={'cm'} // Cameroon
-           onlyCountries={['cm']} // Optional: force only Cameroon
-           masks={{ cm: '.... ......' }}
-           value={form.phoneno}
-           onChange={(phone) =>
-          setForm((prev) => ({ ...prev, phoneno: `+${phone}` }))
-               }
-              inputProps={{
-              name: 'phoneno',
-              required: true,
-              autoFocus: false
-              }}
+                onlyCountries={['cm']} 
+                masks={{ cm: '.... ......' }}
+                value={form.phoneno}
+                onChange={(phone) =>
+                setForm((prev) => ({ ...prev, phoneno: `+${phone}` }))
+                    }
+                    inputProps={{
+                    name: 'phoneno',
+                    required: true,
+                    autoFocus: false
+                    }}
         />
         {phoneError && <div className="error-messages">{phoneError}</div>}
 
         <input name="birthdate" type="date" required onChange={handleInputChange} max={maxDate} />
-        {/* <div className="bio-container"> */}
+        
         <textarea
              name="bio"
              placeholder="Any brief description about you"
@@ -270,12 +273,12 @@ if (!isValidCameroonPhone(form.phoneno)) {
            {charCount}/300
           </span>
            {isInvalid && (
-           <p className="error-msg">Bio must be between 50 and 300 characters.</p>
+           <p className="error-msg">Bio must be between 30 and 300 characters.</p>
            )}
          </div>
-         {/* </div> */}
+        
 
-        {/* 📸 Profile Photo Input + Preview + Remove */}
+        {/*  Profile Photo Input + Preview + Remove */}
       <label>Upload Profile Picture</label>
       <input
         type="file"
@@ -292,95 +295,72 @@ if (!isValidCameroonPhone(form.phoneno)) {
   </div>
 )}
 
-{isCropping && imageSrc && (
-  <div className="cropper-wrapper">
-  <div className="cropper-box">
-    <Cropper
-      image={imageSrc}
-      crop={crop}
-      zoom={zoom}
-      aspect={1}
-      cropShape="round"
-      showGrid={false}
-      onCropChange={setCrop}
-      onZoomChange={setZoom}
-      onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
-    />
-  </div>
+        {isCropping && imageSrc && (
+          <div className="cropper-wrapper">
+          <div className="cropper-box">
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+            />
+          </div>
 
-  <div className="cropper-buttons">
-    <button type="button" onClick={handleCropConfirm}>Crop & Save</button>
-    <button type="button" onClick={() => setIsCropping(false)}>Cancel</button>
-  </div>
+          <div className="cropper-buttons">
+            <button type="button" onClick={handleCropConfirm}>Crop & Save</button>
+            <button type="button" onClick={() => setIsCropping(false)}>Cancel</button>
+          </div>
+              </div>
+
+      )}
 </div>
 
-)}
+         <div className="tellus-forms">
+      <h3>Tell us about yourself</h3>
+      
+         <div className="preferences">
+             {[
+               { name: 'ageRange', placeholder: 'Your age range', options: ['18-21', '22-25', '26-29', '30-33'] },
+               { name: 'gender', placeholder: 'Your gender', options: ['Male', 'Female'] },
+               { name: 'pet', placeholder: 'Pets friendly?', options: ['Yes', 'No'] },
+               { name: 'lateNights', placeholder: 'Late nights?', options: ['Rarely', 'Sometimes', 'Often'] },
+               { name: 'smoking', placeholder: 'Do you smoke?', options: ['Yes', 'No'] },
+               { name: 'drinking', placeholder: 'How often do you drink?', options: ['Rarely', 'Sometimes', 'Often'] },
+               { name: 'guests', placeholder: 'Guest Policy', options: ['Rarely', 'Sometimes', 'Often'] },
+               { name: 'noiseTolerance', placeholder: 'Noise Tolerance', options: ['Low', 'Medium', 'High'] },
+               { name: 'religion', placeholder: 'Religion', options: ['Christian', 'Muslim'] },
+               { name: 'occupation', placeholder: 'Occupation', options: ['Student', 'Worker'] },
+             ].map(field => (
+                 <div className="select-field" key={field.name}>
+                  <label htmlFor={field.name}>{field.placeholder}</label>
+               <select
+                 id={field.name}
+                 name={field.name}
+                 onChange={handleInputChange}
+               >
+                 <option value="" hidden>
+                   {/* Select {field.placeholder} */}
+                 </option>
+                 {field.options.map(opt => (
+                   <option key={opt} value={opt}>{opt}</option>
+                 ))}
+               </select>
+               </div>
+             ))}
+           </div>
+     
+    </div>
 
-
-
-        <h3>Tell us about yourself</h3>
-        <select name="ageRange" onChange={handleInputChange}>
-          <option value="default" hidden> Your age range</option>
-          <option>18-21</option>
-          <option>22-25</option>
-          <option>26-29</option>
-          <option>30-33</option>
-        </select>
-        <select name="gender" onChange={handleInputChange}>
-          <option value="default" hidden>Your gender</option>
-          <option>Male</option>
-          <option>Female</option>
-        </select>
-        <select name="pet" onChange={handleInputChange}>
-          <option value="" hidden>Are you pets friendly?</option>
-          <option>Yes</option>
-          <option>No</option>
-        </select>
-        <select name="lateNights" onChange={handleInputChange}>
-          <option value="" hidden>Late nights?</option>
-          <option>Rarely</option>
-          <option>Sometimes</option>
-          <option>Often</option>
-        </select>
-        <select name="smoking" onChange={handleInputChange}>
-          <option value="" hidden>Do you smoke?</option>
-          <option>Yes</option>
-          <option>No</option>
-        </select>
-        <select name="drinking" onChange={handleInputChange}>
-          <option value="" hidden>How often do you drink?</option>
-          <option>Rarely</option>
-          <option>Sometimes</option>
-          <option>Often</option>
-        </select>
-        <select name="guests" onChange={handleInputChange}>
-          <option value="" hidden>Guest Policy</option>
-          <option>Rarely</option>
-          <option>Sometimes</option>
-          <option>Often</option>
-        </select>
-        <select name="noiseTolerance" onChange={handleInputChange}>
-          <option value="" hidden>Noise Tolerance</option>
-          <option>Low</option>
-          <option>Medium</option>
-          <option>High</option>
-        </select>
-        <select name="religion" onChange={handleInputChange}>
-          <option value="" hidden>Religion</option>
-          <option>Christian</option>
-          <option>Moslem</option>
-        </select>
-        <select name="occupation" onChange={handleInputChange}>
-          <option value="" hidden>Occupation</option>
-          <option>Student</option>
-          <option>Worker</option>
-          <option>Any</option>
-        </select>
 
         <MessageBanner
          message={messageStatus.message} 
         type={messageStatus.type}
-        clear={() => setMessageStatus('')} />
+        clear={() => setMessageStatus({ message: "", type: "info" })} />
         
         <Button type="submit" disabled={submitting}>
   {submitting ? 'Saving...' : 'Save Profile'}</Button>
