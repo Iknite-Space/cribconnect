@@ -306,17 +306,29 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   display: flex;
   justify-content: center;
   align-items: center;
-   z-index: 1000;
+  z-index: 1000;
 }
 
 .modal-contents {
+  display: flex;
+  flex-direction: column;
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
+  width: 500px;
+  height: 650px;
+  max-width: 80%;
+  max-height: 80vh;
   text-align: center;
-   z-index: 1000;
+  overflow: hidden;
+  z-index: 1000;
+  justify-content: center;
+}
+
+.modal-contents .modal-headers,
+.modal-contents img,
+.modal-contents .messa {
+  flex-shrink: 0;
 }
 
 .modal-headers {
@@ -331,19 +343,31 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   font-size: 1.4rem;
 }
 
+.modal-body {
+  flex: 1;                /* fill all remaining vertical space */
+  overflow-y: auto;       /* enable scroll when content is too tall */
+  margin-bottom: 1rem;    /* space before the button */
+  text-align: left;
+  padding-right: 0.5rem;  /* avoid scrollbar hitting your text */
+}
+
 .modal-contents img {
-  width: 100%;
-  height: auto;
+  width: 350px;
+  height: 27vh;
   border-radius: 8px;
   margin-bottom: 1rem;
+  
 }
 
 .modal-contents p {
   margin: 0.5rem 0;
+  font-size: 1.4rem;
 }
 
-.modal-contents button {
+.modal-contents .messa {
+  flex: 0 0 auto;
   margin-top: 1rem;
+  width: fit-content;
   background-color: #007bff;
   color: white;
   border: none;
@@ -353,7 +377,6 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
 }
 
 .filter-header {
-  /* position: sticky; */
   top: 0;
   z-index: 20;
   background-color: #ffffff;
@@ -468,10 +491,43 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
 .match-result {
   margin-left: 1rem;
   font-weight: bold;
-  color: #4caf50; /* or red if error */
+  color: #4caf50; 
 }
 
+/* .messa {
+  margin-top: auto;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+} */
 .messa:hover {
 cursor: pointer;
 transform: scale(1.1);
+}
+
+.modal-body .mutual-count {
+ margin: 1rem 0 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+ .mutual-count   .match-info {
+  border: 1px solid rgb(52, 46, 46);
+  padding: 1rem;
+  background-color: whitesmoke;
+  overflow-y: auto; 
+}
+
+.match-info p {
+  font-weight: 750;
+  font-size: 1.4rem;
+}
+.match-info ul {
+  display: grid;
+  grid-template-columns: repeat(2 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding-left: 1rem;      
+  list-style-position: inside;
+  font-size: 1.1rem; 
 }

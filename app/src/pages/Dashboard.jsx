@@ -44,6 +44,7 @@ function Dashboard() {
 
   const [listings, setListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
+  const [selectedListing, setSelectedListing] = useState(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -263,13 +264,16 @@ function Dashboard() {
         message: `Match Score: ${matchData.score}% — ${
           matchData.comment || "Compatibility calculated!"
         }`,
-        type: "success",
+        type: "info",
       });
+
+      console.log(matchData);
 
       setMatchResults((prev) => ({
         ...prev,
         [userId_2]: {
           score: matchData.score,
+          mutual: matchData.mutal,
           category: matchData.category, //|| "Compatibility calculated!"
         },
       }));
@@ -508,24 +512,14 @@ function Dashboard() {
                   className="clickable-imgs"
                   onClick={() =>{
                     setData({
+                      user_id: listing.user_id,
                       fname: listing.fname ?? "",
                       lname: listing.lname,
-                      // age: listing.age,
                       profile_picture: listing.profilepicture,
                       bio: listing.bio,
-                      // preferences: {
-                      //   Age_range: listing.habbits.agerange,
-                      //   Gender: listing.habbits.gender,
-                      //   Pet: listing.habbits.pet,
-                      //   Late_Nights: listing.habbits.latenights,
-                      //   Smoking: listing.habbits.smoking,
-                      //   Drinking: listing.habbits.drinking,
-                      //   Guests_policy: listing.habbits.guests,
-                      //   noise_tolerance: listing.habbits.noisetolerance,
-                      //   Religion: listing.habbits.religion,
-                      //   Occupation: listing.habbits.occupation
-                      // }
+                      
                     });
+                    setSelectedListing(listing.user_id);
                     setViewDetails(true)
                   }}
                 />
@@ -540,24 +534,25 @@ function Dashboard() {
 
                 <button
                   className="match-buttons"
-                  onClick={() => handleMatch(listing.user_id)}
+                  onClick={() => 
+                    handleMatch(listing.user_id)}
                 >
                   {submitting ? "Matching..." : "Match"}
                 </button>
                 {matchResults[listing.user_id] && (
                   <span
-                    className="match-result"
-                    style={{
-                      marginLeft: "1rem",
-                      fontWeight: "bold",
-                      color:
-                        categoryColorMap[
-                          matchResults[listing.user_id].category
-                        ],
-                    }}
-                  >
-                    {matchResults[listing.user_id].score}% -{" "}
-                    {matchResults[listing.user_id].category}
+                        className="match-result"
+                        style={{
+                          marginLeft: "1rem",
+                          fontWeight: "bold",
+                          color:
+                            categoryColorMap[
+                              matchResults[listing.user_id].category
+                            ],
+                        }}
+                      >
+                        {matchResults[listing.user_id].score}% -{" "}
+                        {matchResults[listing.user_id].category}
                   </span>
                 )}
               </div>
@@ -567,7 +562,7 @@ function Dashboard() {
           )}
         </div>
 
-        {viewDetails  && (
+        {viewDetails  && selectedListing && (
           <div
             className="modal-overlays"
             onClick={(e) => {
@@ -594,6 +589,8 @@ function Dashboard() {
                 </span>
               </div>
 
+              
+
               <img 
                 src={
                   data.profile_picture && data.profile_picture !== ""
@@ -601,6 +598,7 @@ function Dashboard() {
                     : "https://res.cloudinary.com/dh1rs2zgb/image/upload/v1753801839/finder_logo_awoliq.png"
                 }
                 alt={"Photos"}
+                className="thumbnail-img"
               />
 
               <p>
@@ -610,6 +608,48 @@ function Dashboard() {
               <p>
                 <strong>{data.bio}</strong>
               </p>
+               <div class="modal-body">
+              <div className="mutual-count">
+                 {(() => {
+                  const result = matchResults[selectedListing];
+
+                   if (result === undefined ) {
+                    return <p>Tap “Match” on the card first to see your score and mutuals.</p>
+                   }
+                   
+                    if (result === null) {
+                    // match is in progress
+                    return <p>Calculating match…</p>;
+                  }
+                
+                 return (
+              <div className="match-info">
+              
+                  <p>
+                    <strong>You both have these in common:</strong>{" "}
+                    </p>
+                    {result.mutual?.length > 0 ? (
+                      <ul>
+                          {[...result.mutual]                   
+                            .sort((a, b) =>                      
+                            a.localeCompare(b, undefined, { sensitivity: 'base' })
+                          )
+                          .map((item, idx) => (                
+                            <li key={idx}>{item}</li>
+                          ))}
+                      </ul>
+                    ) : (
+                      <p>None</p>
+                    )}
+                  
+                </div>
+              );
+            })()}
+                
+
+                
+                </div>
+                </div>
               <button className="messa" onClick={() => navigate("/chats")}>Message</button>
             </div>
           </div>
