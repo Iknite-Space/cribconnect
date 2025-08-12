@@ -306,6 +306,7 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   display: flex;
   justify-content: center;
   align-items: center;
+   z-index: 1000;
 }
 
 .modal-contents {
@@ -315,6 +316,7 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   width: 90%;
   max-width: 500px;
   text-align: center;
+   z-index: 1000;
 }
 
 .modal-headers {
@@ -467,4 +469,9 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   margin-left: 1rem;
   font-weight: bold;
   color: #4caf50; /* or red if error */
+}
+
+.messa:hover {
+cursor: pointer;
+transform: scale(1.1);
 }
