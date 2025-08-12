@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from 'react-router-dom'; 
 import Navbar from "../assets/components/Navbar";
 import Footer from "../assets/components/Footer";
 import "../styles/Dashboard.css";
@@ -38,6 +39,8 @@ function Dashboard() {
     "Very Good": "#ffc107",
     Excellent: "#4caf50",
   };
+
+   const navigate = useNavigate(); 
 
   const [listings, setListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
@@ -607,7 +610,7 @@ function Dashboard() {
               <p>
                 <strong>{data.bio}</strong>
               </p>
-              <button>Message</button>
+              <button className="messa" onClick={() => navigate("/chats")}>Message</button>
             </div>
           </div>
         )}

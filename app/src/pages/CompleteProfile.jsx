@@ -290,8 +290,12 @@ if (!isValidCameroonPhone(form.phoneno)) {
 
      {form.profile_preview && !isCropping && (
   <div className="preview">
-    <img src={form.profile_preview} alt="Cropped preview" />
-    <button type="button" onClick={handleRemovePhoto}>Remove Photo</button>
+    <img 
+        src={form.profile_preview} 
+        alt="Cropped preview" 
+        className="preview-image"
+      />
+    <button type="button" className='btz' onClick={handleRemovePhoto}>Remove Photo</button>
   </div>
 )}
 
@@ -312,8 +316,8 @@ if (!isValidCameroonPhone(form.phoneno)) {
           </div>
 
           <div className="cropper-buttons">
-            <button type="button" onClick={handleCropConfirm}>Crop & Save</button>
-            <button type="button" onClick={() => setIsCropping(false)}>Cancel</button>
+            <button type="button" className='bt' onClick={handleCropConfirm}>Crop & Save</button>
+            <button type="button" className='btz' onClick={() => setIsCropping(false)}>Cancel</button>
           </div>
               </div>
 

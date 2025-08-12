@@ -1,10 +1,13 @@
 import "../styles/ProfilePage.css";
 // import { Link } from 'react-router-dom';
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import LoadingSpinner from "../assets/components/LoadingSpinner";
 import { AuthContext } from "../context/AuthContext";
 import PhoneInput from "react-phone-input-2";
 import MessageBanner from "../assets/components/MessageBanner";
+import { getCroppedImage } from "../utils/cropImageHelper";
+import Cropper from "react-easy-crop";
+import Navbar from "../assets/components/Navbar";
 
 const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -13,6 +16,15 @@ const ProfilePage = () => {
   const [phoneError, setPhoneError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [message, setMessage] = useState({ message: "", type: 'info' });
+  const [showModal, setShowModal] = useState(false);
+  // const [previewUrl, setPreviewUrl] = useState(null);
+
+   const fileInputRef = useRef(null);
+  const [imageSrc, setImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
 
   const [formData, setFormData] = useState({
     fname: "",
@@ -127,6 +139,11 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
     }
 
     const reader = new FileReader();
+     reader.onload = () => {
+      setImageSrc(reader.result);
+       setShowModal(true);
+     setIsCropping(true);
+     };
     reader.readAsDataURL(file);
     console.log("Selected file:", file);
 
@@ -161,7 +178,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
     formData.fname && formData.lname && formData.email && formData.phoneno
   );
 
- const trimmedBio = formData.bio.trim()
+ const trimmedBio = formData.bio
 const bioLength  = trimmedBio.length;
 const isBioComplete = bioLength >= 30 && bioLength <= 300;
 const isBioInvalid  = bioLength > 0 && !isBioComplete;
@@ -299,9 +316,55 @@ const isBioInvalid  = bioLength > 0 && !isBioComplete;
     }
   };
 
+  const handleCropConfirm = async () => {
+  try {
+    const blob = await getCroppedImage(imageSrc, croppedAreaPixels);
+    const mimeType = blob?.type || 'image/jpeg';
+const extension = mimeType === 'image/png' ? 'png' : 'jpg';
+
+const file = new File([blob], `profile.${extension}`, { type: mimeType });
+
+    const previewURL = URL.createObjectURL(blob);
+
+    setFormData((prev) => ({
+      ...prev,
+      profilepicture: file,
+      profile_preview: previewURL,
+    }));
+
+    setIsCropping(false);
+    setImageSrc(null);
+    setShowModal(false);
+  } catch (err) {
+    alert('Failed to crop image.');
+    console.error(err);
+  }
+};
+
+
+  //  Remove/reset profile photo
+  const handleRemovePhoto = () => {
+  setFormData((prev) => ({
+    ...prev,
+    profilepicture: null,
+    profile_preview: null,
+  }));
+  setImageSrc(null);
+  setIsCropping(false);
+  setCroppedAreaPixels(null);
+  setCrop({ x: 0, y: 0 });
+  setZoom(1);
+
+  if (fileInputRef.current) {
+    fileInputRef.current.value = ''; //  fully clears the file selection
+  }
+};
+
+
   if (isLoading) return <LoadingSpinner message="Loading your profile..." />;
   return (
     <>
+     <Navbar />
       <header className="hero">
         <h1>The changes you make will determine your potential roommate(s)</h1>
         <div className="profile-container">
@@ -312,11 +375,16 @@ const isBioInvalid  = bioLength > 0 && !isBioComplete;
                 : formData.profilepicture
                 ? URL.createObjectURL(formData.profilepicture)
                 : "/path-to-profile.jpg"
-              //: imagePreviewUrl || "/path-to-profile.jpg"
             }
             alt="User Profile"
             className="profile-pic"
+            onClick={() => fileInputRef.current.click()}
           />
+
+          {/* Icon hangs off the image */}
+          <label htmlFor="imageUpload" className="profile-icon">
+            📷
+          </label>
 
           {/* Hidden input trigger */}
           <input
@@ -326,12 +394,39 @@ const isBioInvalid  = bioLength > 0 && !isBioComplete;
             onChange={handleFileChange}
             style={{ display: "none" }}
           />
+            {( formData.profilepicture || ( formData.profile_preview && !isCropping ) ) && (
+          <div className="previewimage">
+            
+            <button type="button" className='remove-btn' onClick={handleRemovePhoto}>Remove Photo</button>
+          </div>
+        )}
 
-          {/* Icon hangs off the image */}
-          <label htmlFor="imageUpload" className="profile-icon">
-            📷
-          </label>
+          
+        
         </div>
+           { isCropping && imageSrc &&  showModal && (
+        <div className="modal-overlay" onClick={() => setIsCropping(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+             <div className="crop-container">
+              <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+            />
+            </div>
+            <div className="modal-buttons">
+              <button className="bt" onClick={handleCropConfirm}>Crop</button>
+              <button className="btz" onClick={() => setIsCropping(false)}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
       </header>
       <form className="profile-form" onSubmit={handleSubmit}>
         <div className="form-section personal">
