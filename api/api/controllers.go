@@ -580,11 +580,12 @@ func (h *UserHandler) handleCalculateMatch(c *gin.Context) {
 		return
 	}
 
-	score := utils.CalculateMatchScore(prefs1, prefs2)
+	score, mutual := utils.CalculateMatchScore(prefs1, prefs2)
 	category, comment := utils.InterpretScore(score)
 
 	c.JSON(http.StatusOK, gin.H{
 		"score":    score,
+		"mutal":    mutual,
 		"category": category,
 		"comment":  comment,
 	})

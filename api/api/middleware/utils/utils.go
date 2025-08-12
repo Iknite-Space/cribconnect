@@ -170,42 +170,54 @@ type PrefJson struct {
 	Occupation     string `json:"occupation"`
 }
 
-func CalculateMatchScore(p1, p2 PrefJson) int {
+func CalculateMatchScore(p1, p2 PrefJson) (int, []string) {
 	total := 0
 	max := 10
+	var common []string
 
 	if p1.AgeRange == p2.AgeRange {
 		total += 1
+		common = append(common, "Age range")
 	}
 	if p1.Gender == p2.Gender {
 		total += 1
+		common = append(common, "Gender")
 	}
 	if p1.Pet == p2.Pet {
 		total += 1
+		common = append(common, "Pets friendly")
 	}
 	if p1.LateNights == p2.LateNights {
 		total += 1
+		common = append(common, "LateNights")
 	}
 	if p1.Smoking == p2.Smoking {
 		total += 1
+		common = append(common, "Smoking")
 	}
 	if p1.Drinking == p2.Drinking {
 		total += 1
+		common = append(common, "Drinking")
 	}
 	if p1.Guests == p2.Guests {
 		total += 1
+		common = append(common, "Guest policy")
 	}
 	if p1.NoiseTolerance == p2.NoiseTolerance {
 		total += 1
+		common = append(common, "Noise Tolerance")
 	}
 	if p1.Religion == p2.Religion {
 		total += 1
+		common = append(common, "Religion")
 	}
 	if p1.Occupation == p2.Occupation {
 		total += 1
+		common = append(common, "Occupation")
 	}
 
-	return int((float64(total) / float64(max)) * 100)
+	score := int((float64(total) / float64(max)) * 100)
+	return score, common
 }
 
 func InterpretScore(score int) (string, string) {
