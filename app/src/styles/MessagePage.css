@@ -1,7 +1,16 @@
 .message-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.message-container {
   /* padding: 90px 20px 60px; */
   display: flex;
-  height: 100vh;
+  flex-grow: 1;
   font-family: Arial, sans-serif;
 }
 
+.footer-container {
+  width: 100%;
+}
