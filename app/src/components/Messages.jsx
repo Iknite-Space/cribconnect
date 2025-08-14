@@ -4,7 +4,7 @@ import ChatBox from "./ChatBox";
 import "./Messages.css";
 
 const Messages = ({ threadId }) => {
-  const { messages, isLocked, isLoading, error } = useMessages(threadId);
+  const { messages, isLoading } = useMessages(threadId);
   const [localMessages, setLocalMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
