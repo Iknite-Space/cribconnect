@@ -3,7 +3,7 @@ import './Footer.css';
 const Footer = () => {
 
     return (
-        <footer className="footere">
+        <footer className="footer">
         &copy; {new Date().getFullYear()} Roommate Finder. All rights reserved.
       </footer>
     );

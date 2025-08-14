@@ -14,19 +14,22 @@ const MessagePage = () => {
   });
 
   return (
-    <>
+    <div className='message-page'>
       <Navbar />
       <MessageBanner
         message={messageStatus.message}
         type={messageStatus.type}
         clear={() => setMessageStatus({ message: "", type: "info" })}
       />
-      <Threads updateThread={setThread} />
-      <div className='message-page'>
-        {thread ? <Messages threadId={thread?.id} /> : null}
+      
+      <div className='message-container'>
+        <Threads updateThread={setThread} />
+        <Messages threadId={thread?.id} />
+        {/* {thread ? <Messages threadId={thread?.id} /> : null} */}
       </div>
-      <Footer />
-    </>
+      <div className='footer-container'><Footer /></div>
+      
+    </div>
   );
 };
 
