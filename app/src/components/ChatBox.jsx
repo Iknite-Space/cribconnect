@@ -7,8 +7,6 @@ const ChatBox = ({ sendMessage }) => {
   const handleSend = (messageHandler) => {
     if (!input.trim()) return;
 
-    
-
     const newMessage = {
       id: Date.now(),
       text: [input],
@@ -34,13 +32,19 @@ const ChatBox = ({ sendMessage }) => {
     <div className='chat-input-container'>
       <>
         <input
+          className='chatbox-input'
           type='text'
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder='Type your message...'
         />
       </>
-      <button onClick={() => handleSend(sendMessage)}>Send</button>
+      <button
+        className='chatbox-button'
+        onClick={() => handleSend(sendMessage)}
+      >
+        Send
+      </button>
     </div>
   );
 };

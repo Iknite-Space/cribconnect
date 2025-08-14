@@ -5,10 +5,9 @@
   padding: 10px;
 
   margin-bottom: auto;
- 
 }
 
-input {
+.chatbox-input {
   flex: 1;
   /* padding: 10px; */
   border: 1px solid #aaa;
@@ -16,7 +15,7 @@ input {
   margin-right: 10px;
 }
 
-button {
+.chatbox-button {
   padding: 10px;
   /* height: 20px; */
   background-color: #007bff;
