@@ -1,0 +1,6 @@
+.banner-container {
+  background-color: rgb(220, 221, 223);
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  padding:25px;
+}

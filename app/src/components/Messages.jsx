@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import useMessages from "../hooks/useMessages";
 import ChatBox from "./ChatBox";
+import Banner from "./Banner";
 import "./Messages.css";
 
 const Messages = ({ threadId }) => {
@@ -28,11 +29,18 @@ const Messages = ({ threadId }) => {
   return (
     <>
       <div className='chat-window'>
-        <p>Chatting with...</p>
+        <div className='banner'>
+          <Banner />
+        </div>
         <div className='chat-messages'>
           {(localMessages || []).map((msg, index) => (
-            <div key={index} className='message'>
-              <strong>{msg.sender}: </strong> {msg.text}
+            <div
+              key={index}
+              className={`message ${
+                msg.sender === "You" ? "sender" : "recipient"
+              }`}
+            >
+              {msg.text}
             </div>
           ))}
         </div>
