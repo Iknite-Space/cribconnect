@@ -16,6 +16,7 @@ import (
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
+	"github.com/Iknite-Space/c4-project-boilerplate/api/payment"
 )
 
 // DBConfig holds the database configuration. This struct is populated from the .env in the current directory.
@@ -79,9 +80,10 @@ func run() error {
 	querier := repo.New(db)
 	service := api.NewService()
 	middleware := middleware.NewMiddleware()
+	campayClient := payment.NewApiClient(os.Getenv("CAMPAY_BASE_URL"), os.Getenv("CAMPAY_API_KEY"))
 
 	// We create a new http handler using the database querier.
-	handler := api.NewControllerHandler(querier, service, middleware).WireHttpHandler()
+	handler := api.NewControllerHandler(querier, service, middleware, campayClient).WireHttpHandler()
 
 	// And finally we start the HTTP server on the configured port.
 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.ListenPort), handler)
