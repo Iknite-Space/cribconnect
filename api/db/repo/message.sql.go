@@ -230,6 +230,25 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
+const getNamesOnThread = `-- name: GetNamesOnThread :one
+SELECT u.fname, u.lname 
+FROM thread t
+JOIN users u ON t.target_user_id = u.user_id
+WHERE t.thread_id = $1
+`
+
+type GetNamesOnThreadRow struct {
+	Fname *string `json:"fname"`
+	Lname *string `json:"lname"`
+}
+
+func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) (GetNamesOnThreadRow, error) {
+	row := q.db.QueryRow(ctx, getNamesOnThread, threadID)
+	var i GetNamesOnThreadRow
+	err := row.Scan(&i.Fname, &i.Lname)
+	return i, err
+}
+
 const getPaymentIdByThreadId = `-- name: GetPaymentIdByThreadId :one
 SELECT payment_id FROM payment
 WHERE thread_id = $1
@@ -261,6 +280,26 @@ type GetThreadBetweenUsersParams struct {
 
 func (q *Queries) GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error) {
 	row := q.db.QueryRow(ctx, getThreadBetweenUsers, arg.InitiatorID, arg.TargetUserID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getThreadById = `-- name: GetThreadById :one
+SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
+FROM thread
+WHERE initiator_id = $1
+`
+
+func (q *Queries) GetThreadById(ctx context.Context, initiatorID string) (Thread, error) {
+	row := q.db.QueryRow(ctx, getThreadById, initiatorID)
 	var i Thread
 	err := row.Scan(
 		&i.ThreadID,

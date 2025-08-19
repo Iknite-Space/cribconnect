@@ -109,6 +109,17 @@ SELECT
 FROM thread
 WHERE (initiator_id = $1 AND target_user_id = $2);
 
+-- name: GetThreadById :one
+SELECT * 
+FROM thread
+WHERE initiator_id = $1;
+
+-- name: GetNamesOnThread :one
+SELECT u.fname, u.lname 
+FROM thread t
+JOIN users u ON t.target_user_id = u.user_id
+WHERE t.thread_id = $1;
+
 -- name: CreateMessage :one
 INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
 VALUES ($1, $2, $3, $4)
