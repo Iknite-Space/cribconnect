@@ -10,8 +10,13 @@ import (
 )
 
 type Querier interface {
+	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
+	CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error)
+	CreateThread(ctx context.Context, arg CreateThreadParams) (Thread, error)
 	FilterUsersByPreferences(ctx context.Context, dollar_1 []byte) ([]FilterUsersByPreferencesRow, error)
 	GetAllUsers(ctx context.Context, userID string) ([]GetAllUsersRow, error)
+	GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error)
+	GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
 	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
 	GetUserHabbits(ctx context.Context, userID string) (json.RawMessage, error)
@@ -30,6 +35,7 @@ type Querier interface {
 	// DELETE FROM message
 	// WHERE id = $1;
 	RegisterUser(ctx context.Context, arg RegisterUserParams) (RegisterUserRow, error)
+	UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStatusParams) (Payment, error)
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (User, error)
 }
 

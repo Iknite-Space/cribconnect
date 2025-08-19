@@ -92,3 +92,43 @@ SELECT
   COALESCE(created_at, now()) AS created_at
   FROM users
 WHERE habbits @> $1::jsonb;
+
+-- name: CreateThread :one
+INSERT INTO thread (initiator_id, target_user_id, topic)
+VALUES ($1, $2, $3)
+RETURNING *;
+
+-- name: GetThreadBetweenUsers :one
+SELECT 
+   thread_id,
+   initiator_id,
+   target_user_id,
+   topic,
+   is_unlocked,
+   created_at
+FROM thread
+WHERE (initiator_id = $1 AND target_user_id = $2);
+
+-- name: CreateMessage :one
+INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: CreatePayment :one
+INSERT INTO payment (payer_id, target_user_id, thread_id, amount)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: GetPaymentIdByThreadId :one
+SELECT payment_id FROM payment
+WHERE thread_id = $1;
+
+-- name: UpdatePaymentStatus :one
+UPDATE payment
+SET status = $2,
+    phone = $3,
+    reference = $4,
+    external_reference = $5
+WHERE payment_id = $1
+RETURNING *;
+

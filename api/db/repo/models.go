@@ -5,11 +5,134 @@
 package repo
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type MessageStatus string
+
+const (
+	MessageStatusSent    MessageStatus = "sent"
+	MessageStatusRead    MessageStatus = "read"
+	MessageStatusDeleted MessageStatus = "deleted"
+	MessageStatusFailed  MessageStatus = "failed"
+)
+
+func (e *MessageStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MessageStatus(s)
+	case string:
+		*e = MessageStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MessageStatus: %T", src)
+	}
+	return nil
+}
+
+type NullMessageStatus struct {
+	MessageStatus MessageStatus `json:"message_status"`
+	Valid         bool          `json:"valid"` // Valid is true if MessageStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMessageStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.MessageStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MessageStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMessageStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MessageStatus), nil
+}
+
+type PaymentStatus string
+
+const (
+	PaymentStatusPENDING    PaymentStatus = "PENDING"
+	PaymentStatusSUCCESSFUL PaymentStatus = "SUCCESSFUL"
+	PaymentStatusFAILED     PaymentStatus = "FAILED"
+)
+
+func (e *PaymentStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PaymentStatus(s)
+	case string:
+		*e = PaymentStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PaymentStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPaymentStatus struct {
+	PaymentStatus PaymentStatus `json:"payment_status"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPaymentStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PaymentStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PaymentStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPaymentStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PaymentStatus), nil
+}
+
+type Message struct {
+	MessageID   string           `json:"message_id"`
+	ThreadID    string           `json:"thread_id"`
+	SenderID    string           `json:"sender_id"`
+	ReceiverID  string           `json:"receiver_id"`
+	MessageText string           `json:"message_text"`
+	IsDeleted   bool             `json:"is_deleted"`
+	Status      MessageStatus    `json:"status"`
+	SentAt      pgtype.Timestamp `json:"sent_at"`
+}
+
+type Payment struct {
+	PaymentID         string           `json:"payment_id"`
+	PayerID           string           `json:"payer_id"`
+	TargetUserID      string           `json:"target_user_id"`
+	ThreadID          string           `json:"thread_id"`
+	Phone             *string          `json:"phone"`
+	Amount            pgtype.Numeric   `json:"amount"`
+	Status            PaymentStatus    `json:"status"`
+	Provider          string           `json:"provider"`
+	Reference         *string          `json:"reference"`
+	ExternalReference string           `json:"external_reference"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
+}
+
+type Thread struct {
+	ThreadID     string           `json:"thread_id"`
+	InitiatorID  string           `json:"initiator_id"`
+	TargetUserID string           `json:"target_user_id"`
+	Topic        string           `json:"topic"`
+	IsUnlocked   bool             `json:"is_unlocked"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+}
 
 type User struct {
 	UserID         string           `json:"user_id"`

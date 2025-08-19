@@ -15,6 +15,7 @@ import (
 
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware/utils"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/payment"
 )
@@ -80,7 +81,7 @@ func run() error {
 	querier := repo.New(db)
 	service := api.NewService()
 	middleware := middleware.NewMiddleware()
-	campayClient := payment.NewApiClient(os.Getenv("CAMPAY_BASE_URL"), os.Getenv("CAMPAY_API_KEY"))
+	campayClient := payment.NewApiClient(utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_BASE_URL"), utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_API_KEY"))
 
 	// We create a new http handler using the database querier.
 	handler := api.NewControllerHandler(querier, service, middleware, campayClient).WireHttpHandler()
