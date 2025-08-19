@@ -26,7 +26,9 @@ func (clients *Requests) SendPaymentLink(amount string,
 
 	paymentRequest := PaymentRequest{
 		Amount:               amount,
+		Currency:             currency,
 		Description:          description,
+		External_reference:   external_reference,
 		RedirectUrl:          redirect_url,
 		Failure_redirect_url: failure_redirect_url,
 	}

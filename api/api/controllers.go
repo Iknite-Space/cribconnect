@@ -654,3 +654,212 @@ func (h *UserHandler) handleFilterListings(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"users": formattedUsers})
 }
+
+func (h *UserHandler) handleCreateThread(c *gin.Context) {
+	var req struct {
+		User_2 string `json:"user_2"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user 2 id"})
+		return
+	}
+
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+
+	topic := "Chat"
+
+	checkThread := repo.GetThreadBetweenUsersParams{
+		InitiatorID:  firebaseUID,
+		TargetUserID: req.User_2,
+	}
+
+	// Try to fetch an existing thread
+	existingThread, err := h.querier.GetThreadBetweenUsers(c, checkThread)
+	if err == nil {
+		// Found one – return it immediately
+		c.JSON(http.StatusOK, gin.H{"existing thread": existingThread})
+		return
+	}
+	if err != sql.ErrNoRows {
+		// Did not find any, create one
+		createThread := repo.CreateThreadParams{
+			InitiatorID:  firebaseUID,
+			TargetUserID: req.User_2,
+			Topic:        topic,
+		}
+		newThread, err := h.querier.CreateThread(c, createThread)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error:" + err.Error()})
+			return
+		}
+
+		// return new thread
+		c.JSON(http.StatusOK, gin.H{
+			"new thread": newThread,
+		})
+		return
+	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error" + err.Error()})
+
+}
+
+func (h *UserHandler) handleCreatePayment(c *gin.Context) {
+	var req struct {
+		User_2 string `json:"user_2"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user 2 id"})
+		return
+	}
+
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+
+	checkThread := repo.GetThreadBetweenUsersParams{
+		InitiatorID:  firebaseUID,
+		TargetUserID: req.User_2,
+	}
+
+	// Try to fetch an existing thread
+	existingThread, err := h.querier.GetThreadBetweenUsers(c, checkThread)
+	if err == nil {
+		paymentRequest := repo.CreatePaymentParams{
+			PayerID:      firebaseUID,
+			TargetUserID: req.User_2,
+			ThreadID:     existingThread.ThreadID,
+		}
+		if err := c.ShouldBindJSON(&paymentRequest); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment request" + err.Error()})
+			return
+		}
+		pay, err := h.querier.CreatePayment(c, paymentRequest)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
+			return
+		}
+		amount := "10"
+		currency := "XAF"
+		description := "Roommate messaging"
+		ext_ref := existingThread.ThreadID
+		redirect_url := "https://cribconnect.xyz/login"
+		failure_redirect_url := "https://cribconnect.xyz/"
+
+		paymentLink := h.campayClient.SendPaymentLink(amount, currency, description, ext_ref, redirect_url, failure_redirect_url)
+
+		c.JSON(http.StatusOK, gin.H{
+			"payment":     pay,
+			"paymentLink": paymentLink,
+		})
+		return
+	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error" + err.Error()})
+
+}
+
+var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
+
+var webhookKey = []byte(hookKey)
+
+func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
+
+	webhook := h.campayClient.CheckWebhook(string(webhookKey), c)
+
+	paymentStatus := h.campayClient.CheckPaymentStatus(webhook.Reference)
+
+	paymentToBeUpdated, err := h.querier.GetPaymentIdByThreadId(c, webhook.ExternalReference)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
+		return
+	}
+
+	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusSUCCESSFUL {
+
+		payment := repo.UpdatePaymentStatusParams{
+			PaymentID:         paymentToBeUpdated,
+			Status:            repo.PaymentStatusSUCCESSFUL,
+			Phone:             &webhook.PhoneNumber,
+			Reference:         &paymentStatus.Reference,
+			ExternalReference: webhook.ExternalReference,
+		}
+
+		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"webhookStatus":  webhook,
+			"paymentStatus":  paymentStatus,
+			"updatedPayment": updatePayment,
+		})
+
+		return
+	}
+
+	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusFAILED {
+
+		payment := repo.UpdatePaymentStatusParams{
+			PaymentID:         paymentToBeUpdated,
+			Status:            repo.PaymentStatusFAILED,
+			Phone:             &webhook.PhoneNumber,
+			Reference:         &paymentStatus.Reference,
+			ExternalReference: webhook.ExternalReference,
+		}
+
+		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"webhookStatus":  webhook,
+			"paymentStatus":  paymentStatus,
+			"updatedPayment": updatePayment,
+		})
+
+		return
+	}
+
+	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusPENDING {
+
+		payment := repo.UpdatePaymentStatusParams{
+			PaymentID:         paymentToBeUpdated,
+			Status:            repo.PaymentStatusPENDING,
+			Phone:             &webhook.PhoneNumber,
+			Reference:         &paymentStatus.Reference,
+			ExternalReference: webhook.ExternalReference,
+		}
+
+		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"webhookStatus":  webhook,
+			"paymentStatus":  paymentStatus,
+			"updatedPayment": updatePayment,
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+
+}

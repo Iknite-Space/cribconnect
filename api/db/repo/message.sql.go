@@ -13,6 +13,103 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createMessage = `-- name: CreateMessage :one
+INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
+VALUES ($1, $2, $3, $4)
+RETURNING message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
+`
+
+type CreateMessageParams struct {
+	ThreadID    string `json:"thread_id"`
+	SenderID    string `json:"sender_id"`
+	ReceiverID  string `json:"receiver_id"`
+	MessageText string `json:"message_text"`
+}
+
+func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
+	row := q.db.QueryRow(ctx, createMessage,
+		arg.ThreadID,
+		arg.SenderID,
+		arg.ReceiverID,
+		arg.MessageText,
+	)
+	var i Message
+	err := row.Scan(
+		&i.MessageID,
+		&i.ThreadID,
+		&i.SenderID,
+		&i.ReceiverID,
+		&i.MessageText,
+		&i.IsDeleted,
+		&i.Status,
+		&i.SentAt,
+	)
+	return i, err
+}
+
+const createPayment = `-- name: CreatePayment :one
+INSERT INTO payment (payer_id, target_user_id, thread_id, amount)
+VALUES ($1, $2, $3, $4)
+RETURNING payment_id, payer_id, target_user_id, thread_id, phone, amount, status, provider, reference, external_reference, created_at
+`
+
+type CreatePaymentParams struct {
+	PayerID      string         `json:"payer_id"`
+	TargetUserID string         `json:"target_user_id"`
+	ThreadID     string         `json:"thread_id"`
+	Amount       pgtype.Numeric `json:"amount"`
+}
+
+func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error) {
+	row := q.db.QueryRow(ctx, createPayment,
+		arg.PayerID,
+		arg.TargetUserID,
+		arg.ThreadID,
+		arg.Amount,
+	)
+	var i Payment
+	err := row.Scan(
+		&i.PaymentID,
+		&i.PayerID,
+		&i.TargetUserID,
+		&i.ThreadID,
+		&i.Phone,
+		&i.Amount,
+		&i.Status,
+		&i.Provider,
+		&i.Reference,
+		&i.ExternalReference,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createThread = `-- name: CreateThread :one
+INSERT INTO thread (initiator_id, target_user_id, topic)
+VALUES ($1, $2, $3)
+RETURNING thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at
+`
+
+type CreateThreadParams struct {
+	InitiatorID  string `json:"initiator_id"`
+	TargetUserID string `json:"target_user_id"`
+	Topic        string `json:"topic"`
+}
+
+func (q *Queries) CreateThread(ctx context.Context, arg CreateThreadParams) (Thread, error) {
+	row := q.db.QueryRow(ctx, createThread, arg.InitiatorID, arg.TargetUserID, arg.Topic)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const filterUsersByPreferences = `-- name: FilterUsersByPreferences :many
 SELECT 
  COALESCE(user_id, '') AS user_id,
@@ -133,6 +230,49 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
+const getPaymentIdByThreadId = `-- name: GetPaymentIdByThreadId :one
+SELECT payment_id FROM payment
+WHERE thread_id = $1
+`
+
+func (q *Queries) GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error) {
+	row := q.db.QueryRow(ctx, getPaymentIdByThreadId, threadID)
+	var payment_id string
+	err := row.Scan(&payment_id)
+	return payment_id, err
+}
+
+const getThreadBetweenUsers = `-- name: GetThreadBetweenUsers :one
+SELECT 
+   thread_id,
+   initiator_id,
+   target_user_id,
+   topic,
+   is_unlocked,
+   created_at
+FROM thread
+WHERE (initiator_id = $1 AND target_user_id = $2)
+`
+
+type GetThreadBetweenUsersParams struct {
+	InitiatorID  string `json:"initiator_id"`
+	TargetUserID string `json:"target_user_id"`
+}
+
+func (q *Queries) GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error) {
+	row := q.db.QueryRow(ctx, getThreadBetweenUsers, arg.InitiatorID, arg.TargetUserID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getUserByFirebaseId = `-- name: GetUserByFirebaseId :one
 SELECT user_id, email FROM users
 WHERE user_id = $1
@@ -251,6 +391,49 @@ func (q *Queries) RegisterUser(ctx context.Context, arg RegisterUserParams) (Reg
 	row := q.db.QueryRow(ctx, registerUser, arg.UserID, arg.Email)
 	var i RegisterUserRow
 	err := row.Scan(&i.UserID, &i.Email)
+	return i, err
+}
+
+const updatePaymentStatus = `-- name: UpdatePaymentStatus :one
+UPDATE payment
+SET status = $2,
+    phone = $3,
+    reference = $4,
+    external_reference = $5
+WHERE payment_id = $1
+RETURNING payment_id, payer_id, target_user_id, thread_id, phone, amount, status, provider, reference, external_reference, created_at
+`
+
+type UpdatePaymentStatusParams struct {
+	PaymentID         string        `json:"payment_id"`
+	Status            PaymentStatus `json:"status"`
+	Phone             *string       `json:"phone"`
+	Reference         *string       `json:"reference"`
+	ExternalReference string        `json:"external_reference"`
+}
+
+func (q *Queries) UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStatusParams) (Payment, error) {
+	row := q.db.QueryRow(ctx, updatePaymentStatus,
+		arg.PaymentID,
+		arg.Status,
+		arg.Phone,
+		arg.Reference,
+		arg.ExternalReference,
+	)
+	var i Payment
+	err := row.Scan(
+		&i.PaymentID,
+		&i.PayerID,
+		&i.TargetUserID,
+		&i.ThreadID,
+		&i.Phone,
+		&i.Amount,
+		&i.Status,
+		&i.Provider,
+		&i.Reference,
+		&i.ExternalReference,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
