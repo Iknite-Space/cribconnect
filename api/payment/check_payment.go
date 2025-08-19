@@ -7,7 +7,28 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 )
+
+type CampayWebhookPayload struct {
+	Status            string `json:"status"`
+	Reference         string `json:"reference"`
+	Amount            string `json:"amount"`
+	Currency          string `json:"currency"`
+	Operator          string `json:"operator"`
+	Code              string `json:"code"`
+	OperatorReference string `json:"operator_reference"`
+	Signature         string `json:"signature"`
+	Endpoint          string `json:"endpoint"`
+	ExternalReference string `json:"external_reference"`
+	ExternalUser      string `json:"external_user"`
+	ExtraFirstName    string `json:"extra_first_name"`
+	ExtraLastName     string `json:"extra_last_name"`
+	ExtraEmail        string `json:"extra_email"`
+	PhoneNumber       string `json:"phone_number"`
+}
 
 // struct type to hold output
 type Status struct {
@@ -23,6 +44,39 @@ type Status struct {
 	Exterbal_User      string `json:"external_user"`
 	Reason             string `json:"reason"`
 	Phone_Number       string `json:"phone_number"`
+}
+
+func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayWebhookPayload {
+	var payload CampayWebhookPayload
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error here": err.Error()})
+		log.Fatal(err)
+	}
+
+	if err := json.Unmarshal(body, &payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error is here": err.Error()})
+		log.Fatal(err)
+	}
+
+	fmt.Println(payload)
+
+	// Verify JWT signature
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(payload.Signature, claims, func(token *jwt.Token) (any, error) {
+		// Ensure the signing method is HMAC
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(webhookKey), nil
+	})
+
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden" + err.Error()})
+		log.Fatal(err)
+	}
+	return payload
 }
 
 // Initiating request to get the status of the transaction
