@@ -710,6 +710,31 @@ func (h *UserHandler) handleCreateThread(c *gin.Context) {
 
 }
 
+func (h *UserHandler) handleGetThreadById(c *gin.Context) {
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+
+	thread, err := h.querier.GetThreadById(c, firebaseUID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+		return
+	}
+
+	nameOnThread, err := h.querier.GetNamesOnThread(c, thread.ThreadID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"names": nameOnThread,
+	})
+}
+
 func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	var req struct {
 		User_2 string `json:"user_2"`
