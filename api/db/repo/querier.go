@@ -18,7 +18,7 @@ type Querier interface {
 	GetNamesOnThread(ctx context.Context, threadID string) ([]GetNamesOnThreadRow, error)
 	GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error)
 	GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error)
-	GetThreadById(ctx context.Context, initiatorID string) (Thread, error)
+	GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
 	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
 	GetUserHabbits(ctx context.Context, userID string) (json.RawMessage, error)

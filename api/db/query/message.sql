@@ -109,7 +109,7 @@ SELECT
 FROM thread
 WHERE (initiator_id = $1 AND target_user_id = $2);
 
--- name: GetThreadById :one
+-- name: GetThreadById :many
 SELECT * 
 FROM thread
 WHERE initiator_id = $1;

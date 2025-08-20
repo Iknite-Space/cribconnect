@@ -306,24 +306,37 @@ func (q *Queries) GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetwee
 	return i, err
 }
 
-const getThreadById = `-- name: GetThreadById :one
+const getThreadById = `-- name: GetThreadById :many
 SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
 FROM thread
 WHERE initiator_id = $1
 `
 
-func (q *Queries) GetThreadById(ctx context.Context, initiatorID string) (Thread, error) {
-	row := q.db.QueryRow(ctx, getThreadById, initiatorID)
-	var i Thread
-	err := row.Scan(
-		&i.ThreadID,
-		&i.InitiatorID,
-		&i.TargetUserID,
-		&i.Topic,
-		&i.IsUnlocked,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error) {
+	rows, err := q.db.Query(ctx, getThreadById, initiatorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Thread{}
+	for rows.Next() {
+		var i Thread
+		if err := rows.Scan(
+			&i.ThreadID,
+			&i.InitiatorID,
+			&i.TargetUserID,
+			&i.Topic,
+			&i.IsUnlocked,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserByFirebaseId = `-- name: GetUserByFirebaseId :one
