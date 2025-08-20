@@ -114,8 +114,8 @@ SELECT *
 FROM thread
 WHERE initiator_id = $1;
 
--- name: GetNamesOnThread :one
-SELECT u.fname, u.lname 
+-- name: GetNamesOnThread :many
+SELECT u.user_id, u.fname, u.lname 
 FROM thread t
 JOIN users u ON t.target_user_id = u.user_id
 WHERE t.thread_id = $1;
