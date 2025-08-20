@@ -710,6 +710,11 @@ func (h *UserHandler) handleCreateThread(c *gin.Context) {
 
 }
 
+type Participant struct {
+	User     repo.User `json:"user"`
+	Unlocked bool      `json:"unlocked"`
+}
+
 func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	firebaseUIDRaw, exists := c.Get("firebase_uid")
 	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
@@ -723,7 +728,9 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
-	var targetUsers []repo.User
+
+	var participants []Participant
+
 	for _, thread := range threads {
 		nameOnThread, err := h.querier.GetNamesOnThread(c, thread.ThreadID)
 		if err != nil {
@@ -731,17 +738,20 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 			return
 		}
 		for _, name := range nameOnThread {
-			user := repo.User{
-				UserID: name.UserID,
-				Fname:  name.Fname,
-				Lname:  name.Lname,
-			}
-			targetUsers = append(targetUsers, user)
+			participants = append(participants, Participant{
+				User: repo.User{
+					UserID: name.UserID,
+					Fname:  name.Fname,
+					Lname:  name.Lname,
+				},
+				Unlocked: thread.IsUnlocked,
+			})
 		}
+
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"names": targetUsers,
+		"names": participants,
 	})
 }
 

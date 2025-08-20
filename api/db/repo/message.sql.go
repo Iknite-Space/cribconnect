@@ -231,16 +231,17 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 }
 
 const getNamesOnThread = `-- name: GetNamesOnThread :many
-SELECT u.user_id, u.fname, u.lname 
+SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
 JOIN users u ON t.target_user_id = u.user_id
 WHERE t.thread_id = $1
 `
 
 type GetNamesOnThreadRow struct {
-	UserID string  `json:"user_id"`
-	Fname  *string `json:"fname"`
-	Lname  *string `json:"lname"`
+	UserID     string  `json:"user_id"`
+	Fname      *string `json:"fname"`
+	Lname      *string `json:"lname"`
+	IsUnlocked bool    `json:"is_unlocked"`
 }
 
 func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) ([]GetNamesOnThreadRow, error) {
@@ -252,7 +253,12 @@ func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) ([]GetN
 	items := []GetNamesOnThreadRow{}
 	for rows.Next() {
 		var i GetNamesOnThreadRow
-		if err := rows.Scan(&i.UserID, &i.Fname, &i.Lname); err != nil {
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Fname,
+			&i.Lname,
+			&i.IsUnlocked,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
