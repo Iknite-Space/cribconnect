@@ -1,23 +1,33 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 function useFetch(url) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { token } = useContext(AuthContext);
+  const { token, refreshIdToken } = useContext(AuthContext);
 
-  useEffect(() => {
-    const fetchData = async () => {
+ 
+    const fetchData = useCallback( async () => {
+     
       try {
         setLoading(true);
+        await refreshIdToken();
         const response = await fetch(url, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
+          
+          
         });
+
+        // if (response.status === 401) {
+        //   await refreshIdToken();
+        //   return;
+        // }
+        // console.log(response)
         if (!response.ok) {
           setError({
             message: `Something went wrong. ${response.status}`,
@@ -33,10 +43,13 @@ function useFetch(url) {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
-  }, [token, url]); // Empty dependency array = runs once on component mount
+     }, [token,refreshIdToken, url]);
+    
+    useEffect(() => {
+      fetchData();
+    }, [fetchData]);
+    
+    // Empty dependency array = runs once on component mount
   return { data, loading, error };
 }
 

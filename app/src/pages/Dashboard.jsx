@@ -287,6 +287,48 @@ function Dashboard() {
     }
   };
 
+  const handleMessage = async (user_2) => {
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      const response = await fetch("https://api.cribconnect.xyz/v1/users/chats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_2 }),
+      });
+      console.log(user_2)
+
+       if (!response.ok) {
+        setMessageStatus({
+          message: "Couldn't create chat",
+          type: "error",
+        });
+        return;
+      }
+
+      const chat = await response.json();
+      setMessageStatus({
+        message: "New chat Added",
+        type: "info",
+      });
+      console.log(chat);
+      navigate("/chats");
+
+    } catch (error) {
+       setMessageStatus({
+        message: "Something went wrong",
+        type: "error",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+
   return (
     <>
       <MessageBanner
@@ -650,7 +692,7 @@ function Dashboard() {
                 
                 </div>
                 </div>
-              <button className="messa" onClick={() => navigate("/chats")}>Message</button>
+              <button className="messa" onClick={() => handleMessage(selectedListing)}>Message</button>
             </div>
           </div>
         )}

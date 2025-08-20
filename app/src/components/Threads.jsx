@@ -2,16 +2,23 @@ import useThreads from "../hooks/useThreads";
 import "./Threads.css";
 
 // To do replace this with auth context
-const user_id = 1;
+// const user_id = 1;
 
 const Threads = ({ updateThread }) => {
-  const { threads, isLoading, error } = useThreads(user_id);
+  const { threads, isLoading, error } = useThreads(); //user_id
+  console.log("threads type:", typeof threads);
+  console.log("isArray:", Array.isArray(threads));
+  console.log("threads:", threads);
+
+  const threadArray = Array.isArray(threads) ? threads : threads.names || [];
+  // console.log("error", error)
+
 
   return (
     <>
       <div className='sidebar'>
         <h2>Chats</h2>
-        {threadContent(threads, isLoading, error, updateThread)}
+        {threadContent(threadArray, isLoading, error, updateThread)}
       </div>
     </>
   );
@@ -30,11 +37,13 @@ const threadContent = (threads, isLoading, error, updateThread) => {
 
   return (
     <ul>
-      {threads.map((u) => (
-        <li key={u.id} onClick={() => updateThread(u)}>
-          {u.name}
+       {threads.map(({user, unlocked}) => (
+        <li key={user.user_id} className={unlocked ? 'unlocked' : 'locked'}
+         onClick={() => unlocked && updateThread(threads)}>
+          {user.fname?.trim()} {user.lname?.trim()}
+          {!unlocked && <span className="lock-icon">🔒</span>}
         </li>
-      ))}
+      ))} 
     </ul>
   );
 };
