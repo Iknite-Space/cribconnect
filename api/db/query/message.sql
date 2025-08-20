@@ -115,7 +115,7 @@ FROM thread
 WHERE initiator_id = $1;
 
 -- name: GetNamesOnThread :many
-SELECT u.user_id, u.fname, u.lname 
+SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
 JOIN users u ON t.target_user_id = u.user_id
 WHERE t.thread_id = $1;
