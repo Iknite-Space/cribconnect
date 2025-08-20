@@ -718,20 +718,30 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	}
 	firebaseUID := firebaseUIDRaw.(string)
 
-	thread, err := h.querier.GetThreadById(c, firebaseUID)
+	threads, err := h.querier.GetThreadById(c, firebaseUID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
-
-	nameOnThread, err := h.querier.GetNamesOnThread(c, thread.ThreadID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
-		return
+	var targetUsers []repo.User
+	for _, thread := range threads {
+		nameOnThread, err := h.querier.GetNamesOnThread(c, thread.ThreadID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+			return
+		}
+		for _, name := range nameOnThread {
+			user := repo.User{
+				UserID: name.UserID,
+				Fname:  name.Fname,
+				Lname:  name.Lname,
+			}
+			targetUsers = append(targetUsers, user)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"names": nameOnThread,
+		"names": targetUsers,
 	})
 }
 
