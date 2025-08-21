@@ -711,6 +711,7 @@ func (h *UserHandler) handleCreateThread(c *gin.Context) {
 }
 
 type Participant struct {
+	ThreadId string    `json:"thread_id"`
 	User     repo.User `json:"user"`
 	Unlocked bool      `json:"unlocked"`
 }
@@ -739,6 +740,7 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 		}
 		for _, name := range nameOnThread {
 			participants = append(participants, Participant{
+				ThreadId: thread.ThreadID,
 				User: repo.User{
 					UserID: name.UserID,
 					Fname:  name.Fname,
@@ -757,7 +759,7 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 
 func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	var req struct {
-		User_2 string `json:"user_2"`
+		UserId_2 string `json:"userId_2"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -774,7 +776,7 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 
 	checkThread := repo.GetThreadBetweenUsersParams{
 		InitiatorID:  firebaseUID,
-		TargetUserID: req.User_2,
+		TargetUserID: req.UserId_2,
 	}
 
 	// Try to fetch an existing thread
@@ -782,23 +784,20 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	if err == nil {
 		paymentRequest := repo.CreatePaymentParams{
 			PayerID:      firebaseUID,
-			TargetUserID: req.User_2,
+			TargetUserID: req.UserId_2,
 			ThreadID:     existingThread.ThreadID,
 		}
-		if err := c.ShouldBindJSON(&paymentRequest); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment request" + err.Error()})
-			return
-		}
+
 		pay, err := h.querier.CreatePayment(c, paymentRequest)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
 			return
 		}
-		amount := "10"
+		amount := "1"
 		currency := "XAF"
 		description := "Roommate messaging"
 		ext_ref := existingThread.ThreadID
-		redirect_url := "https://cribconnect.xyz/login"
+		redirect_url := "https://cribconnect.xyz/chats"
 		failure_redirect_url := "https://cribconnect.xyz/"
 
 		paymentLink := h.campayClient.SendPaymentLink(amount, currency, description, ext_ref, redirect_url, failure_redirect_url)
