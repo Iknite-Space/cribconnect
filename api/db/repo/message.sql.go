@@ -48,16 +48,17 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 }
 
 const createPayment = `-- name: CreatePayment :one
-INSERT INTO payment (payer_id, target_user_id, thread_id, amount)
-VALUES ($1, $2, $3, $4)
+INSERT INTO payment (payer_id, target_user_id, thread_id, amount, external_reference)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING payment_id, payer_id, target_user_id, thread_id, phone, amount, status, provider, reference, external_reference, created_at
 `
 
 type CreatePaymentParams struct {
-	PayerID      string         `json:"payer_id"`
-	TargetUserID string         `json:"target_user_id"`
-	ThreadID     string         `json:"thread_id"`
-	Amount       pgtype.Numeric `json:"amount"`
+	PayerID           string         `json:"payer_id"`
+	TargetUserID      string         `json:"target_user_id"`
+	ThreadID          string         `json:"thread_id"`
+	Amount            pgtype.Numeric `json:"amount"`
+	ExternalReference string         `json:"external_reference"`
 }
 
 func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error) {
@@ -66,6 +67,7 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 		arg.TargetUserID,
 		arg.ThreadID,
 		arg.Amount,
+		arg.ExternalReference,
 	)
 	var i Payment
 	err := row.Scan(

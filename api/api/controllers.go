@@ -789,10 +789,11 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	existingThread, err := h.querier.GetThreadBetweenUsers(c, checkThread)
 	if err == nil {
 		paymentRequest := repo.CreatePaymentParams{
-			PayerID:      firebaseUID,
-			TargetUserID: req.UserId_2,
-			ThreadID:     existingThread.ThreadID,
-			Amount:       amt,
+			PayerID:           firebaseUID,
+			TargetUserID:      req.UserId_2,
+			ThreadID:          existingThread.ThreadID,
+			Amount:            amt,
+			ExternalReference: existingThread.ThreadID,
 		}
 
 		pay, err := h.querier.CreatePayment(c, paymentRequest)
