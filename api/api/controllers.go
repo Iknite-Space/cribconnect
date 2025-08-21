@@ -16,6 +16,7 @@ import (
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware/utils"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type PrefJson struct {
@@ -779,6 +780,11 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 		TargetUserID: req.UserId_2,
 	}
 
+	var amt pgtype.Numeric
+	err := amt.Scan("2")
+	if err != nil {
+		log.Fatal("Failed to parse amount:", err)
+	}
 	// Try to fetch an existing thread
 	existingThread, err := h.querier.GetThreadBetweenUsers(c, checkThread)
 	if err == nil {
@@ -786,6 +792,7 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 			PayerID:      firebaseUID,
 			TargetUserID: req.UserId_2,
 			ThreadID:     existingThread.ThreadID,
+			Amount:       amt,
 		}
 
 		pay, err := h.querier.CreatePayment(c, paymentRequest)
@@ -793,7 +800,7 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
 			return
 		}
-		amount := "1"
+		amount := "2"
 		currency := "XAF"
 		description := "Roommate messaging"
 		ext_ref := existingThread.ThreadID
