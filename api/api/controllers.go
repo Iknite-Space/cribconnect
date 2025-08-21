@@ -758,6 +758,8 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	})
 }
 
+//
+
 func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	var req struct {
 		UserId_2 string `json:"userId_2"`
