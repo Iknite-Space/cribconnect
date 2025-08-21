@@ -126,8 +126,8 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: CreatePayment :one
-INSERT INTO payment (payer_id, target_user_id, thread_id, amount)
-VALUES ($1, $2, $3, $4)
+INSERT INTO payment (payer_id, target_user_id, thread_id, amount, external_reference)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetPaymentIdByThreadId :one
