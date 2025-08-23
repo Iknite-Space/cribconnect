@@ -130,9 +130,11 @@ INSERT INTO payment (payer_id, target_user_id, thread_id, amount, external_refer
 VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
--- name: GetPaymentIdByThreadId :one
-SELECT payment_id FROM payment
-WHERE thread_id = $1;
+-- name: GetPaymentByThreadId :one
+SELECT * FROM payment
+WHERE thread_id = $1
+ORDER BY created_at DESC
+LIMIT 1;
 
 -- name: UpdatePaymentStatus :one
 UPDATE payment

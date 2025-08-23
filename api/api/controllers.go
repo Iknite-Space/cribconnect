@@ -789,38 +789,49 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	}
 	// Try to fetch an existing thread
 	existingThread, err := h.querier.GetThreadBetweenUsers(c, checkThread)
-	if err == nil {
-		paymentRequest := repo.CreatePaymentParams{
-			PayerID:           firebaseUID,
-			TargetUserID:      req.UserId_2,
-			ThreadID:          existingThread.ThreadID,
-			Amount:            amt,
-			ExternalReference: existingThread.ThreadID,
-		}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Thread lookup failed: " + err.Error()})
+		return
+	}
 
-		pay, err := h.querier.CreatePayment(c, paymentRequest)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
-			return
-		}
-		amount := "2"
-		currency := "XAF"
-		description := "Roommate messaging"
-		ext_ref := existingThread.ThreadID
-		redirect_url := "https://cribconnect.xyz/chats"
-		failure_redirect_url := "https://cribconnect.xyz/"
+	amount := "2"
+	currency := "XAF"
+	description := "Roommate messaging"
+	ext_ref := existingThread.ThreadID
+	redirect_url := "https://cribconnect.xyz/chats"
+	failure_redirect_url := "https://cribconnect.xyz/"
 
+	existingPayment, err := h.querier.GetPaymentByThreadId(c, existingThread.ThreadID)
+
+	if err == nil && (existingPayment.Status == "PENDING" || existingPayment.Status == "FAILED") {
 		paymentLink := h.campayClient.SendPaymentLink(amount, currency, description, ext_ref, redirect_url, failure_redirect_url)
-
 		c.JSON(http.StatusOK, gin.H{
-			"payment":     pay,
+			"payment":     existingPayment,
 			"paymentLink": paymentLink,
 		})
 		return
 	}
 
-	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error" + err.Error()})
+	newPaymentRequest := repo.CreatePaymentParams{
+		PayerID:           firebaseUID,
+		TargetUserID:      req.UserId_2,
+		ThreadID:          existingThread.ThreadID,
+		Amount:            amt,
+		ExternalReference: existingThread.ThreadID,
+	}
 
+	newPayment, err := h.querier.CreatePayment(c, newPaymentRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
+		return
+	}
+
+	paymentLink := h.campayClient.SendPaymentLink(amount, currency, description, ext_ref, redirect_url, failure_redirect_url)
+
+	c.JSON(http.StatusOK, gin.H{
+		"payment":     newPayment,
+		"paymentLink": paymentLink,
+	})
 }
 
 var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
@@ -828,25 +839,30 @@ var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
 var webhookKey = []byte(hookKey)
 
 func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
+	log.Printf("Received webhook call from Campay")
 
 	webhook := h.campayClient.CheckWebhook(string(webhookKey), c)
 
 	paymentStatus := h.campayClient.CheckPaymentStatus(webhook.Reference)
 
-	paymentToBeUpdated, err := h.querier.GetPaymentIdByThreadId(c, webhook.ExternalReference)
+	paymentToBeUpdated, err := h.querier.GetPaymentByThreadId(c, webhook.ExternalReference)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
 
-	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusSUCCESSFUL {
+	status := repo.PaymentStatus(webhook.Status)
+	if webhook.Status == paymentStatus.Status &&
+		(status == repo.PaymentStatusSUCCESSFUL ||
+			status == repo.PaymentStatusFAILED ||
+			status == repo.PaymentStatusPENDING) {
 
 		payment := repo.UpdatePaymentStatusParams{
-			PaymentID:         paymentToBeUpdated,
-			Status:            repo.PaymentStatusSUCCESSFUL,
+			PaymentID:         paymentToBeUpdated.PaymentID,
+			Status:            status,
 			Phone:             &webhook.PhoneNumber,
 			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
+			ExternalReference: webhook.OperatorReference,
 		}
 
 		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
@@ -863,57 +879,7 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 
 		return
 	}
-
-	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusFAILED {
-
-		payment := repo.UpdatePaymentStatusParams{
-			PaymentID:         paymentToBeUpdated,
-			Status:            repo.PaymentStatusFAILED,
-			Phone:             &webhook.PhoneNumber,
-			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
-		}
-
-		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"webhookStatus":  webhook,
-			"paymentStatus":  paymentStatus,
-			"updatedPayment": updatePayment,
-		})
-
-		return
-	}
-
-	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusPENDING {
-
-		payment := repo.UpdatePaymentStatusParams{
-			PaymentID:         paymentToBeUpdated,
-			Status:            repo.PaymentStatusPENDING,
-			Phone:             &webhook.PhoneNumber,
-			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
-		}
-
-		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"webhookStatus":  webhook,
-			"paymentStatus":  paymentStatus,
-			"updatedPayment": updatePayment,
-		})
-
-		return
-	}
-
+	log.Printf("Webhook status mismatch: webhook=%s, transaction=%s", webhook.Status, paymentStatus.Status)
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 
 }

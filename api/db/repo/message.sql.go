@@ -271,16 +271,30 @@ func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) ([]GetN
 	return items, nil
 }
 
-const getPaymentIdByThreadId = `-- name: GetPaymentIdByThreadId :one
-SELECT payment_id FROM payment
+const getPaymentByThreadId = `-- name: GetPaymentByThreadId :one
+SELECT payment_id, payer_id, target_user_id, thread_id, phone, amount, status, provider, reference, external_reference, created_at FROM payment
 WHERE thread_id = $1
+ORDER BY created_at DESC
+LIMIT 1
 `
 
-func (q *Queries) GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error) {
-	row := q.db.QueryRow(ctx, getPaymentIdByThreadId, threadID)
-	var payment_id string
-	err := row.Scan(&payment_id)
-	return payment_id, err
+func (q *Queries) GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error) {
+	row := q.db.QueryRow(ctx, getPaymentByThreadId, threadID)
+	var i Payment
+	err := row.Scan(
+		&i.PaymentID,
+		&i.PayerID,
+		&i.TargetUserID,
+		&i.ThreadID,
+		&i.Phone,
+		&i.Amount,
+		&i.Status,
+		&i.Provider,
+		&i.Reference,
+		&i.ExternalReference,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const getThreadBetweenUsers = `-- name: GetThreadBetweenUsers :one

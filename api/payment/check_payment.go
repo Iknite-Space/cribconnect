@@ -47,20 +47,26 @@ type Status struct {
 }
 
 func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayWebhookPayload {
-	var payload CampayWebhookPayload
-
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error here": err.Error()})
-		log.Fatal(err)
+	payload := CampayWebhookPayload{
+		Status:            c.Query("status"),
+		Reference:         c.Query("reference"),
+		Amount:            c.Query("amount"),
+		Currency:          c.Query("currency"),
+		Operator:          c.Query("operator"),
+		Code:              c.Query("code"),
+		OperatorReference: c.Query("operator_reference"),
+		Signature:         c.Query("signature"),
+		Endpoint:          c.Query("endpoint"),
+		ExternalReference: c.Query("external_reference"),
+		ExternalUser:      c.Query("external_user"),
+		ExtraFirstName:    c.Query("extra_first_name"),
+		ExtraLastName:     c.Query("extra_last_name"),
+		ExtraEmail:        c.Query("extra_email"),
+		PhoneNumber:       c.Query("phone_number"),
 	}
 
-	if err := json.Unmarshal(body, &payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error is here": err.Error()})
-		log.Fatal(err)
-	}
-
-	fmt.Println(payload)
+	log.Printf("Webhook payload: %+v", payload)
+	log.Printf("Headers: %v", c.Request.Header)
 
 	// Verify JWT signature
 	claims := jwt.MapClaims{}
@@ -73,9 +79,12 @@ func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayW
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden" + err.Error()})
-		log.Fatal(err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid signature", "details": err.Error()})
+		log.Println(err)
+		return CampayWebhookPayload{}
 	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "Payload received"})
 	return payload
 }
 
@@ -87,12 +96,12 @@ func (clients *Requests) CheckPaymentStatus(reference string) Status {
 
 	if err != nil {
 		fmt.Println("Invalid Request, check get request credentials")
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	var checkState Status
 	if err := json.NewDecoder(bytes.NewBuffer(responsebody)).Decode((&checkState)); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	return checkState
 
@@ -103,7 +112,7 @@ func (clients *Requests) makeHttpRequest(method string, url string, body io.Read
 
 	if err != nil {
 		fmt.Println("Check GET request credentials")
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Token %s", clients.apikey))
@@ -113,11 +122,11 @@ func (clients *Requests) makeHttpRequest(method string, url string, body io.Read
 
 	if err != nil {
 		fmt.Println("Invalid Request, check post request credentials")
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer func() {
 		if err := response.Body.Close(); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}()
 
