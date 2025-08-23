@@ -50,6 +50,9 @@ func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayW
 	var payload CampayWebhookPayload
 
 	body, err := io.ReadAll(c.Request.Body)
+	log.Printf("Webhook payload: %s", string(body))
+	log.Printf("Headers: %v", c.Request.Header)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error here": err.Error()})
 		log.Fatal(err)
