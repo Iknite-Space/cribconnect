@@ -850,7 +850,8 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
-
+	log.Println("webhook status", webhook.Status)
+	log.Println("payment status", paymentStatus.Status)
 	status := repo.PaymentStatus(webhook.Status)
 	if webhook.Status == paymentStatus.Status &&
 		(status == repo.PaymentStatusSUCCESSFUL ||
