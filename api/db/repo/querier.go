@@ -16,7 +16,7 @@ type Querier interface {
 	FilterUsersByPreferences(ctx context.Context, dollar_1 []byte) ([]FilterUsersByPreferencesRow, error)
 	GetAllUsers(ctx context.Context, userID string) ([]GetAllUsersRow, error)
 	GetNamesOnThread(ctx context.Context, threadID string) ([]GetNamesOnThreadRow, error)
-	GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error)
+	GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error)
 	GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error)
 	GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
