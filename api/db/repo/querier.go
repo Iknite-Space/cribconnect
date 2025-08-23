@@ -38,6 +38,7 @@ type Querier interface {
 	// WHERE id = $1;
 	RegisterUser(ctx context.Context, arg RegisterUserParams) (RegisterUserRow, error)
 	UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStatusParams) (Payment, error)
+	UpdateThreadStatus(ctx context.Context, arg UpdateThreadStatusParams) (Thread, error)
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (User, error)
 }
 
