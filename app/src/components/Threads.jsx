@@ -1,30 +1,30 @@
+import { useEffect } from "react";
 import useThreads from "../hooks/useThreads";
 import "./Threads.css";
 
-// To do replace this with auth context
-// const user_id = 1;
-
-const Threads = ({ updateThread }) => {
-  const { threads, isLoading, error } = useThreads(); //user_id
-  console.log("threads type:", typeof threads);
-  console.log("isArray:", Array.isArray(threads));
-  console.log("threads:", threads);
+const Threads = ({ updateThread, onPayment }) => {
+  const { threads, payThread, paymentResponse,  isLoading, error } = useThreads();
 
   const threadArray = Array.isArray(threads) ? threads : threads.names || [];
-  // console.log("error", error)
 
+  useEffect(() => {
+    if(paymentResponse) {
+      onPayment(paymentResponse);
+      console.log("payment",paymentResponse)
+    }
+  }, [paymentResponse, onPayment]);
 
   return (
     <>
       <div className='sidebar'>
         <h2>Chats</h2>
-        {threadContent(threadArray, isLoading, error, updateThread)}
+        {threadContent(threadArray, isLoading, error, updateThread, payThread)}
       </div>
     </>
   );
 };
 
-const threadContent = (threads, isLoading, error, updateThread) => {
+const threadContent = (threads, isLoading, error, updateThread, payThread) => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -37,9 +37,9 @@ const threadContent = (threads, isLoading, error, updateThread) => {
 
   return (
     <ul>
-       {threads.map(({user, unlocked}) => (
+       {threads.map(({thread_id, user, unlocked}) => (
         <li key={user.user_id} className={unlocked ? 'unlocked' : 'locked'}
-         onClick={() => unlocked && updateThread(threads)}>
+         onClick={() => unlocked ? updateThread({thread_id, unlocked, user}) : payThread(user.user_id)}>
           {user.fname?.trim()} {user.lname?.trim()}
           {!unlocked && <span className="lock-icon">🔒</span>}
         </li>
