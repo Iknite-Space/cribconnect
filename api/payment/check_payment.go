@@ -47,21 +47,26 @@ type Status struct {
 }
 
 func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayWebhookPayload {
-	var payload CampayWebhookPayload
+	payload := CampayWebhookPayload{
+		Status:            c.Query("status"),
+		Reference:         c.Query("reference"),
+		Amount:            c.Query("amount"),
+		Currency:          c.Query("currency"),
+		Operator:          c.Query("operator"),
+		Code:              c.Query("code"),
+		OperatorReference: c.Query("operator_reference"),
+		Signature:         c.Query("signature"),
+		Endpoint:          c.Query("endpoint"),
+		ExternalReference: c.Query("external_reference"),
+		ExternalUser:      c.Query("external_user"),
+		ExtraFirstName:    c.Query("extra_first_name"),
+		ExtraLastName:     c.Query("extra_last_name"),
+		ExtraEmail:        c.Query("extra_email"),
+		PhoneNumber:       c.Query("phone_number"),
+	}
 
-	body, err := io.ReadAll(c.Request.Body)
-	log.Printf("Webhook payload: %s", string(body))
+	log.Printf("Webhook payload: %+v", payload)
 	log.Printf("Headers: %v", c.Request.Header)
-
-	if err != nil {
-		log.Println("Error reading body:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error here; Invalid request body": err.Error()})
-	}
-
-	if err := json.Unmarshal(body, &payload); err != nil {
-		log.Println("Error unmarshalling payload:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error is here; Invalid JSON": err.Error()})
-	}
 
 	// Verify JWT signature
 	claims := jwt.MapClaims{}
@@ -74,10 +79,12 @@ func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayW
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden" + err.Error()})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid signature", "details": err.Error()})
 		log.Println(err)
+		return CampayWebhookPayload{}
 	}
-	log.Println("payload", payload)
+
+	c.JSON(http.StatusOK, gin.H{"status": "Payload received"})
 	return payload
 }
 
