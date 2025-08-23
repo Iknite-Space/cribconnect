@@ -23,7 +23,7 @@ const AppRouter = () => (
       <Route path="/complete-profile" element={<PrivateRoute> <CompleteProfile /></PrivateRoute>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/profile" element={<PrivateRoute> <ProfilePage /> </PrivateRoute>} />
-      <Route path="/chats" element={<MessagePage /> } />
+      <Route path="/chats" element={<PrivateRoute><MessagePage /></PrivateRoute> } />
       <Route path="/dashboard" element={<PrivateRoute> <Dashboard /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute> <SettingsPage /></PrivateRoute>} />
       {/* <Route path="*" element={<NotFound />} /> */}
