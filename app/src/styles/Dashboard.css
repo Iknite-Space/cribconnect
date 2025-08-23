@@ -494,12 +494,6 @@ font-size: clamp(0.8rem, 1.8vw, 1.9rem);
   color: #4caf50; 
 }
 
-/* .messa {
-  margin-top: auto;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-} */
 .messa:hover {
 cursor: pointer;
 transform: scale(1.1);

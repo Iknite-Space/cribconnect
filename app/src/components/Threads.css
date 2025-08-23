@@ -4,7 +4,6 @@
   border-right: 1px solid #ccc;
   padding: 15px;
   font-family: 'Segoe UI',  sans-serif;
-  /* height: 100vh; */
   overflow-y: auto;
 }
 
@@ -57,3 +56,19 @@ opacity: 1;
   transform: scale(1.06);
 }
 /* 888854 */
+
+.payment-notification {
+  background: #f0f9ff;
+  border: 1px solid #a0d8ff;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+}
+
+.payment-notification button {
+  margin-left: 1rem;
+  background: transparent;
+  border: none;
+  color: #0077cc;
+  cursor: pointer;
+}

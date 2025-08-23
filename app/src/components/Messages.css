@@ -31,7 +31,6 @@
 
 .message {
   display: flex;
-  /* white-space: normal; */
   min-height: 30px;
   overflow-wrap: break-word;
   border-radius: 5px;
@@ -50,4 +49,107 @@
 
 .recipient {
   background-color: rgb(253, 232, 207);
+}
+
+.select-chat {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  font-size: 1.75rem;      
+  color: #555;              
+  text-align: center;
+  padding: 1rem 2rem;      
+  background: #f8f8f8;     
+  border-radius: 8px;      
+  box-shadow: 0 4px 12px rgba(190, 15, 15, 0.08);
+  max-width: 80%;          
+  line-height: 1.4;
+}
+
+.payment-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.payment-modal {
+  position: relative; 
+  width: 90%;
+  max-width: 500px;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-out;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 1rem;
+  background: transparent;
+  font-size: 2.5rem; 
+  width: 2rem; 
+  height: 2rem;
+  line-height: 2.5rem;
+  border: none;
+  color: #d62222;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-title {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  color: #222;
+}
+
+.modal-text {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.payment-amount {
+  color: #3893d0;   
+  font-weight: 600; 
+  font-size: 2.2rem;  
+}
+
+.modal-action{
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #76c7c0;  
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-action:hover {
+  background-color: #5bb0a8;
+  transform: translateY(-2px);
+}
+
+.modal-action:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 199, 192, 0.5);
 }
