@@ -872,6 +872,18 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 			return
 		}
 
+		if status == repo.PaymentStatusSUCCESSFUL {
+			_, err := h.querier.UpdateThreadStatus(c, repo.UpdateThreadStatusParams{
+				IsUnlocked: true,
+				ThreadID:   paymentToBeUpdated.ThreadID,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Thread update failed: " + err.Error()})
+				return
+			}
+			log.Print("thread updated")
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"webhookStatus":  webhook,
 			"paymentStatus":  paymentStatus,

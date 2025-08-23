@@ -120,6 +120,12 @@ FROM thread t
 JOIN users u ON t.target_user_id = u.user_id
 WHERE t.thread_id = $1;
 
+-- name: UpdateThreadStatus :one
+UPDATE thread
+SET is_unlocked = $1
+WHERE thread_id = $2
+RETURNING *;
+
 -- name: CreateMessage :one
 INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
 VALUES ($1, $2, $3, $4)

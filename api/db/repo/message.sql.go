@@ -525,6 +525,32 @@ func (q *Queries) UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStat
 	return i, err
 }
 
+const updateThreadStatus = `-- name: UpdateThreadStatus :one
+UPDATE thread
+SET is_unlocked = $1
+WHERE thread_id = $2
+RETURNING thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at
+`
+
+type UpdateThreadStatusParams struct {
+	IsUnlocked bool   `json:"is_unlocked"`
+	ThreadID   string `json:"thread_id"`
+}
+
+func (q *Queries) UpdateThreadStatus(ctx context.Context, arg UpdateThreadStatusParams) (Thread, error) {
+	row := q.db.QueryRow(ctx, updateThreadStatus, arg.IsUnlocked, arg.ThreadID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const updateUserProfile = `-- name: UpdateUserProfile :one
 UPDATE users
 SET
