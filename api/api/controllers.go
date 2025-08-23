@@ -862,7 +862,7 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 			Status:            status,
 			Phone:             &webhook.PhoneNumber,
 			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
+			ExternalReference: webhook.OperatorReference,
 		}
 
 		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
