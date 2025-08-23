@@ -32,18 +32,18 @@ type CampayWebhookPayload struct {
 
 // struct type to hold output
 type Status struct {
-	Reference          string `json:"reference"`
-	Ext_ref            string `json:"external_reference"`
-	Status             string `json:"status"`
-	Amount             string `json:"amount"`
-	Currency           string `json:"currency"`
-	Operator           string `json:"operator"`
-	Code               string `json:"code"`
-	Operator_Reference string `json:"operator_reference"`
-	Description        string `json:"description"`
-	Exterbal_User      string `json:"external_user"`
-	Reason             string `json:"reason"`
-	Phone_Number       string `json:"phone_number"`
+	Reference          string  `json:"reference"`
+	Ext_ref            string  `json:"external_reference"`
+	Status             string  `json:"status"`
+	Amount             float64 `json:"amount"`
+	Currency           string  `json:"currency"`
+	Operator           string  `json:"operator"`
+	Code               string  `json:"code"`
+	Operator_Reference string  `json:"operator_reference"`
+	Description        string  `json:"description"`
+	Exterbal_User      string  `json:"external_user"`
+	Reason             string  `json:"reason"`
+	Phone_Number       string  `json:"phone_number"`
 }
 
 func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayWebhookPayload {
@@ -107,12 +107,12 @@ func (clients *Requests) CheckPaymentStatus(reference string) Status {
 
 	if err != nil {
 		fmt.Println("Invalid Request, check get request credentials")
-		log.Println(err)
+		log.Println("error", err)
 	}
 
 	var checkState Status
 	if err := json.NewDecoder(bytes.NewBuffer(responsebody)).Decode((&checkState)); err != nil {
-		log.Println(err)
+		log.Println("unmarshal error", err)
 	}
 	return checkState
 
@@ -133,7 +133,7 @@ func (clients *Requests) makeHttpRequest(method string, url string, body io.Read
 
 	if err != nil {
 		fmt.Println("Invalid Request, check post request credentials")
-		log.Println(err)
+		log.Println("request error", err)
 	}
 	defer func() {
 		if err := response.Body.Close(); err != nil {
