@@ -839,6 +839,7 @@ var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
 var webhookKey = []byte(hookKey)
 
 func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
+	log.Printf("Received webhook call from Campay")
 
 	webhook := h.campayClient.CheckWebhook(string(webhookKey), c)
 
