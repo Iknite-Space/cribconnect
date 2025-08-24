@@ -346,6 +346,7 @@ const getThreadById = `-- name: GetThreadById :many
 SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
 FROM thread
 WHERE initiator_id = $1
+  OR target_user_id = $1
 `
 
 func (q *Queries) GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error) {
