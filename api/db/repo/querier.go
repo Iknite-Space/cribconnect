@@ -20,7 +20,7 @@ type Querier interface {
 	// FROM thread t
 	// JOIN users u ON t.target_user_id = u.user_id
 	// WHERE t.thread_id = $1;
-	GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) (GetOtherUserOnThreadRow, error)
+	GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) ([]GetOtherUserOnThreadRow, error)
 	GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error)
 	GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error)
 	GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error)

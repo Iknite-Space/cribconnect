@@ -744,17 +744,17 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 			return
 		}
-		// for _, name := range nameOnThread {
-		participants = append(participants, Participant{
-			ThreadId: thread.ThreadID,
-			User: repo.User{
-				UserID: nameOnThread.UserID,
-				Fname:  nameOnThread.Fname,
-				Lname:  nameOnThread.Lname,
-			},
-			Unlocked: thread.IsUnlocked,
-		})
-		// }
+		for _, name := range nameOnThread {
+			participants = append(participants, Participant{
+				ThreadId: thread.ThreadID,
+				User: repo.User{
+					UserID: name.UserID,
+					Fname:  name.Fname,
+					Lname:  name.Lname,
+				},
+				Unlocked: thread.IsUnlocked,
+			})
+		}
 
 	}
 
