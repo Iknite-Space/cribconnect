@@ -107,7 +107,8 @@ SELECT
    is_unlocked,
    created_at
 FROM thread
-WHERE (initiator_id = $1 AND target_user_id = $2);
+WHERE (initiator_id = $1 AND target_user_id = $2)
+OR (initiator_id  = $2 AND target_user_id = $1);
 
 -- name: GetThreadById :many
 SELECT * 
