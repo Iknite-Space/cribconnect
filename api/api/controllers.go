@@ -727,7 +727,7 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 
 	threads, err := h.querier.GetThreadById(c, firebaseUID)
 	if err != nil {
-		log.Println("server error here", err)
+		log.Printf("DB error on GetThreadById for UID %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
