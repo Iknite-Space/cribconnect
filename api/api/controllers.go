@@ -717,11 +717,6 @@ type Participant struct {
 	Unlocked bool      `json:"unlocked"`
 }
 
-type OtherUserOnThreadParams struct {
-	ThreadID string `json:"thread_id"`
-	UserID   string `json:"user_id"`
-}
-
 func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	firebaseUIDRaw, exists := c.Get("firebase_uid")
 	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
@@ -741,10 +736,6 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 
 	var participants []Participant
 	for _, thread := range threads {
-		// params := OtherUserOnThreadParams{
-		// 	ThreadID: thread.ThreadID,
-		// 	UserID:   firebaseUID,
-		// }
 		nameOnThread, err := h.querier.GetOtherUserOnThread(ctx, repo.GetOtherUserOnThreadParams{
 			ThreadID:    thread.ThreadID,
 			InitiatorID: firebaseUID,
