@@ -727,7 +727,8 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 
 	threads, err := h.querier.GetThreadById(c, firebaseUID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+		log.Println("server error here", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
 
@@ -739,7 +740,8 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 			InitiatorID: firebaseUID,
 		})
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+			log.Println("server here", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 			return
 		}
 		// for _, name := range nameOnThread {

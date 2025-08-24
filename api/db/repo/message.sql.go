@@ -240,7 +240,7 @@ JOIN users u ON (
     (t.initiator_id = $2 AND u.user_id = t.target_user_id) OR
     (t.target_user_id = $2 AND u.user_id = t.initiator_id)
 )
-WHERE t.thread_id = $1 AND t.is_unlocked = TRUE
+WHERE t.thread_id = $1
 `
 
 type GetOtherUserOnThreadParams struct {
