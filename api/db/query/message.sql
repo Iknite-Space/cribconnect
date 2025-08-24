@@ -112,7 +112,8 @@ WHERE (initiator_id = $1 AND target_user_id = $2);
 -- name: GetThreadById :many
 SELECT * 
 FROM thread
-WHERE initiator_id = $1;
+WHERE initiator_id = $1
+  OR target_user_id = $1;
 
 -- -- name: GetNamesOnThread :many
 -- SELECT u.user_id, u.fname, u.lname, t.is_unlocked
