@@ -734,22 +734,25 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	var participants []Participant
 
 	for _, thread := range threads {
-		nameOnThread, err := h.querier.GetNamesOnThread(c, thread.ThreadID)
+		nameOnThread, err := h.querier.GetOtherUserOnThread(c, repo.GetOtherUserOnThreadParams{
+			ThreadID:    thread.ThreadID,
+			InitiatorID: firebaseUID,
+		})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
 			return
 		}
-		for _, name := range nameOnThread {
-			participants = append(participants, Participant{
-				ThreadId: thread.ThreadID,
-				User: repo.User{
-					UserID: name.UserID,
-					Fname:  name.Fname,
-					Lname:  name.Lname,
-				},
-				Unlocked: thread.IsUnlocked,
-			})
-		}
+		// for _, name := range nameOnThread {
+		participants = append(participants, Participant{
+			ThreadId: thread.ThreadID,
+			User: repo.User{
+				UserID: nameOnThread.UserID,
+				Fname:  nameOnThread.Fname,
+				Lname:  nameOnThread.Lname,
+			},
+			Unlocked: thread.IsUnlocked,
+		})
+		// }
 
 	}
 

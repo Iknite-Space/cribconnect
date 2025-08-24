@@ -114,11 +114,20 @@ SELECT *
 FROM thread
 WHERE initiator_id = $1;
 
--- name: GetNamesOnThread :many
+-- -- name: GetNamesOnThread :many
+-- SELECT u.user_id, u.fname, u.lname, t.is_unlocked
+-- FROM thread t
+-- JOIN users u ON t.target_user_id = u.user_id
+-- WHERE t.thread_id = $1;
+
+-- name: GetOtherUserOnThread :one
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
-JOIN users u ON t.target_user_id = u.user_id
-WHERE t.thread_id = $1;
+JOIN users u ON (
+    (t.initiator_id = $2 AND u.user_id = t.target_user_id) OR
+    (t.target_user_id = $2 AND u.user_id = t.initiator_id)
+)
+WHERE t.thread_id = $1 AND t.is_unlocked = TRUE;
 
 -- name: UpdateThreadStatus :one
 UPDATE thread

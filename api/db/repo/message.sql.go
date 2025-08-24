@@ -232,43 +232,44 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
-const getNamesOnThread = `-- name: GetNamesOnThread :many
+const getOtherUserOnThread = `-- name: GetOtherUserOnThread :one
+
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
-JOIN users u ON t.target_user_id = u.user_id
-WHERE t.thread_id = $1
+JOIN users u ON (
+    (t.initiator_id = $2 AND u.user_id = t.target_user_id) OR
+    (t.target_user_id = $2 AND u.user_id = t.initiator_id)
+)
+WHERE t.thread_id = $1 AND t.is_unlocked = TRUE
 `
 
-type GetNamesOnThreadRow struct {
+type GetOtherUserOnThreadParams struct {
+	ThreadID    string `json:"thread_id"`
+	InitiatorID string `json:"initiator_id"`
+}
+
+type GetOtherUserOnThreadRow struct {
 	UserID     string  `json:"user_id"`
 	Fname      *string `json:"fname"`
 	Lname      *string `json:"lname"`
 	IsUnlocked bool    `json:"is_unlocked"`
 }
 
-func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) ([]GetNamesOnThreadRow, error) {
-	rows, err := q.db.Query(ctx, getNamesOnThread, threadID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetNamesOnThreadRow{}
-	for rows.Next() {
-		var i GetNamesOnThreadRow
-		if err := rows.Scan(
-			&i.UserID,
-			&i.Fname,
-			&i.Lname,
-			&i.IsUnlocked,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+// -- name: GetNamesOnThread :many
+// SELECT u.user_id, u.fname, u.lname, t.is_unlocked
+// FROM thread t
+// JOIN users u ON t.target_user_id = u.user_id
+// WHERE t.thread_id = $1;
+func (q *Queries) GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) (GetOtherUserOnThreadRow, error) {
+	row := q.db.QueryRow(ctx, getOtherUserOnThread, arg.ThreadID, arg.InitiatorID)
+	var i GetOtherUserOnThreadRow
+	err := row.Scan(
+		&i.UserID,
+		&i.Fname,
+		&i.Lname,
+		&i.IsUnlocked,
+	)
+	return i, err
 }
 
 const getPaymentByThreadId = `-- name: GetPaymentByThreadId :one
