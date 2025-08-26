@@ -22,12 +22,13 @@ function useGet(url, shouldFetch = true) {
             Authorization: `Bearer ${token}`,
           },
         });
-
+        
         if (!response.ok) {
           setError({ message: `Error ${response.status}`, code: response.status });
         } else {
           const result = await response.json();
           setData(result);
+          console.log(result)
         }
       } catch (err) {
         setError(err);
