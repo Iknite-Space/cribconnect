@@ -764,8 +764,6 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	})
 }
 
-//
-
 func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	var req struct {
 		UserId_2 string `json:"userId_2"`
@@ -841,8 +839,6 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 }
 
 var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
-
-// var webhookKey = []byte(hookKey)
 
 func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 	log.Printf("Received webhook call from Campay")

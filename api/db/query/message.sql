@@ -1,21 +1,3 @@
--- -- name: CreateMessage :one
--- INSERT INTO message (thread, sender, content)
--- VALUES ($1, $2, $3)
--- RETURNING *;
-
--- -- name: GetMessageByID :one
--- SELECT * FROM message
--- WHERE id = $1;
-
--- -- name: GetMessagesByThread :many
--- SELECT * FROM message
--- WHERE thread = $1
--- ORDER BY created_at DESC;
-
--- -- name: DeleteMessage :exec
--- DELETE FROM message
--- WHERE id = $1;
-
 
 -- name: RegisterUser :one
 INSERT INTO users (user_id,email)
@@ -115,12 +97,6 @@ SELECT *
 FROM thread
 WHERE initiator_id = $1
   OR target_user_id = $1;
-
--- -- name: GetNamesOnThread :many
--- SELECT u.user_id, u.fname, u.lname, t.is_unlocked
--- FROM thread t
--- JOIN users u ON t.target_user_id = u.user_id
--- WHERE t.thread_id = $1;
 
 -- name: GetOtherUserOnThread :many
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
