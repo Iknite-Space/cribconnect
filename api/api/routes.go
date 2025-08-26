@@ -35,10 +35,6 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 	r.GET("/v1/users/profiles", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGetAllUsers)
 	r.POST("/v1/match", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCalculateMatch)
 	r.POST("/v1/filter", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleFilterListings)
-	// r.POST("/message", h.handleCreateMessage)
-	// r.GET("/message/:id", h.handleGetMessage)
-	// r.DELETE("/message/:id", h.handleDeleteMessage)
-	// r.GET("/thread/:id/messages", h.handleGetThreadMessages)
 
 	r.POST("/v1/users/chats", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCreateThread)
 	r.POST("/v1/users/payment", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCreatePayment)

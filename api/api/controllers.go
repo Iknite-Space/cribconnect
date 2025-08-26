@@ -687,27 +687,27 @@ func (h *UserHandler) handleCreateThread(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"existing thread": existingThread})
 		return
 	}
-	if err != sql.ErrNoRows {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error" + err.Error()})
+	if err == sql.ErrNoRows {
+		// Did not find any, create one
+		createThread := repo.CreateThreadParams{
+			InitiatorID:  firebaseUID,
+			TargetUserID: req.User_2,
+			Topic:        topic,
+		}
+		newThread, err := h.querier.CreateThread(c, createThread)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error:" + err.Error()})
+			return
+		}
+
+		// return new thread
+		c.JSON(http.StatusOK, gin.H{
+			"new thread": newThread,
+		})
 		return
 	}
 
-	// Did not find any, create one
-	createThread := repo.CreateThreadParams{
-		InitiatorID:  firebaseUID,
-		TargetUserID: req.User_2,
-		Topic:        topic,
-	}
-	newThread, err := h.querier.CreateThread(c, createThread)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error:" + err.Error()})
-		return
-	}
-
-	// return new thread
-	c.JSON(http.StatusOK, gin.H{
-		"new thread": newThread,
-	})
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error" + err.Error()})
 
 }
 
@@ -763,8 +763,6 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 		"names": participants,
 	})
 }
-
-//
 
 func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	var req struct {
@@ -841,8 +839,6 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 }
 
 var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
-
-// var webhookKey = []byte(hookKey)
 
 func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 	log.Printf("Received webhook call from Campay")
