@@ -687,7 +687,7 @@ func (h *UserHandler) handleCreateThread(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"existing thread": existingThread})
 		return
 	}
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// Did not find any, create one
 		createThread := repo.CreateThreadParams{
 			InitiatorID:  firebaseUID,
