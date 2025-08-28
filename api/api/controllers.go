@@ -925,23 +925,30 @@ func (h *UserHandler) GetMessages(c *gin.Context) {
 }
 
 func (h *UserHandler) serveWs(c *gin.Context) {
-	log.Println("reaching message socket")
+	log.Println("Starting WebSocket connection setup")
 	firebaseUIDRaw, exists := c.Get("firebase_uid")
 	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		log.Println("Firebase UID missing or empty")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
 		return
 	}
 	firebaseUID := firebaseUIDRaw.(string)
-
+	log.Printf("Firebase UID retrieved: %s", firebaseUID)
 	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
+		log.Printf("WebSocket upgrade failed for user %s: %v", firebaseUID, err)
 		return
 	}
+	log.Printf("WebSocket connection established for user %s", firebaseUID)
 	h.manager.Add(firebaseUID, wsConn)
+	log.Printf("WebSocket connection added to manager for user %s", firebaseUID)
 	defer func() {
 		h.manager.Remove(firebaseUID)
+		log.Printf("Removed WebSocket connection from manager for user %s", firebaseUID)
 		if err := wsConn.Close(); err != nil {
 			log.Printf("WebSocket close error for user %s: %v", firebaseUID, err)
+		} else {
+			log.Printf("WebSocket connection closed cleanly for user %s", firebaseUID)
 		}
 	}()
 
@@ -952,6 +959,7 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 			Content    string `json:"content"`
 		}
 		if err := wsConn.ReadJSON(&incoming); err != nil {
+			log.Printf("Error reading JSON from WebSocket for user %s: %v", firebaseUID, err)
 			break
 		}
 
@@ -964,14 +972,20 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 		}
 		newMsg, dbErr := h.querier.CreateMessage(c.Request.Context(), msgParams)
 		if dbErr != nil {
+			log.Printf("Failed to persist message for user %s: %v", firebaseUID, dbErr)
 			continue
 		}
+		log.Printf("Message persisted for user %s: %+v", firebaseUID, newMsg)
 
 		// 2. Broadcast to both participants
 		thread, _ := h.querier.GetThreadById(c.Request.Context(), incoming.ThreadID)
 		recipients := []string{thread.InitiatorID, thread.TargetUserID}
 		for _, uid := range recipients {
-			_ = h.manager.Send(uid, newMsg)
+			if sendErr := h.manager.Send(uid, newMsg); sendErr != nil {
+				log.Printf("Failed to send message to user %s: %v", uid, sendErr)
+			} else {
+				log.Printf("Message sent to user %s", uid)
+			}
 		}
 	}
 }
