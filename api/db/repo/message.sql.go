@@ -242,7 +242,6 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
- Message-Backend
 const getMessageByID = `-- name: GetMessageByID :one
  SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at FROM message
  WHERE message_id = $1
@@ -250,16 +249,6 @@ const getMessageByID = `-- name: GetMessageByID :one
 
 func (q *Queries) GetMessageByID(ctx context.Context, messageID string) (Message, error) {
 	row := q.db.QueryRow(ctx, getMessageByID, messageID)
-  
-const getMessagesByThreadID = `-- name: GetMessagesByThreadID :one
-SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
-FROM message
-WHERE thread_id = $1
-ORDER BY sent_at
-`
-
-func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error) {
-	row := q.db.QueryRow(ctx, getMessagesByThreadID, threadID)
 	var i Message
 	err := row.Scan(
 		&i.MessageID,
@@ -273,7 +262,6 @@ func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) (M
 	)
 	return i, err
 }
-
 
 const getMessagesByThread = `-- name: GetMessagesByThread :many
 	 SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at FROM message
@@ -310,7 +298,28 @@ func (q *Queries) GetMessagesByThread(ctx context.Context, threadID string) ([]M
 	return items, nil
 }
 
-const getNamesOnThread = `-- name: GetNamesOnThread :many
+const getMessagesByThreadID = `-- name: GetMessagesByThreadID :one
+SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
+FROM message
+WHERE thread_id = $1
+ORDER BY sent_at
+`
+
+func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error) {
+	row := q.db.QueryRow(ctx, getMessagesByThreadID, threadID)
+	var i Message
+	err := row.Scan(
+		&i.MessageID,
+		&i.ThreadID,
+		&i.SenderID,
+		&i.ReceiverID,
+		&i.MessageText,
+		&i.IsDeleted,
+		&i.Status,
+		&i.SentAt,
+	)
+	return i, err
+}
 
 const getOtherUserOnThread = `-- name: GetOtherUserOnThread :many
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked

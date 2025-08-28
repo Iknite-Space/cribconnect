@@ -18,8 +18,6 @@ type Querier interface {
 	GetAllUsers(ctx context.Context, userID string) ([]GetAllUsersRow, error)
 	GetMessageByID(ctx context.Context, messageID string) (Message, error)
 	GetMessagesByThread(ctx context.Context, threadID string) ([]Message, error)
-	GetNamesOnThread(ctx context.Context, threadID string) ([]GetNamesOnThreadRow, error)
-	GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error)
 	GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error)
 	GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) ([]GetOtherUserOnThreadRow, error)
 	GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error)
