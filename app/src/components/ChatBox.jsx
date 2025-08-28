@@ -17,7 +17,7 @@ const ChatBox = ({ sendMessage }) => {
     const simulatedReply = {
       id: Date.now() + 1,
       text: `${input}`,
-      sender: "Bot"
+      recipient: "Bot"
     };
 
     messageHandler((prev) => [...prev, newMessage]);
