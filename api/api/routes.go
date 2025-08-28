@@ -40,7 +40,8 @@ func (h *UserHandler) WireHttpHandler() http.Handler {
 	r.POST("/v1/users/payment", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleCreatePayment)
 	r.GET("/v1/user/threads", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.handleGetThreadById)
 	r.POST("/v1/check-payment", h.handleCheckPaymentstatus)
-
+	r.GET("/v1/user/messages", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.GetMessages)
+	r.POST("/v1/user/messages", h.middleware.FirebaseAuthMiddleware(middleware.InitFirebaseClient()), h.serveWs)
 	return r
 }
 

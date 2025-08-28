@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/smtp"
 	"os"
+	"sync"
 	"time"
 
 	//
@@ -17,6 +18,8 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	"github.com/gorilla/websocket"
 )
 
 func LoadEnvSecret(envVarName, field string) string {
@@ -270,4 +273,35 @@ func CleanPrefs(prefs PrefJson) map[string]string {
 	}
 
 	return cleaned
+}
+
+type ConnectionManager struct {
+	mu          sync.RWMutex
+	connections map[string]*websocket.Conn // userID → ws
+}
+
+func NewManager() *ConnectionManager {
+	return &ConnectionManager{connections: make(map[string]*websocket.Conn)}
+}
+
+func (m *ConnectionManager) Add(userID string, conn *websocket.Conn) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.connections[userID] = conn
+}
+
+func (m *ConnectionManager) Remove(userID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.connections, userID)
+}
+
+func (m *ConnectionManager) Send(to string, msg interface{}) error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	conn, ok := m.connections[to]
+	if !ok {
+		return fmt.Errorf("user offline")
+	}
+	return conn.WriteJSON(msg)
 }

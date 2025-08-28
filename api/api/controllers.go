@@ -17,7 +17,20 @@ import (
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	"github.com/gorilla/websocket"
 )
+
+// 1. Declare the Upgrader
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// CheckOrigin controls which requests are allowed to upgrade.
+	// In production, replace this with strict origin validation.
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 type PrefJson struct {
 	AgeRange       string `json:"agerange"`
@@ -727,9 +740,9 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	threads, err := h.querier.GetThreadById(ctx, firebaseUID)
+	threads, err := h.querier.GetThreadByUserId(ctx, firebaseUID)
 	if err != nil {
-		log.Printf("DB error on GetThreadById for UID %s: %v", firebaseUID, err)
+		log.Printf("DB error on GetThreadByUserId for UID %s: %v", firebaseUID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
@@ -897,4 +910,66 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 	log.Printf("Webhook status mismatch: webhook=%s, transaction=%s", webhook.Status, paymentStatus.Status)
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 
+}
+
+func (h *UserHandler) GetMessages(c *gin.Context) {
+	log.Println("getting messages")
+	threadID := c.Param("thread_id")
+	log.Println(threadID)
+	messages, err := h.querier.GetMessagesByThreadID(c.Request.Context(), threadID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
+		return
+	}
+	c.JSON(http.StatusOK, messages)
+}
+
+func (h *UserHandler) serveWs(c *gin.Context) {
+	log.Println("reaching message socket")
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+
+	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return
+	}
+	h.manager.Add(firebaseUID, wsConn)
+	defer func() {
+		h.manager.Remove(firebaseUID)
+		wsConn.Close()
+	}()
+
+	for {
+		var incoming struct {
+			ThreadID   string `json:"thread_id"`
+			ReceiverID string `json:"receiver_id"`
+			Content    string `json:"content"`
+		}
+		if err := wsConn.ReadJSON(&incoming); err != nil {
+			break
+		}
+
+		// 1. Persist message
+		msgParams := repo.CreateMessageParams{
+			ThreadID:    incoming.ThreadID,
+			SenderID:    firebaseUID,
+			ReceiverID:  incoming.ReceiverID,
+			MessageText: incoming.Content,
+		}
+		newMsg, dbErr := h.querier.CreateMessage(c.Request.Context(), msgParams)
+		if dbErr != nil {
+			continue
+		}
+
+		// 2. Broadcast to both participants
+		thread, _ := h.querier.GetThreadById(c.Request.Context(), incoming.ThreadID)
+		recipients := []string{thread.InitiatorID, thread.TargetUserID}
+		for _, uid := range recipients {
+			_ = h.manager.Send(uid, newMsg)
+		}
+	}
 }
