@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api"
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/messages"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware/utils"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
@@ -85,6 +86,13 @@ func run() error {
 
 	// We create a new http handler using the database querier.
 	handler := api.NewControllerHandler(querier, service, middleware, campayClient).WireHttpHandler()
+
+	
+	messageService := messages.NewMessageService(querier)
+	messageHandler := messages.NewMessageHandler(messageService)
+
+	handler = messageHandler.WireRoutes(handler) 
+
 
 	// And finally we start the HTTP server on the configured port.
 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.ListenPort), handler)

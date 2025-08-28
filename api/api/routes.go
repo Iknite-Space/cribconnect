@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *UserHandler) WireHttpHandler() http.Handler {
+func (h *UserHandler) WireHttpHandler() *gin.Engine {
 
 	r := gin.Default()
 	r.Use(gin.CustomRecovery(func(c *gin.Context, _ any) {
