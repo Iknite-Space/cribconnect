@@ -940,7 +940,9 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 	h.manager.Add(firebaseUID, wsConn)
 	defer func() {
 		h.manager.Remove(firebaseUID)
-		wsConn.Close()
+		if err := wsConn.Close(); err != nil {
+			log.Printf("WebSocket close error for user %s: %v", firebaseUID, err)
+		}
 	}()
 
 	for {
