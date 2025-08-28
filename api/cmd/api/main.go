@@ -83,8 +83,9 @@ func run() error {
 	middleware := middleware.NewMiddleware()
 	campayClient := payment.NewApiClient(utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_BASE_URL"), utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_API_KEY"))
 
+	hub := utils.NewManager()
 	// We create a new http handler using the database querier.
-	handler := api.NewControllerHandler(querier, service, middleware, campayClient).WireHttpHandler()
+	handler := api.NewControllerHandler(querier, service, middleware, campayClient, hub).WireHttpHandler()
 
 	// And finally we start the HTTP server on the configured port.
 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.ListenPort), handler)

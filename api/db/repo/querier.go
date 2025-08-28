@@ -15,32 +15,15 @@ type Querier interface {
 	CreateThread(ctx context.Context, arg CreateThreadParams) (Thread, error)
 	FilterUsersByPreferences(ctx context.Context, dollar_1 []byte) ([]FilterUsersByPreferencesRow, error)
 	GetAllUsers(ctx context.Context, userID string) ([]GetAllUsersRow, error)
-	// -- name: GetNamesOnThread :many
-	// SELECT u.user_id, u.fname, u.lname, t.is_unlocked
-	// FROM thread t
-	// JOIN users u ON t.target_user_id = u.user_id
-	// WHERE t.thread_id = $1;
+	GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error)
 	GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) ([]GetOtherUserOnThreadRow, error)
 	GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error)
 	GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error)
-	GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error)
+	GetThreadById(ctx context.Context, threadID string) (Thread, error)
+	GetThreadByUserId(ctx context.Context, initiatorID string) ([]Thread, error)
 	GetUserByFirebaseId(ctx context.Context, userID string) (GetUserByFirebaseIdRow, error)
 	GetUserById(ctx context.Context, userID string) (GetUserByIdRow, error)
 	GetUserHabbits(ctx context.Context, userID string) (json.RawMessage, error)
-	// -- name: CreateMessage :one
-	// INSERT INTO message (thread, sender, content)
-	// VALUES ($1, $2, $3)
-	// RETURNING *;
-	// -- name: GetMessageByID :one
-	// SELECT * FROM message
-	// WHERE id = $1;
-	// -- name: GetMessagesByThread :many
-	// SELECT * FROM message
-	// WHERE thread = $1
-	// ORDER BY created_at DESC;
-	// -- name: DeleteMessage :exec
-	// DELETE FROM message
-	// WHERE id = $1;
 	RegisterUser(ctx context.Context, arg RegisterUserParams) (RegisterUserRow, error)
 	UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStatusParams) (Payment, error)
 	UpdateThreadStatus(ctx context.Context, arg UpdateThreadStatusParams) (Thread, error)

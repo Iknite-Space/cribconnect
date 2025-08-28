@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware"
+	"github.com/Iknite-Space/c4-project-boilerplate/api/api/middleware/utils"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 	"github.com/Iknite-Space/c4-project-boilerplate/api/payment"
 )
@@ -11,14 +12,16 @@ type UserHandler struct {
 	service      *Service
 	middleware   *middleware.Middleware
 	campayClient *payment.Requests
+	manager      *utils.ConnectionManager
 }
 
-func NewControllerHandler(querier repo.Querier, service *Service, middleware *middleware.Middleware, campayClient *payment.Requests) *UserHandler {
+func NewControllerHandler(querier repo.Querier, service *Service, middleware *middleware.Middleware, campayClient *payment.Requests, manager *utils.ConnectionManager) *UserHandler {
 	handler := &UserHandler{
 		querier:      querier,
 		service:      service,
 		middleware:   middleware,
 		campayClient: campayClient,
+		manager:      manager,
 	}
 	return handler
 }

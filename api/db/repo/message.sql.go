@@ -232,8 +232,30 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
-const getOtherUserOnThread = `-- name: GetOtherUserOnThread :many
+const getMessagesByThreadID = `-- name: GetMessagesByThreadID :one
+SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
+FROM message
+WHERE thread_id = $1
+ORDER BY sent_at
+`
 
+func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error) {
+	row := q.db.QueryRow(ctx, getMessagesByThreadID, threadID)
+	var i Message
+	err := row.Scan(
+		&i.MessageID,
+		&i.ThreadID,
+		&i.SenderID,
+		&i.ReceiverID,
+		&i.MessageText,
+		&i.IsDeleted,
+		&i.Status,
+		&i.SentAt,
+	)
+	return i, err
+}
+
+const getOtherUserOnThread = `-- name: GetOtherUserOnThread :many
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
 JOIN users u ON (
@@ -255,11 +277,6 @@ type GetOtherUserOnThreadRow struct {
 	IsUnlocked bool    `json:"is_unlocked"`
 }
 
-// -- name: GetNamesOnThread :many
-// SELECT u.user_id, u.fname, u.lname, t.is_unlocked
-// FROM thread t
-// JOIN users u ON t.target_user_id = u.user_id
-// WHERE t.thread_id = $1;
 func (q *Queries) GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) ([]GetOtherUserOnThreadRow, error) {
 	rows, err := q.db.Query(ctx, getOtherUserOnThread, arg.ThreadID, arg.InitiatorID)
 	if err != nil {
@@ -343,15 +360,35 @@ func (q *Queries) GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetwee
 	return i, err
 }
 
-const getThreadById = `-- name: GetThreadById :many
+const getThreadById = `-- name: GetThreadById :one
+SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
+FROM thread
+WHERE thread_id = $1
+`
+
+func (q *Queries) GetThreadById(ctx context.Context, threadID string) (Thread, error) {
+	row := q.db.QueryRow(ctx, getThreadById, threadID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getThreadByUserId = `-- name: GetThreadByUserId :many
 SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
 FROM thread
 WHERE initiator_id = $1
   OR target_user_id = $1
 `
 
-func (q *Queries) GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error) {
-	rows, err := q.db.Query(ctx, getThreadById, initiatorID)
+func (q *Queries) GetThreadByUserId(ctx context.Context, initiatorID string) ([]Thread, error) {
+	rows, err := q.db.Query(ctx, getThreadByUserId, initiatorID)
 	if err != nil {
 		return nil, err
 	}
@@ -457,11 +494,6 @@ func (q *Queries) GetUserHabbits(ctx context.Context, userID string) (json.RawMe
 }
 
 const registerUser = `-- name: RegisterUser :one
-
-
-
-
-
 INSERT INTO users (user_id,email)
 VALUES ($1, $2)
 RETURNING user_id,email
@@ -477,20 +509,6 @@ type RegisterUserRow struct {
 	Email  string `json:"email"`
 }
 
-// -- name: CreateMessage :one
-// INSERT INTO message (thread, sender, content)
-// VALUES ($1, $2, $3)
-// RETURNING *;
-// -- name: GetMessageByID :one
-// SELECT * FROM message
-// WHERE id = $1;
-// -- name: GetMessagesByThread :many
-// SELECT * FROM message
-// WHERE thread = $1
-// ORDER BY created_at DESC;
-// -- name: DeleteMessage :exec
-// DELETE FROM message
-// WHERE id = $1;
 func (q *Queries) RegisterUser(ctx context.Context, arg RegisterUserParams) (RegisterUserRow, error) {
 	row := q.db.QueryRow(ctx, registerUser, arg.UserID, arg.Email)
 	var i RegisterUserRow

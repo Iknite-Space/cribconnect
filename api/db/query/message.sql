@@ -92,11 +92,16 @@ FROM thread
 WHERE (initiator_id = $1 AND target_user_id = $2)
 OR (initiator_id  = $2 AND target_user_id = $1);
 
--- name: GetThreadById :many
+-- name: GetThreadByUserId :many
 SELECT * 
 FROM thread
 WHERE initiator_id = $1
   OR target_user_id = $1;
+
+-- name: GetThreadById :one
+SELECT * 
+FROM thread
+WHERE thread_id = $1;
 
 -- name: GetOtherUserOnThread :many
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
@@ -117,6 +122,12 @@ RETURNING *;
 INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
+
+-- name: GetMessagesByThreadID :one
+SELECT *
+FROM message
+WHERE thread_id = $1
+ORDER BY sent_at;
 
 -- name: CreatePayment :one
 INSERT INTO payment (payer_id, target_user_id, thread_id, amount, external_reference)
