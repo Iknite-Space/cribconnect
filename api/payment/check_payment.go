@@ -32,39 +32,52 @@ type CampayWebhookPayload struct {
 
 // struct type to hold output
 type Status struct {
-	Reference          string `json:"reference"`
-	Ext_ref            string `json:"external_reference"`
-	Status             string `json:"status"`
-	Amount             string `json:"amount"`
-	Currency           string `json:"currency"`
-	Operator           string `json:"operator"`
-	Code               string `json:"code"`
-	Operator_Reference string `json:"operator_reference"`
-	Description        string `json:"description"`
-	Exterbal_User      string `json:"external_user"`
-	Reason             string `json:"reason"`
-	Phone_Number       string `json:"phone_number"`
+	Reference          string  `json:"reference"`
+	Ext_ref            string  `json:"external_reference"`
+	Status             string  `json:"status"`
+	Amount             float64 `json:"amount"`
+	Currency           string  `json:"currency"`
+	Operator           string  `json:"operator"`
+	Code               string  `json:"code"`
+	Operator_Reference string  `json:"operator_reference"`
+	Description        string  `json:"description"`
+	Exterbal_User      string  `json:"external_user"`
+	Reason             string  `json:"reason"`
+	Phone_Number       string  `json:"phone_number"`
 }
 
 func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayWebhookPayload {
+	// payload := CampayWebhookPayload{
+	// 	Status:            c.Query("status"),
+	// 	Reference:         c.Query("reference"),
+	// 	Amount:            c.Query("amount"),
+	// 	Currency:          c.Query("currency"),
+	// 	Operator:          c.Query("operator"),
+	// 	Code:              c.Query("code"),
+	// 	OperatorReference: c.Query("operator_reference"),
+	// 	Signature:         c.Query("signature"),
+	// 	Endpoint:          c.Query("endpoint"),
+	// 	ExternalReference: c.Query("external_reference"),
+	// 	ExternalUser:      c.Query("external_user"),
+	// 	ExtraFirstName:    c.Query("extra_first_name"),
+	// 	ExtraLastName:     c.Query("extra_last_name"),
+	// 	ExtraEmail:        c.Query("extra_email"),
+	// 	PhoneNumber:       c.Query("phone_number"),
+	// }
 	var payload CampayWebhookPayload
-
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error here": err.Error()})
-		log.Fatal(err)
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Println("Failed to bind JSON:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON", "details": err.Error()})
+		return CampayWebhookPayload{}
 	}
 
-	if err := json.Unmarshal(body, &payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error is here": err.Error()})
-		log.Fatal(err)
-	}
-
-	fmt.Println(payload)
+	log.Printf("Webhook payload: %+v", payload)
+	log.Printf("Headers: %v", c.Request.Header)
+	log.Printf("Webhook key: %+v", webhookKey)
 
 	// Verify JWT signature
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(payload.Signature, claims, func(token *jwt.Token) (any, error) {
+	// claims := jwt.MapClaims{}
+	token, err := jwt.Parse(payload.Signature, func(token *jwt.Token) (any, error) {
 		// Ensure the signing method is HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method")
@@ -73,9 +86,16 @@ func (clients *Requests) CheckWebhook(webhookKey string, c *gin.Context) CampayW
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden" + err.Error()})
-		log.Fatal(err)
+		log.Println("Invalid signature", err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid signature", "details": err.Error()})
+		return CampayWebhookPayload{}
 	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		log.Println("Verified token claims:", claims)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "Payload received"})
 	return payload
 }
 
@@ -87,12 +107,12 @@ func (clients *Requests) CheckPaymentStatus(reference string) Status {
 
 	if err != nil {
 		fmt.Println("Invalid Request, check get request credentials")
-		log.Fatal(err)
+		log.Println("error", err)
 	}
 
 	var checkState Status
 	if err := json.NewDecoder(bytes.NewBuffer(responsebody)).Decode((&checkState)); err != nil {
-		log.Fatal(err)
+		log.Println("unmarshal error", err)
 	}
 	return checkState
 
@@ -103,7 +123,7 @@ func (clients *Requests) makeHttpRequest(method string, url string, body io.Read
 
 	if err != nil {
 		fmt.Println("Check GET request credentials")
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Token %s", clients.apikey))
@@ -113,11 +133,11 @@ func (clients *Requests) makeHttpRequest(method string, url string, body io.Read
 
 	if err != nil {
 		fmt.Println("Invalid Request, check post request credentials")
-		log.Fatal(err)
+		log.Println("request error", err)
 	}
 	defer func() {
 		if err := response.Body.Close(); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}()
 

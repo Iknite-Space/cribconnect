@@ -17,7 +17,20 @@ import (
 	"github.com/Iknite-Space/c4-project-boilerplate/api/db/repo"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	"github.com/gorilla/websocket"
 )
+
+// 1. Declare the Upgrader
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// CheckOrigin controls which requests are allowed to upgrade.
+	// In production, replace this with strict origin validation.
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 type PrefJson struct {
 	AgeRange       string `json:"agerange"`
@@ -687,7 +700,7 @@ func (h *UserHandler) handleCreateThread(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"existing thread": existingThread})
 		return
 	}
-	if err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// Did not find any, create one
 		createThread := repo.CreateThreadParams{
 			InitiatorID:  firebaseUID,
@@ -725,18 +738,24 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	}
 	firebaseUID := firebaseUIDRaw.(string)
 
-	threads, err := h.querier.GetThreadById(c, firebaseUID)
+	ctx := c.Request.Context()
+
+	threads, err := h.querier.GetThreadByUserId(ctx, firebaseUID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+		log.Printf("DB error on GetThreadByUserId for UID %s: %v", firebaseUID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
 
 	var participants []Participant
-
 	for _, thread := range threads {
-		nameOnThread, err := h.querier.GetNamesOnThread(c, thread.ThreadID)
+		nameOnThread, err := h.querier.GetOtherUserOnThread(ctx, repo.GetOtherUserOnThreadParams{
+			ThreadID:    thread.ThreadID,
+			InitiatorID: firebaseUID,
+		})
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
+			log.Println("server here", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 			return
 		}
 		for _, name := range nameOnThread {
@@ -787,64 +806,79 @@ func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	}
 	// Try to fetch an existing thread
 	existingThread, err := h.querier.GetThreadBetweenUsers(c, checkThread)
-	if err == nil {
-		paymentRequest := repo.CreatePaymentParams{
-			PayerID:           firebaseUID,
-			TargetUserID:      req.UserId_2,
-			ThreadID:          existingThread.ThreadID,
-			Amount:            amt,
-			ExternalReference: existingThread.ThreadID,
-		}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Thread lookup failed: " + err.Error()})
+		return
+	}
 
-		pay, err := h.querier.CreatePayment(c, paymentRequest)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
-			return
-		}
-		amount := "2"
-		currency := "XAF"
-		description := "Roommate messaging"
-		ext_ref := existingThread.ThreadID
-		redirect_url := "https://cribconnect.xyz/chats"
-		failure_redirect_url := "https://cribconnect.xyz/"
+	amount := "2"
+	currency := "XAF"
+	description := "Roommate messaging"
+	ext_ref := existingThread.ThreadID
+	redirect_url := "https://cribconnect.xyz/chats"
+	failure_redirect_url := "https://cribconnect.xyz/"
 
+	existingPayment, err := h.querier.GetPaymentByThreadId(c, existingThread.ThreadID)
+
+	if err == nil && (existingPayment.Status == "PENDING" || existingPayment.Status == "FAILED") {
 		paymentLink := h.campayClient.SendPaymentLink(amount, currency, description, ext_ref, redirect_url, failure_redirect_url)
-
 		c.JSON(http.StatusOK, gin.H{
-			"payment":     pay,
+			"payment":     existingPayment,
 			"paymentLink": paymentLink,
 		})
 		return
 	}
 
-	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error" + err.Error()})
+	newPaymentRequest := repo.CreatePaymentParams{
+		PayerID:           firebaseUID,
+		TargetUserID:      req.UserId_2,
+		ThreadID:          existingThread.ThreadID,
+		Amount:            amt,
+		ExternalReference: existingThread.ThreadID,
+	}
 
+	newPayment, err := h.querier.CreatePayment(c, newPaymentRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error" + err.Error()})
+		return
+	}
+
+	paymentLink := h.campayClient.SendPaymentLink(amount, currency, description, ext_ref, redirect_url, failure_redirect_url)
+
+	c.JSON(http.StatusOK, gin.H{
+		"payment":     newPayment,
+		"paymentLink": paymentLink,
+	})
 }
 
 var hookKey = utils.LoadEnvSecret("CAMPAY_CONFIG", "CAMPAY_WEBHOOK_KEY")
 
-var webhookKey = []byte(hookKey)
-
 func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
+	log.Printf("Received webhook call from Campay")
 
-	webhook := h.campayClient.CheckWebhook(string(webhookKey), c)
+	webhook := h.campayClient.CheckWebhook(string(hookKey), c)
 
 	paymentStatus := h.campayClient.CheckPaymentStatus(webhook.Reference)
 
-	paymentToBeUpdated, err := h.querier.GetPaymentIdByThreadId(c, webhook.ExternalReference)
+	paymentToBeUpdated, err := h.querier.GetPaymentByThreadId(c, webhook.ExternalReference)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
 		return
 	}
-
-	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusSUCCESSFUL {
+	log.Println("webhook status", webhook.Status)
+	log.Println("payment status", paymentStatus.Status)
+	status := repo.PaymentStatus(webhook.Status)
+	if webhook.Status == paymentStatus.Status &&
+		(status == repo.PaymentStatusSUCCESSFUL ||
+			status == repo.PaymentStatusFAILED ||
+			status == repo.PaymentStatusPENDING) {
 
 		payment := repo.UpdatePaymentStatusParams{
-			PaymentID:         paymentToBeUpdated,
-			Status:            repo.PaymentStatusSUCCESSFUL,
+			PaymentID:         paymentToBeUpdated.PaymentID,
+			Status:            status,
 			Phone:             &webhook.PhoneNumber,
 			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
+			ExternalReference: webhook.OperatorReference,
 		}
 
 		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
@@ -853,29 +887,16 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"webhookStatus":  webhook,
-			"paymentStatus":  paymentStatus,
-			"updatedPayment": updatePayment,
-		})
-
-		return
-	}
-
-	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusFAILED {
-
-		payment := repo.UpdatePaymentStatusParams{
-			PaymentID:         paymentToBeUpdated,
-			Status:            repo.PaymentStatusFAILED,
-			Phone:             &webhook.PhoneNumber,
-			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
-		}
-
-		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
-			return
+		if status == repo.PaymentStatusSUCCESSFUL {
+			_, err := h.querier.UpdateThreadStatus(c, repo.UpdateThreadStatusParams{
+				IsUnlocked: true,
+				ThreadID:   paymentToBeUpdated.ThreadID,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Thread update failed: " + err.Error()})
+				return
+			}
+			log.Print("thread updated")
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -886,32 +907,85 @@ func (h *UserHandler) handleCheckPaymentstatus(c *gin.Context) {
 
 		return
 	}
-
-	if webhook.Status == paymentStatus.Status && repo.PaymentStatus(webhook.Status) == repo.PaymentStatusPENDING {
-
-		payment := repo.UpdatePaymentStatusParams{
-			PaymentID:         paymentToBeUpdated,
-			Status:            repo.PaymentStatusPENDING,
-			Phone:             &webhook.PhoneNumber,
-			Reference:         &paymentStatus.Reference,
-			ExternalReference: webhook.ExternalReference,
-		}
-
-		updatePayment, err := h.querier.UpdatePaymentStatus(c, payment)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "DB Error" + err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"webhookStatus":  webhook,
-			"paymentStatus":  paymentStatus,
-			"updatedPayment": updatePayment,
-		})
-
-		return
-	}
-
+	log.Printf("Webhook status mismatch: webhook=%s, transaction=%s", webhook.Status, paymentStatus.Status)
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 
+}
+
+func (h *UserHandler) GetMessages(c *gin.Context) {
+	log.Println("getting messages")
+	threadID := c.Param("thread_id")
+	log.Println(threadID)
+	messages, err := h.querier.GetMessagesByThreadID(c.Request.Context(), threadID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
+		return
+	}
+	c.JSON(http.StatusOK, messages)
+}
+
+func (h *UserHandler) serveWs(c *gin.Context) {
+	log.Println("Starting WebSocket connection setup")
+	firebaseUIDRaw, exists := c.Get("firebase_uid")
+	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+		log.Println("Firebase UID missing or empty")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+		return
+	}
+	firebaseUID := firebaseUIDRaw.(string)
+	log.Printf("Firebase UID retrieved: %s", firebaseUID)
+	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Printf("WebSocket upgrade failed for user %s: %v", firebaseUID, err)
+		return
+	}
+	log.Printf("WebSocket connection established for user %s", firebaseUID)
+	h.manager.Add(firebaseUID, wsConn)
+	log.Printf("WebSocket connection added to manager for user %s", firebaseUID)
+	defer func() {
+		h.manager.Remove(firebaseUID)
+		log.Printf("Removed WebSocket connection from manager for user %s", firebaseUID)
+		if err := wsConn.Close(); err != nil {
+			log.Printf("WebSocket close error for user %s: %v", firebaseUID, err)
+		} else {
+			log.Printf("WebSocket connection closed cleanly for user %s", firebaseUID)
+		}
+	}()
+
+	for {
+		var incoming struct {
+			ThreadID   string `json:"thread_id"`
+			ReceiverID string `json:"receiver_id"`
+			Content    string `json:"content"`
+		}
+		if err := wsConn.ReadJSON(&incoming); err != nil {
+			log.Printf("Error reading JSON from WebSocket for user %s: %v", firebaseUID, err)
+			break
+		}
+
+		// 1. Persist message
+		msgParams := repo.CreateMessageParams{
+			ThreadID:    incoming.ThreadID,
+			SenderID:    firebaseUID,
+			ReceiverID:  incoming.ReceiverID,
+			MessageText: incoming.Content,
+		}
+		newMsg, dbErr := h.querier.CreateMessage(c.Request.Context(), msgParams)
+		if dbErr != nil {
+			log.Printf("Failed to persist message for user %s: %v", firebaseUID, dbErr)
+			continue
+		}
+		log.Printf("Message persisted for user %s: %+v", firebaseUID, newMsg)
+
+		// 2. Broadcast to both participants
+		thread, _ := h.querier.GetThreadById(c.Request.Context(), incoming.ThreadID)
+		recipients := []string{thread.InitiatorID, thread.TargetUserID}
+		for _, uid := range recipients {
+			if sendErr := h.manager.Send(uid, newMsg); sendErr != nil {
+				log.Printf("Failed to send message to user %s: %v", uid, sendErr)
+			} else {
+				log.Printf("Message sent to user %s", uid)
+			}
+		}
+	}
 }

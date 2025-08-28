@@ -242,6 +242,7 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
+ Message-Backend
 const getMessageByID = `-- name: GetMessageByID :one
  SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at FROM message
  WHERE message_id = $1
@@ -249,6 +250,16 @@ const getMessageByID = `-- name: GetMessageByID :one
 
 func (q *Queries) GetMessageByID(ctx context.Context, messageID string) (Message, error) {
 	row := q.db.QueryRow(ctx, getMessageByID, messageID)
+  
+const getMessagesByThreadID = `-- name: GetMessagesByThreadID :one
+SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
+FROM message
+WHERE thread_id = $1
+ORDER BY sent_at
+`
+
+func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error) {
+	row := q.db.QueryRow(ctx, getMessagesByThreadID, threadID)
 	var i Message
 	err := row.Scan(
 		&i.MessageID,
@@ -262,6 +273,7 @@ func (q *Queries) GetMessageByID(ctx context.Context, messageID string) (Message
 	)
 	return i, err
 }
+
 
 const getMessagesByThread = `-- name: GetMessagesByThread :many
 	 SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at FROM message
@@ -299,28 +311,38 @@ func (q *Queries) GetMessagesByThread(ctx context.Context, threadID string) ([]M
 }
 
 const getNamesOnThread = `-- name: GetNamesOnThread :many
+
+const getOtherUserOnThread = `-- name: GetOtherUserOnThread :many
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
-JOIN users u ON t.target_user_id = u.user_id
+JOIN users u ON (
+    (t.initiator_id = $2 AND u.user_id = t.target_user_id) OR
+    (t.target_user_id = $2 AND u.user_id = t.initiator_id)
+)
 WHERE t.thread_id = $1
 `
 
-type GetNamesOnThreadRow struct {
+type GetOtherUserOnThreadParams struct {
+	ThreadID    string `json:"thread_id"`
+	InitiatorID string `json:"initiator_id"`
+}
+
+type GetOtherUserOnThreadRow struct {
 	UserID     string  `json:"user_id"`
 	Fname      *string `json:"fname"`
 	Lname      *string `json:"lname"`
 	IsUnlocked bool    `json:"is_unlocked"`
 }
 
-func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) ([]GetNamesOnThreadRow, error) {
-	rows, err := q.db.Query(ctx, getNamesOnThread, threadID)
+func (q *Queries) GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) ([]GetOtherUserOnThreadRow, error) {
+	rows, err := q.db.Query(ctx, getOtherUserOnThread, arg.ThreadID, arg.InitiatorID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetNamesOnThreadRow{}
+	items := []GetOtherUserOnThreadRow{}
 	for rows.Next() {
-		var i GetNamesOnThreadRow
+		var i GetOtherUserOnThreadRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.Fname,
@@ -337,16 +359,30 @@ func (q *Queries) GetNamesOnThread(ctx context.Context, threadID string) ([]GetN
 	return items, nil
 }
 
-const getPaymentIdByThreadId = `-- name: GetPaymentIdByThreadId :one
-SELECT payment_id FROM payment
+const getPaymentByThreadId = `-- name: GetPaymentByThreadId :one
+SELECT payment_id, payer_id, target_user_id, thread_id, phone, amount, status, provider, reference, external_reference, created_at FROM payment
 WHERE thread_id = $1
+ORDER BY created_at DESC
+LIMIT 1
 `
 
-func (q *Queries) GetPaymentIdByThreadId(ctx context.Context, threadID string) (string, error) {
-	row := q.db.QueryRow(ctx, getPaymentIdByThreadId, threadID)
-	var payment_id string
-	err := row.Scan(&payment_id)
-	return payment_id, err
+func (q *Queries) GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error) {
+	row := q.db.QueryRow(ctx, getPaymentByThreadId, threadID)
+	var i Payment
+	err := row.Scan(
+		&i.PaymentID,
+		&i.PayerID,
+		&i.TargetUserID,
+		&i.ThreadID,
+		&i.Phone,
+		&i.Amount,
+		&i.Status,
+		&i.Provider,
+		&i.Reference,
+		&i.ExternalReference,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const getThreadBetweenUsers = `-- name: GetThreadBetweenUsers :one
@@ -359,6 +395,7 @@ SELECT
    created_at
 FROM thread
 WHERE (initiator_id = $1 AND target_user_id = $2)
+OR (initiator_id  = $2 AND target_user_id = $1)
 `
 
 type GetThreadBetweenUsersParams struct {
@@ -380,14 +417,35 @@ func (q *Queries) GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetwee
 	return i, err
 }
 
-const getThreadById = `-- name: GetThreadById :many
+const getThreadById = `-- name: GetThreadById :one
+SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
+FROM thread
+WHERE thread_id = $1
+`
+
+func (q *Queries) GetThreadById(ctx context.Context, threadID string) (Thread, error) {
+	row := q.db.QueryRow(ctx, getThreadById, threadID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getThreadByUserId = `-- name: GetThreadByUserId :many
 SELECT thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at 
 FROM thread
 WHERE initiator_id = $1
+  OR target_user_id = $1
 `
 
-func (q *Queries) GetThreadById(ctx context.Context, initiatorID string) ([]Thread, error) {
-	rows, err := q.db.Query(ctx, getThreadById, initiatorID)
+func (q *Queries) GetThreadByUserId(ctx context.Context, initiatorID string) ([]Thread, error) {
+	rows, err := q.db.Query(ctx, getThreadByUserId, initiatorID)
 	if err != nil {
 		return nil, err
 	}
@@ -553,6 +611,32 @@ func (q *Queries) UpdatePaymentStatus(ctx context.Context, arg UpdatePaymentStat
 		&i.Provider,
 		&i.Reference,
 		&i.ExternalReference,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateThreadStatus = `-- name: UpdateThreadStatus :one
+UPDATE thread
+SET is_unlocked = $1
+WHERE thread_id = $2
+RETURNING thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at
+`
+
+type UpdateThreadStatusParams struct {
+	IsUnlocked bool   `json:"is_unlocked"`
+	ThreadID   string `json:"thread_id"`
+}
+
+func (q *Queries) UpdateThreadStatus(ctx context.Context, arg UpdateThreadStatusParams) (Thread, error) {
+	row := q.db.QueryRow(ctx, updateThreadStatus, arg.IsUnlocked, arg.ThreadID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
 		&i.CreatedAt,
 	)
 	return i, err

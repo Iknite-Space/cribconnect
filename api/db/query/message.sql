@@ -1,4 +1,5 @@
 
+
 -- name: GetMessageByID :one
  SELECT * FROM message
  WHERE message_id = $1;
@@ -11,6 +12,7 @@
 -- name: DeleteMessage :exec
  DELETE FROM message
  WHERE message_id = $1;
+
 
 
 -- name: RegisterUser :one
@@ -103,32 +105,56 @@ SELECT
    is_unlocked,
    created_at
 FROM thread
-WHERE (initiator_id = $1 AND target_user_id = $2);
+WHERE (initiator_id = $1 AND target_user_id = $2)
+OR (initiator_id  = $2 AND target_user_id = $1);
 
--- name: GetThreadById :many
+-- name: GetThreadByUserId :many
 SELECT * 
 FROM thread
-WHERE initiator_id = $1;
+WHERE initiator_id = $1
+  OR target_user_id = $1;
 
--- name: GetNamesOnThread :many
+-- name: GetThreadById :one
+SELECT * 
+FROM thread
+WHERE thread_id = $1;
+
+-- name: GetOtherUserOnThread :many
 SELECT u.user_id, u.fname, u.lname, t.is_unlocked
 FROM thread t
-JOIN users u ON t.target_user_id = u.user_id
+JOIN users u ON (
+    (t.initiator_id = $2 AND u.user_id = t.target_user_id) OR
+    (t.target_user_id = $2 AND u.user_id = t.initiator_id)
+)
 WHERE t.thread_id = $1;
+
+-- name: UpdateThreadStatus :one
+UPDATE thread
+SET is_unlocked = $1
+WHERE thread_id = $2
+RETURNING *;
 
 -- name: CreateMessage :one
 INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
+-- name: GetMessagesByThreadID :one
+SELECT *
+FROM message
+WHERE thread_id = $1
+ORDER BY sent_at;
+
 -- name: CreatePayment :one
 INSERT INTO payment (payer_id, target_user_id, thread_id, amount, external_reference)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
--- name: GetPaymentIdByThreadId :one
-SELECT payment_id FROM payment
-WHERE thread_id = $1;
+-- name: GetPaymentByThreadId :one
+SELECT * FROM payment
+WHERE thread_id = $1
+ORDER BY created_at DESC
+LIMIT 1;
 
 -- name: UpdatePaymentStatus :one
 UPDATE payment

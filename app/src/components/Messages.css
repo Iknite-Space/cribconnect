@@ -1,20 +1,24 @@
 .chat-window {
+  flex: 1;
   display: flex;
-  height: 100%;
+  height: 100vh;
   width: 100%;
+  min-width: 0;
+  margin: auto;
   flex-direction: column;
+  border: 1px solid black;
+  border-radius: 12px;
+  background-color: #fff;
+  overflow: hidden;
 }
 
 .chat-messages {
   display: flex;
   overflow-y: auto;
-  padding: 10px;
+  padding: 1rem;
   flex-grow: 1;
-  flex-basis: 0;
   flex-direction: column;
-  max-height: 70vh;
-  margin-bottom: auto;
-  margin-top: auto;
+  gap: 0.75rem;
 }
 
 .chat-messages > :first-child {
@@ -23,31 +27,182 @@
 
 .chat-input {
   width: 100%;
+  padding: 0 0 0 0.5rem;
+  border-top: 1px solid #eee;
+  background-color: #fafafa;
 }
 
 .banner {
   width: 100%;
+   text-align: center;
+  font-weight: bold;
 }
 
 .message {
-  display: flex;
-  /* white-space: normal; */
+  display: inline-block;
+  padding: 0.75rem 1rem;
   min-height: 30px;
-  overflow-wrap: break-word;
-  border-radius: 5px;
-  width: fit-content;
-  min-width: 5%;
-  max-width: 25%;
-
-  background-color: white;
+  word-break: break-word;
+  border-radius: 10px;
+  max-width: fit-content;
+  font-size: 1rem;
+  line-height: 1.4;
 }
 
 .sender {
-  margin-left: auto;
+  align-self: flex-end;
   background-color: #003151;
   color: white;
 }
 
 .recipient {
+  align-self: flex-start;
   background-color: rgb(253, 232, 207);
+}
+
+.select-chat {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  font-size: 1.75rem;      
+  color: #555;              
+  text-align: center;
+  padding: 1rem 2rem;      
+  background: #f8f8f8;     
+  border-radius: 8px;      
+  box-shadow: 0 4px 12px rgba(190, 15, 15, 0.08);
+  max-width: 80%;          
+  line-height: 1.4;
+}
+
+.payment-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.payment-modal {
+  position: relative; 
+  width: 90%;
+  max-width: 500px;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-out;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 1rem;
+  background: transparent;
+  font-size: 2.5rem; 
+  line-height: 2.5rem;
+  border: none;
+  color: #d62222;
+  cursor: pointer;
+}
+
+.modal-title {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.modal-text {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.payment-amount {
+  color: #3893d0;   
+  font-weight: 600; 
+  font-size: 2.2rem;  
+}
+
+.modal-action{
+  padding: 0.75rem 1.5rem;
+  background-color: #76c7c0;  
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-action:hover {
+  background-color: #5bb0a8;
+  transform: translateY(-2px);
+}
+
+.modal-action:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 199, 192, 0.5);
+}
+
+
+@media (max-width: 768px) {
+  .chat-window {
+    flex: 1;
+    width: 100%;
+    border-left: none;
+    border: 1px solid black;
+  }
+  
+  .message {
+    max-width: 90%;
+    font-size: 0.95rem;
+  }
+
+  .modal-title,
+  .modal-text,
+  .payment-amount {
+    font-size: 1.2rem;
+  }
+
+  .select-chat {
+    font-size: 1.25rem;
+    padding: 1rem;
+  }
+
+  .chat-messages {
+    margin-bottom: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-window {
+    flex: 1;
+    width: 100%;
+    border-left: none;
+    border: 1px solid black;
+  }
+
+  .chat-input {
+    padding: 0.75rem;
+  }
+
+  .message {
+    font-size: 0.9rem;
+  }
+  .chat-messages {
+    margin-bottom: auto;
+  }
+  .modal-action {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
 }
