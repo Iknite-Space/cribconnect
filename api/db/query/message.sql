@@ -1,4 +1,20 @@
 
+
+-- name: GetMessageByID :one
+ SELECT * FROM message
+ WHERE message_id = $1;
+
+-- name: GetMessagesByThread :many
+	 SELECT * FROM message
+	 WHERE thread_id = $1
+	 ORDER BY sent_at DESC;
+
+-- name: DeleteMessage :exec
+ DELETE FROM message
+ WHERE message_id = $1;
+
+
+
 -- name: RegisterUser :one
 INSERT INTO users (user_id,email)
 VALUES ($1, $2)
