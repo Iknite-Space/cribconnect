@@ -15,7 +15,7 @@ type Querier interface {
 	CreateThread(ctx context.Context, arg CreateThreadParams) (Thread, error)
 	FilterUsersByPreferences(ctx context.Context, dollar_1 []byte) ([]FilterUsersByPreferencesRow, error)
 	GetAllUsers(ctx context.Context, userID string) ([]GetAllUsersRow, error)
-	GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error)
+	GetMessagesByThreadID(ctx context.Context, threadID string) ([]Message, error)
 	GetOtherUserOnThread(ctx context.Context, arg GetOtherUserOnThreadParams) ([]GetOtherUserOnThreadRow, error)
 	GetPaymentByThreadId(ctx context.Context, threadID string) (Payment, error)
 	GetThreadBetweenUsers(ctx context.Context, arg GetThreadBetweenUsersParams) (Thread, error)

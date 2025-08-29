@@ -123,7 +123,7 @@ INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
--- name: GetMessagesByThreadID :one
+-- name: GetMessagesByThreadID :many
 SELECT *
 FROM message
 WHERE thread_id = $1
