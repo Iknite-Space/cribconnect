@@ -6,11 +6,11 @@ import Messages from "../components/Messages";
 import "../styles/MessagePage.css";
 
 const MessagePage = () => {
-  const [thread_id, setThread] = useState(null);
-  const selectedName = thread_id
-  ? `${thread_id.user?.fname || ""} ${thread_id.user?.lname || ""}`.trim()
+  const [thread, setThread] = useState(null);
+  const selectedName = thread
+  ? `${thread.user?.fname || ""} ${thread.user?.lname || ""}`.trim()
   : "";
-
+console.log(thread)
    const [paymentData, setPaymentData] = useState(null);
   return (
     <div className='message-page'>
@@ -18,9 +18,9 @@ const MessagePage = () => {
       
       <div className='message-container'>
         <Threads updateThread={setThread} onPayment={setPaymentData} />
-        <Messages threadId={thread_id} 
+        <Messages thread={thread} 
          paymentResponse={paymentData} 
-         isUnlocked={thread_id} 
+         isUnlocked={thread} 
          name={selectedName}
          clearPayment={() => 
           setPaymentData(null)
