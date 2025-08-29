@@ -232,27 +232,40 @@ func (q *Queries) GetAllUsers(ctx context.Context, userID string) ([]GetAllUsers
 	return items, nil
 }
 
-const getMessagesByThreadID = `-- name: GetMessagesByThreadID :one
+const getMessagesByThreadID = `-- name: GetMessagesByThreadID :many
 SELECT message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
 FROM message
 WHERE thread_id = $1
 ORDER BY sent_at
 `
 
-func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) (Message, error) {
-	row := q.db.QueryRow(ctx, getMessagesByThreadID, threadID)
-	var i Message
-	err := row.Scan(
-		&i.MessageID,
-		&i.ThreadID,
-		&i.SenderID,
-		&i.ReceiverID,
-		&i.MessageText,
-		&i.IsDeleted,
-		&i.Status,
-		&i.SentAt,
-	)
-	return i, err
+func (q *Queries) GetMessagesByThreadID(ctx context.Context, threadID string) ([]Message, error) {
+	rows, err := q.db.Query(ctx, getMessagesByThreadID, threadID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Message{}
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.MessageID,
+			&i.ThreadID,
+			&i.SenderID,
+			&i.ReceiverID,
+			&i.MessageText,
+			&i.IsDeleted,
+			&i.Status,
+			&i.SentAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOtherUserOnThread = `-- name: GetOtherUserOnThread :many
