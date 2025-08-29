@@ -373,6 +373,7 @@ func (h *UserHandler) handleGetUser(c *gin.Context) {
 	}
 
 	response := gin.H{
+		"user_id":        user.UserID,
 		"fname":          user.Fname,
 		"lname":          user.Lname,
 		"email":          user.Email,
@@ -926,14 +927,14 @@ var upgrader = websocket.Upgrader{
 
 func (h *UserHandler) serveWs(c *gin.Context) {
 	log.Println("Starting WebSocket connection setup")
-	firebaseUIDRaw, exists := c.Get("firebase_uid")
-	if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
-		log.Println("Firebase UID missing or empty")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
-		return
-	}
-	firebaseUID := firebaseUIDRaw.(string)
-	log.Printf("Firebase UID retrieved: %s", firebaseUID)
+	// firebaseUIDRaw, exists := c.Get("firebase_uid")
+	// if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
+	// 	log.Println("Firebase UID missing or empty")
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
+	// 	return
+	// }
+	firebaseUID := c.Param("user_id")
+	// log.Printf("Firebase UID retrieved: %s", firebaseUID)
 	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed for user %s: %v", firebaseUID, err)
