@@ -1,31 +1,13 @@
 import React, { useState } from "react";
 import "./ChatBox.css";
 
-const ChatBox = ({ sendMessage }) => {
+const ChatBox = ({ onSend }) => {
   const [input, setInput] = useState("");
 
-  const handleSend = (messageHandler) => {
+   const handleSend = () => {
     if (!input.trim()) return;
-
-    const newMessage = {
-      id: Date.now(),
-      text: [input],
-      sender: "You"
-    };
-
-    // Simulate response after 1 second
-    const simulatedReply = {
-      id: Date.now() + 1,
-      text: `${input}`,
-      sender: "Bot"
-    };
-
-    messageHandler((prev) => [...prev, newMessage]);
-    setInput("");
-
-    setTimeout(() => {
-      messageHandler((prev) => [...prev, simulatedReply]);
-    }, 1000);
+    onSend(input.trim());
+    setInput('');
   };
 
   return (
@@ -41,7 +23,7 @@ const ChatBox = ({ sendMessage }) => {
       </>
       <button
         className='chatbox-button'
-        onClick={() => handleSend(sendMessage)}
+        onClick={handleSend}
       >
         Send
       </button>
