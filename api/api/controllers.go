@@ -21,17 +21,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// 1. Declare the Upgrader
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	// CheckOrigin controls which requests are allowed to upgrade.
-	// In production, replace this with strict origin validation.
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 type PrefJson struct {
 	AgeRange       string `json:"agerange"`
 	Gender         string `json:"gender"`
@@ -922,6 +911,17 @@ func (h *UserHandler) GetMessages(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, messages)
+}
+
+// 1. Declare the Upgrader
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// CheckOrigin controls which requests are allowed to upgrade.
+	// In production, replace this with strict origin validation.
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func (h *UserHandler) serveWs(c *gin.Context) {
