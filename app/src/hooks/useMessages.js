@@ -27,7 +27,7 @@ function useMessages(thread, shouldFetch = false) {
       
     } else if (!shouldFetch) {
       console.log("nothing fetched")
-      // ✅ If we’re not fetching (e.g., no thread selected), clear list
+      //  If we’re not fetching (e.g., no thread selected), clear list
       setMessages([]);
     }
   }, [data, shouldFetch]);

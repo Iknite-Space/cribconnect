@@ -10,7 +10,6 @@ const MessagePage = () => {
   const selectedName = thread
   ? `${thread.user?.fname || ""} ${thread.user?.lname || ""}`.trim()
   : "";
-console.log(thread)
    const [paymentData, setPaymentData] = useState(null);
   return (
     <div className='message-page'>

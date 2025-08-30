@@ -1,7 +1,7 @@
 .sidebar {
   flex: 0 0 30%;
   max-width: 300px;
-  background-color: #fafafa;
+  background-color: rgb(245, 241, 235);
   border-right: 1px solid #ccc;
   padding: 1.25rem 0 0 0.5rem;
   font-family: 'Segoe UI',  sans-serif;

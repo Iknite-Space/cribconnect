@@ -28,7 +28,6 @@ function useGet(url, shouldFetch = true) {
         } else {
           const result = await response.json();
           setData(result);
-          console.log(result)
         }
       } catch (err) {
         setError(err);
