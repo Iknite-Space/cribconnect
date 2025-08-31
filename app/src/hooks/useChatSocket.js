@@ -26,14 +26,6 @@ export function useChatSocket(thread, onMessage) {
     }
   }, []);
 
-      ws.current.onopen = () => {
-      console.log("WebSocket connected");
-      while (messageQueue.current.length > 0) {
-        const msg = messageQueue.current.shift();
-        ws.current.send(JSON.stringify(msg));
-      }
-    };
-
   /**
    * NEW: joinThread sends a signal to subscribe to a specific thread
    * instead of reconnecting the socket entirely.
@@ -58,6 +50,14 @@ export function useChatSocket(thread, onMessage) {
     // Log when connected
     ws.current.onopen = function () {
       console.log('Connected to WebSocket=', ws.current.readyState);
+
+      // Flush queued messages
+      while (messageQueue.current.length > 0) {
+        const msg = messageQueue.current.shift();
+        ws.current.send(JSON.stringify(msg));
+      }
+
+      // Join thread if available
        if (thread?.thread_id) {
         joinThread(thread.thread_id);
       }
