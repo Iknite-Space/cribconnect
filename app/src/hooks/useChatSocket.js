@@ -7,15 +7,32 @@ export function useChatSocket(thread, onMessage) {
   const ws = useRef(null); 
   const {profile} = useContext(AuthContext)
 
- const sendMessage = useCallback((threadId, receiverId, content) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      const payload = { thread_id: threadId, receiver_id: receiverId, content };
-      console.log("Sending WS payload:", payload); 
-      ws.current.send(JSON.stringify(payload));
+  const messageQueue = useRef([]);
+
+ const sendMessage = useCallback((threadId, receiverId, content, tempId) => {
+      const payload = { 
+        thread_id: threadId,
+        receiver_id: receiverId, 
+        content,
+        client_temp_id: tempId
+       };
+       
+       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+       ws.current.send(JSON.stringify(payload));
+       console.log("Sending WS payload:", payload);
     } else {
-      console.warn("Cannot send — WS not open");
+       console.warn("WS not open, queuing message");
+      messageQueue.current.push(payload);
     }
   }, []);
+
+      ws.current.onopen = () => {
+      console.log("WebSocket connected");
+      while (messageQueue.current.length > 0) {
+        const msg = messageQueue.current.shift();
+        ws.current.send(JSON.stringify(msg));
+      }
+    };
 
   /**
    * NEW: joinThread sends a signal to subscribe to a specific thread

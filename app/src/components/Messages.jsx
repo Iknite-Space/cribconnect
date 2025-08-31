@@ -20,8 +20,12 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
       sender_id: incomingMsg.sender_id,
       receiver_id: incomingMsg.receiver_id,
       sent_at: incomingMsg.sent_at || new Date().toISOString(),
+      status: 'confirmed'
     };
-      setMessages((prevMessages) => [...prevMessages, normalisedMsg]);
+      setMessages((prevMessages) => 
+           prevMessages.map((msg) =>
+          msg.id === incomingMsg.client_temp_id ? normalisedMsg : msg
+        ));
     });
 
   useEffect(() => {
@@ -38,8 +42,9 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
     // Send message via WebSocket
     const handleSend = (text) => {
       if (!thread?.thread_id || text.trim() === '') return; 
-
+        const tempId = Date.now().toString();
          const optimisticincomingMsg = {
+          id: tempId,
           message_text: text,
           sender_id: profile.user_id,
           receiver_id: thread.user.user_id,
