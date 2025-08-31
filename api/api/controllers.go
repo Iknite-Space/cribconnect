@@ -955,13 +955,25 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 
 	for {
 		var incoming struct {
-			ThreadID   string `json:"thread_id"`
-			ReceiverID string `json:"receiver_id"`
-			Content    string `json:"content"`
+			ThreadID     string `json:"thread_id"`
+			ReceiverID   string `json:"receiver_id"`
+			Content      string `json:"content"`
+			ClientTempID string `json:"client_temp_id"` // NEW
 		}
 		if err := wsConn.ReadJSON(&incoming); err != nil {
 			log.Printf("Error reading JSON from WebSocket for user %s: %v", firebaseUID, err)
 			break
+		}
+		type OutgoingMessage struct {
+			MessageID    string
+			ThreadID     string
+			SenderID     string
+			ReceiverID   string
+			MessageText  string
+			IsDeleted    bool
+			SentAt       pgtype.Timestamp
+			Status       repo.MessageStatus
+			ClientTempID string
 		}
 
 		// 1. Persist message
@@ -971,6 +983,7 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 			ReceiverID:  incoming.ReceiverID,
 			MessageText: incoming.Content,
 		}
+
 		newMsg, dbErr := h.querier.CreateMessage(c.Request.Context(), msgParams)
 		if dbErr != nil {
 			log.Printf("Failed to persist message for user %s: %v", firebaseUID, dbErr)
@@ -978,11 +991,23 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 		}
 		log.Printf("Message persisted for user %s: %+v", firebaseUID, newMsg)
 
+		broadcastMsg := OutgoingMessage{
+			MessageID:    newMsg.MessageID,
+			ThreadID:     newMsg.ThreadID,
+			SenderID:     newMsg.SenderID,
+			ReceiverID:   newMsg.ReceiverID,
+			MessageText:  newMsg.MessageText,
+			IsDeleted:    newMsg.IsDeleted,
+			SentAt:       newMsg.SentAt,
+			Status:       newMsg.Status,
+			ClientTempID: incoming.ClientTempID, // echo it back
+		}
+
 		// 2. Broadcast to both participants
 		thread, _ := h.querier.GetThreadById(c.Request.Context(), incoming.ThreadID)
 		recipients := []string{thread.InitiatorID, thread.TargetUserID}
 		for _, uid := range recipients {
-			if sendErr := h.manager.Send(uid, newMsg); sendErr != nil {
+			if sendErr := h.manager.Send(uid, broadcastMsg); sendErr != nil {
 				log.Printf("Failed to send message to user %s: %v", uid, sendErr)
 			} else {
 				log.Printf("Message sent to user %s", uid)
