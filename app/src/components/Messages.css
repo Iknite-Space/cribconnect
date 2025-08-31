@@ -1,7 +1,7 @@
 .chat-window {
   flex: 1;
   display: flex;
-  height: 100vh;
+  height: 92vh;
   width: 100%;
   min-width: 0;
   margin: auto;
@@ -19,6 +19,12 @@
   flex-grow: 1;
   flex-direction: column;
   gap: 0.75rem;
+
+   background-color: whitesmoke; /* fallback color */
+  /* background-image: url('https://res.cloudinary.com/dh1rs2zgb/image/upload/v1756589984/message-background-image_zyj0zt.webp'); */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .chat-messages > :first-child {
@@ -39,12 +45,13 @@
 }
 
 .message {
-  display: inline-block;
-  padding: 0.75rem 1rem;
-  min-height: 30px;
+  position: relative;
+  display: block;
+  padding: 0.75rem 1rem 1.5rem 1rem;
   word-break: break-word;
+  word-wrap: break-word;
   border-radius: 10px;
-  max-width: fit-content;
+  max-width: 70%;
   font-size: 1rem;
   line-height: 1.4;
 }
@@ -53,12 +60,53 @@
   align-self: flex-end;
   background-color: #003151;
   color: white;
+  text-align: right;
 }
 
 .recipient {
   align-self: flex-start;
   background-color: rgb(253, 232, 207);
+  text-align: left;
 }
+
+.timestamp {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7); 
+}
+
+.recipient .timestamp {
+  color: rgba(4, 3, 8, 0.692); 
+}
+
+.date-divider {
+  text-align: center;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+  color: #888;
+  position: relative;
+}
+
+.date-divider::before,
+.date-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ccc;
+}
+
+.date-divider::before {
+  left: 0;
+}
+
+.date-divider::after {
+  right: 0;
+}
+
 
 .select-chat {
   position: relative;

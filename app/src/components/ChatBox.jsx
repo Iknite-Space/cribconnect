@@ -18,6 +18,11 @@ const ChatBox = ({ onSend }) => {
           type='text'
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSend();
+              }
+            }}
           placeholder='Type your message...'
         />
       </>

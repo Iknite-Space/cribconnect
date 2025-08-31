@@ -4,19 +4,35 @@ import { AuthContext } from '../context/AuthContext';
 
 
 export function useChatSocket(thread, onMessage) {
-  const ws = useRef(null); // Store WebSocket instance
+  const ws = useRef(null); 
   const {profile} = useContext(AuthContext)
-  // console.log("profile",profile?.user_id)
 
- const sendMessage = useCallback((threadId, receiverId, content) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      const payload = { thread_id: threadId, receiver_id: receiverId, content };
-      console.log("📤 Sending WS payload:", payload); // Debug outbound
-      ws.current.send(JSON.stringify(payload));
+  const messageQueue = useRef([]);
+
+ const sendMessage = useCallback((threadId, receiverId, content, tempId) => {
+      const payload = { 
+        thread_id: threadId,
+        receiver_id: receiverId, 
+        content,
+        client_temp_id: tempId
+       };
+       
+       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+       ws.current.send(JSON.stringify(payload));
+       console.log("Sending WS payload:", payload);
     } else {
-      console.warn("⚠️ Cannot send — WS not open");
+       console.warn("WS not open, queuing message");
+      messageQueue.current.push(payload);
     }
   }, []);
+
+      ws.current.onopen = () => {
+      console.log("WebSocket connected");
+      while (messageQueue.current.length > 0) {
+        const msg = messageQueue.current.shift();
+        ws.current.send(JSON.stringify(msg));
+      }
+    };
 
   /**
    * NEW: joinThread sends a signal to subscribe to a specific thread
@@ -25,7 +41,6 @@ export function useChatSocket(thread, onMessage) {
   const joinThread = useCallback((threadId) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       const joinPayload = { type: 'join', thread_id: threadId };
-      console.log("📡 Joining thread:", joinPayload);
       ws.current.send(JSON.stringify(joinPayload));
     }
   }, []);
@@ -33,13 +48,10 @@ export function useChatSocket(thread, onMessage) {
 
   useEffect(() => {
     if (!thread || !profile?.user_id) return;
-
-    // const scheme = window.location.protocol === "https:" ? "wss" : "ws";
     const user_id = profile.user_id;
-    // build the exact same host + path your server serves
     const WS_URL = `wss://api.cribconnect.xyz/v1/user/${user_id}/messages`;
     
-    console.log("👉 Attempting WS connect to:", WS_URL);
+    console.log("Attempting WS connect to:", WS_URL);
     // Create WebSocket connection
     ws.current = new WebSocket(WS_URL);
 
@@ -53,25 +65,25 @@ export function useChatSocket(thread, onMessage) {
 
     // Handle incoming messages
     ws.current.onmessage = function (event) {
-      console.log("📥 WS incoming raw:", event.data); // Debug inbound
+      console.log("WS incoming raw:", event.data); 
       try {
         const data = JSON.parse(event.data);
         onMessage(data); // Pass to parent
       } catch (err) {
-        console.error("❌ Failed to parse WS message:", err);
+        console.error("Failed to parse WS message:", err);
       }
     };
 
     // Log when disconnected
     ws.current.onclose = function (evt) {
      console.warn(
-    `🛑 WS closed — code: ${evt.code},` + 
+    ` WS closed — code: ${evt.code},` + 
   ` reason: ${evt.reason}, wasClean: ${evt.wasClean}`);
       console.log('Disconnected from WebSocket');
     };
 
     ws.current.onerror = (evt) => {
-        console.error("❌ WS error event:", evt);
+        console.error("WS error event:", evt);
     }
 
     // Cleanup on unmount

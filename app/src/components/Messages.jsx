@@ -8,8 +8,6 @@ import "./Messages.css";
 const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) => {
   const shouldFetchMessages = !!thread && isUnlocked;
   const { messages, setMessages, isLoading } = useMessages(thread, shouldFetchMessages);
-  // const [localMessages, setLocalMessages] = useState([]);
-  // const [message, setMessage] = useState([]);
   const messagesEndRef = useRef(null);
  
   const [showModal, setShowModal] = useState(false);
@@ -22,8 +20,12 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
       sender_id: incomingMsg.sender_id,
       receiver_id: incomingMsg.receiver_id,
       sent_at: incomingMsg.sent_at || new Date().toISOString(),
+      status: 'confirmed'
     };
-      setMessages((prevMessages) => [...prevMessages, normalisedMsg]);
+      setMessages((prevMessages) => 
+           prevMessages.map((msg) =>
+          msg.id === incomingMsg.client_temp_id ? normalisedMsg : msg
+        ));
     });
 
   useEffect(() => {
@@ -40,19 +42,17 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
     // Send message via WebSocket
     const handleSend = (text) => {
       if (!thread?.thread_id || text.trim() === '') return; 
-
+        const tempId = Date.now().toString();
          const optimisticincomingMsg = {
+          id: tempId,
           message_text: text,
           sender_id: profile.user_id,
           receiver_id: thread.user.user_id,
           sent_at: new Date().toISOString()
         };
-        console.log(thread.user.user_id)
          setMessages((prev) => [...prev, optimisticincomingMsg]);
 
         sendMessage(thread.thread_id, thread.user.user_id, text);
-        // setInput('');
-      
     };
 
    const paymentLink = paymentResponse?.paymentLink?.link || null;
@@ -72,7 +72,6 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
   };
 
   if (isLoading) return <div>Loading messages...</div>;
-  // if (!isUnlocked) return <div>This chat is locked. Please pay first.</div>;
   return (
     <>
       <div className='chat-window'>
@@ -111,18 +110,51 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
           <Banner name={name} />
         </div>
         <div className='chat-messages'>
-          {messages.map((incomingMsg, index) => (
-            <div
-              key={index}
+          {messages.map((incomingMsg, index) => {
+            const msgDate = new Date(incomingMsg.sent_at);
+             const time = msgDate.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+              // Format date for comparison
+              const msgDay = msgDate.toDateString();
+              const prevMsg = messages[index - 1];
+              const prevDay = prevMsg ? new Date(prevMsg.sent_at).toDateString() : null;
+
+              // Determine if we need a date divider
+              const showDateDivider = msgDay !== prevDay;
+
+              // Create label: Today, Yesterday, or full date
+              const today = new Date();
+              const yesterday = new Date();
+              yesterday.setDate(today.getDate() - 1);
+
+              let dayLabel = msgDay;
+              if (msgDate.toDateString() === today.toDateString()) {
+                dayLabel = "Today";
+              } else if (msgDate.toDateString() === yesterday.toDateString()) {
+                dayLabel = "Yesterday";
+              }
+
+              return (
+            <React.Fragment
+              key={index}>
+              {showDateDivider && (
+                <div className="date-divider">{dayLabel}</div>
+              )}
+              <div
               className={`message ${
                 incomingMsg.sender_id === profile.user_id? "sender" : "recipient"
               }`}
             >
               {incomingMsg.text || incomingMsg.message_text}
-            </div>
-          ))}
-        </div>
+              <span className="timestamp">{time}</span>
+              </div>
+            </React.Fragment>
+              );
+          })}
           <div ref={messagesEndRef} />
+        </div>
         <div className='chat-input'>
           <ChatBox onSend={handleSend} />
         </div> 

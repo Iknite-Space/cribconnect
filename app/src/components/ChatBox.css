@@ -11,14 +11,20 @@
 }
 
 .chatbox-button {
-  padding: 10px;
+  padding: 12px 18px;
+  font-size: 1rem; 
+  font-weight: 500;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
+.chatbox-button:hover {
+  background-color: #0056b3;
+}
 
 @media (min-width: 480px) and (max-width: 1024px) {
   .chat-window {
