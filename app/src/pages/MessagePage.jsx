@@ -10,12 +10,17 @@ const MessagePage = () => {
   ? `${thread.user?.fname || ""} ${thread.user?.lname || ""}`.trim()
   : "";
    const [paymentData, setPaymentData] = useState(null);
+   const [isSidebarOpen, setSidebarOpen] = useState(true);
+
   return (
+    
     <div className='message-page'>
       <Navbar />
-      
       <div className='message-container'>
-        <Threads updateThread={setThread} onPayment={setPaymentData} />
+        <Threads updateThread={(thread) => {
+          setThread(thread)
+          setSidebarOpen(false);
+        }} onPayment={setPaymentData}  isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen}/>
         <Messages thread={thread} 
          paymentResponse={paymentData} 
          isUnlocked={thread} 
@@ -24,7 +29,11 @@ const MessagePage = () => {
           setPaymentData(null)
         }/>
       </div>
-      
+      {!isSidebarOpen && (
+  <button className="open-sidebar-btn" onClick={() => setSidebarOpen(true)}>
+    Show Chats
+  </button>
+)}
     </div>
   );
 };
