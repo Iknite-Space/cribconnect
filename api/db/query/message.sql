@@ -119,8 +119,8 @@ WHERE thread_id = $2
 RETURNING *;
 
 -- name: CreateMessage :one
-INSERT INTO message (thread_id, sender_id, receiver_id, message_text)
-VALUES ($1, $2, $3, $4)
+INSERT INTO message (thread_id, sender_id, receiver_id, message_text, sent_at)
+VALUES ($1, $2, $3, $4, now() AT TIME ZONE 'Africa/Douala')
 RETURNING *;
 
 -- name: GetMessagesByThreadID :many
