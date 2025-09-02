@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import "./Navbar.css";
 // import { ThemeContext } from '../../context/ThemeContext';
@@ -8,6 +8,29 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
   const { profile, logout, authReady } = useContext(AuthContext);
   const [panelOpen, setPanelOpen] = useState(false);
   // const { toggleTheme, theme } = useContext(ThemeContext);
+
+   const panelRef = useRef(null);
+  const profilePicRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      // If panel is open and click is outside both the panel and the profile image
+      if (
+        panelOpen &&
+        panelRef.current &&
+        !panelRef.current.contains(e.target) &&
+        profilePicRef.current &&
+        !profilePicRef.current.contains(e.target)
+      ) {
+        setPanelOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [panelOpen]);
 
   return (
     <>
@@ -35,7 +58,7 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
                     onHowClick();
                   }}
                 >
-                  How It Works
+                  Guide
                 </a>
               </li>
             </>
@@ -46,6 +69,7 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
               {/* <li><Link to="/dashboard">Dashboard</Link></li> */}
               <li className='navbar-user'>
                 <img
+                  ref={profilePicRef}
                   src={
                     profile.profilepicture?.trim()
                       ? profile.profilepicture
@@ -71,7 +95,7 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
 
       {/* Side Panel */}
       {authReady && panelOpen && profile && (
-        <div className='side-panel'>
+        <div className='side-panel' ref={panelRef}>
           <div className='side-panel-header'>Welcome, {profile.fname}</div>
           <ul>
             <li>

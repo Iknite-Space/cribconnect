@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Footer from "../assets/components/Footer";
 import Navbar from "../assets/components/Navbar";
 import Threads from "../components/Threads";
 import Messages from "../components/Messages";
@@ -25,7 +24,6 @@ const MessagePage = () => {
           setPaymentData(null)
         }/>
       </div>
-      <div className='footer-container'><Footer /></div>
       
     </div>
   );
