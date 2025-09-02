@@ -19,7 +19,7 @@ const Messages = ({ thread, isUnlocked, name, paymentResponse, clearPayment }) =
       text: incomingMsg.message_text || incomingMsg.text || incomingMsg.content,
       sender_id: incomingMsg.sender_id,
       receiver_id: incomingMsg.receiver_id,
-      sent_at: incomingMsg.sent_at || new Date().toISOString(),
+      sent_at: incomingMsg.sent_at, //|| new Date().toISOString(),
       status: 'confirmed'
     };
       setMessages((prevMessages) => 

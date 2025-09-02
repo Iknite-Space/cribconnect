@@ -51,6 +51,7 @@
   padding: 0.5rem 2.2rem 1.2rem 0.75rem;
   border-radius: 10px;
   max-width: 70%;
+  min-width: 3.9rem;
   font-size: 1rem;
   line-height: 1.4;
   word-break: break-word;

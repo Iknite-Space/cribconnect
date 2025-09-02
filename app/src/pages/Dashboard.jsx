@@ -349,11 +349,6 @@ function Dashboard() {
           </div>
           {/* === Search Preferences === */}
           <div className="preferencess">
-            {/* <input
-              className='option'
-              list='age-options'
-              placeholder='Age-Range'
-            /> */}
             <div className="form-field">
              <label htmlFor="agerange">Age Range</label>
             <select
