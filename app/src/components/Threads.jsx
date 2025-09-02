@@ -1,11 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useRef} from "react";
 import useThreads from "../hooks/useThreads";
 import "./Threads.css";
 
-const Threads = ({ updateThread, onPayment }) => {
+const Threads = ({ updateThread, onPayment, isSidebarOpen, setSidebarOpen}) => {
   const { threads, payThread, paymentResponse,  isLoading, error } = useThreads();
 
   const threadArray = Array.isArray(threads) ? threads : threads.names || [];
+
+     const panelRef = useRef(null);
+
+   useEffect(() => {
+    function handleClickOutside(e) {
+      // If panel is open and click is outside both the panel and the profile image
+      if (
+        isSidebarOpen &&
+        panelRef.current &&
+        !panelRef.current.contains(e.target)
+        ) {
+        setSidebarOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSidebarOpen, setSidebarOpen]);
 
   useEffect(() => {
     if(paymentResponse) {
@@ -16,7 +36,7 @@ const Threads = ({ updateThread, onPayment }) => {
 
   return (
     <>
-      <div className='sidebar'>
+      <div className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`} ref={panelRef}>
         <h2>Chats</h2>
         {threadContent(threadArray, isLoading, error, updateThread, payThread)}
       </div>
