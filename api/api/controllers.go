@@ -349,6 +349,21 @@ func (h *UserHandler) handleForgotPassword(c *gin.Context) {
 
 }
 
+func (h *UserHandler) handleDeleteUser(c *gin.Context) {
+	user_id := c.Param("user_id")
+
+	deletedUser, err := h.querier.DeleteThreadById(c, user_id)
+	if err != nil {
+		log.Println("server here", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"User deleted": deletedUser,
+	})
+}
+
 func (h *UserHandler) handleGetUser(c *gin.Context) {
 	firebaseUIDRaw, _ := c.Get("firebase_uid")
 	if firebaseUIDRaw == " " {
@@ -767,6 +782,21 @@ func (h *UserHandler) handleGetThreadById(c *gin.Context) {
 	})
 }
 
+func (h *UserHandler) handleDeleteThread(c *gin.Context) {
+	thread_id := c.Param("thread_id")
+
+	deletedThread, err := h.querier.DeleteThreadById(c, thread_id)
+	if err != nil {
+		log.Println("server here", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"Thread deleted": deletedThread,
+	})
+}
+
 func (h *UserHandler) handleCreatePayment(c *gin.Context) {
 	var req struct {
 		UserId_2 string `json:"userId_2"`
@@ -918,8 +948,6 @@ func (h *UserHandler) GetMessages(c *gin.Context) {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// CheckOrigin controls which requests are allowed to upgrade.
-	// In production, replace this with strict origin validation.
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -927,12 +955,6 @@ var upgrader = websocket.Upgrader{
 
 func (h *UserHandler) serveWs(c *gin.Context) {
 	log.Println("Starting WebSocket connection setup")
-	// firebaseUIDRaw, exists := c.Get("firebase_uid")
-	// if !exists || strings.TrimSpace(firebaseUIDRaw.(string)) == "" {
-	// 	log.Println("Firebase UID missing or empty")
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Firebase ID is required"})
-	// 	return
-	// }
 	firebaseUID := c.Param("user_id")
 	// log.Printf("Firebase UID retrieved: %s", firebaseUID)
 	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

@@ -55,6 +55,12 @@ SET
 WHERE user_id = $1
 RETURNING *;
 
+-- name: DeleteUserById :one
+DELETE FROM users
+WHERE user_id = $1
+RETURNING *;
+
+
 -- name: GetUserHabbits :one
 SELECT habbits
 FROM users
@@ -118,6 +124,11 @@ SET is_unlocked = $1
 WHERE thread_id = $2
 RETURNING *;
 
+-- name: DeleteThreadById :one
+DELETE FROM thread
+WHERE thread_id = $1
+RETURNING *;
+
 -- name: CreateMessage :one
 INSERT INTO message (thread_id, sender_id, receiver_id, message_text, sent_at)
 VALUES ($1, $2, $3, $4, now() AT TIME ZONE 'Africa/Douala')
@@ -128,6 +139,12 @@ SELECT *
 FROM message
 WHERE thread_id = $1
 ORDER BY sent_at;
+
+-- name: DeleteMessageById :one
+DELETE FROM message
+WHERE message_id = $1
+RETURNING *;
+
 
 -- name: CreatePayment :one
 INSERT INTO payment (payer_id, target_user_id, thread_id, amount, external_reference)
