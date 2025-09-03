@@ -93,12 +93,10 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
           if (!isNaN(parsedDate.getTime())) {
             formattedDate = parsedDate.toISOString().slice(0, 10); // YYYY-MM-DD
           } else {
-            // console.warn("Invalid date:", data.birthdate);
             formattedDate = ""; // fallback or default if needed
           }
         }
 
-        // console.log(data)
         if (isMounted) {
           //const userData = data.User;
           setFormData((prev) => ({
@@ -115,9 +113,7 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
           // setImagePreviewUrl(data.profilepicture || "/path-to-profile.jpg"); // update preview separately
           setIsLoading(false); // turn off spinner
         }
-        //console.log("Setting phone number:", normalizePhone(data.phoneno));
       } catch (err) {
-        //console.error("Fetch error:", err);
         if (isMounted) setIsLoading(false); // still turn off spinner
       }
     };
@@ -145,7 +141,6 @@ const maxDate = eighteenYearsAgo.toISOString().split("T")[0];
      setIsCropping(true);
      };
     reader.readAsDataURL(file);
-    console.log("Selected file:", file);
 
     if (file) {
       setFormData((prev) => ({
@@ -307,9 +302,7 @@ const isBioInvalid  = bioLength > 0 && !isBioComplete;
 
        await response.json();
       setMessage({message:"✅ Profile saved successfully!", type: "success"});
-      // console.log("Server response:", data);
     } catch (err) {
-      //console.error("Save error:", err);
       setMessage({message:"❌ Something went wrong. Please try again.", type: "error"});
     } finally {
       setSubmitting(false);
@@ -337,7 +330,6 @@ const file = new File([blob], `profile.${extension}`, { type: mimeType });
     setShowModal(false);
   } catch (err) {
     alert('Failed to crop image.');
-    console.error(err);
   }
 };
 
@@ -466,7 +458,6 @@ const file = new File([blob], `profile.${extension}`, { type: mimeType });
             value={formData.phoneno}
             onChange={(phone) => {
               setFormData((prev) => ({ ...prev, phoneno: phone })); // always attach prefix
-              console.log("Phone input value:", phone);
             }}
             inputProps={{
               name: "phoneno",
