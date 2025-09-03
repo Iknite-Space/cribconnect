@@ -7,7 +7,7 @@ const PrivateRoute = ({ children }) => {
 
   if (!authReady) return null; // or return <Loader />
 
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/" replace />;
 };
 
 export default PrivateRoute;
