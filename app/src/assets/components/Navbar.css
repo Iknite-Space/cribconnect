@@ -1,4 +1,4 @@
-/* 🎯 Base Navbar Layout */
+/* Base Navbar Layout */
 .navbare {
   display: flex;
   justify-content: space-between;
@@ -14,7 +14,7 @@
   font-size: 24px;
 }
 
-/* 🧭 Navigation List */
+/* Navigation List */
 .navbare ul {
   display: flex;
   list-style: none;
@@ -30,7 +30,7 @@
   font-size: 16px;
 }
 
-/* 🧑‍💼 Profile Container */
+/* Profile Container */
 .navbar-user {
   display: flex;
   align-items: center;
@@ -61,7 +61,7 @@
   padding: 0;
 }
 
-/* 📱 Side Panel Styles */
+/* Side Panel Styles */
 .side-panel {
   position: absolute;
   top: 70px;
@@ -76,13 +76,13 @@
   animation: fadeSlide 0.3s ease forwards;
 }
 
-/* ✨ Panel Animation */
+/* Panel Animation */
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 🧩 Panel Header & Links */
+/* Panel Header & Links */
 .side-panel-header {
   font-size: 22px;
   font-weight: bold;
@@ -110,7 +110,7 @@
   text-decoration: underline;
 }
 
-/* 🚪 Logout Button */
+/* Logout Button */
 .side-panel-logout {
   background: none;
   border: none;
@@ -131,14 +131,14 @@
    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 12px;       /* Less padding = more space for links */
+    padding: 16px 12px;      
     flex-wrap: nowrap;
     overflow-x: auto;
   }
 
   .navbare ul {
    flex-direction: row;
-    gap: clamp(8px, 2.5vw, 14px); /* Reduce gap so links fit */
+    gap: clamp(8px, 2.5vw, 14px); 
     margin: 0;
     padding: 0;
     flex: 1 1 auto;
@@ -148,8 +148,8 @@
   }
 
   .navbare .logoe {
-    font-size: clamp(0.9rem, 3.5vw, 1rem); /* Slightly smaller logo text */
-    margin-right: 12px;                    /* Space between logo and links */
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+    margin-right: 12px;                    
     flex: 0 0 auto;
     white-space: nowrap;
   }
@@ -169,4 +169,100 @@
   .side-panel-header {
     font-size: 20px;
   }
+}
+
+.side-panel-delete {
+  background: none;
+  border: none;
+  color: #ff4c4c;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.side-panel-delete:hover {
+  color: #ff1a1a;
+}
+
+.side-panel-logout,
+.side-panel-delete {
+  display: block;      
+  width: 100%;       
+}
+
+
+
+.modal-overlayn {
+position: fixed;
+  top: 85px;
+  left: 0;
+  width: 90%;
+ height: calc(100% - 85px);
+  background: rgba(0, 0, 0, 0.4); 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  z-index: 2000; 
+}
+
+.modaln{
+  background: #ffffff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: inline-block; 
+  width: auto;          
+  max-width: 90%;      
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  animation: fadeInScale 0.25s ease-out;
+  transform: translateY(50px); 
+}
+
+.modaln p {
+ margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+ white-space: normal;
+  word-wrap: break-word;
+}
+
+.modaln-buttons {
+ display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.yes-btn {
+  background-color: #cc0000;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.no-btn {
+ background-color: #0077cc;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.yes-btn:hover {
+  background-color: #a30000;
+}
+
+.no-btn:hover {
+  background-color: #999;
 }
