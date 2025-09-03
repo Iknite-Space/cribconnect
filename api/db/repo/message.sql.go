@@ -112,6 +112,72 @@ func (q *Queries) CreateThread(ctx context.Context, arg CreateThreadParams) (Thr
 	return i, err
 }
 
+const deleteMessageById = `-- name: DeleteMessageById :one
+DELETE FROM message
+WHERE message_id = $1
+RETURNING message_id, thread_id, sender_id, receiver_id, message_text, is_deleted, status, sent_at
+`
+
+func (q *Queries) DeleteMessageById(ctx context.Context, messageID string) (Message, error) {
+	row := q.db.QueryRow(ctx, deleteMessageById, messageID)
+	var i Message
+	err := row.Scan(
+		&i.MessageID,
+		&i.ThreadID,
+		&i.SenderID,
+		&i.ReceiverID,
+		&i.MessageText,
+		&i.IsDeleted,
+		&i.Status,
+		&i.SentAt,
+	)
+	return i, err
+}
+
+const deleteThreadById = `-- name: DeleteThreadById :one
+DELETE FROM thread
+WHERE thread_id = $1
+RETURNING thread_id, initiator_id, target_user_id, topic, is_unlocked, created_at
+`
+
+func (q *Queries) DeleteThreadById(ctx context.Context, threadID string) (Thread, error) {
+	row := q.db.QueryRow(ctx, deleteThreadById, threadID)
+	var i Thread
+	err := row.Scan(
+		&i.ThreadID,
+		&i.InitiatorID,
+		&i.TargetUserID,
+		&i.Topic,
+		&i.IsUnlocked,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const deleteUserById = `-- name: DeleteUserById :one
+DELETE FROM users
+WHERE user_id = $1
+RETURNING user_id, fname, lname, birthdate, phoneno, email, bio, habbits, profile_picture, created_at
+`
+
+func (q *Queries) DeleteUserById(ctx context.Context, userID string) (User, error) {
+	row := q.db.QueryRow(ctx, deleteUserById, userID)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Fname,
+		&i.Lname,
+		&i.Birthdate,
+		&i.Phoneno,
+		&i.Email,
+		&i.Bio,
+		&i.Habbits,
+		&i.ProfilePicture,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const filterUsersByPreferences = `-- name: FilterUsersByPreferences :many
 SELECT 
  COALESCE(user_id, '') AS user_id,
