@@ -9,20 +9,16 @@ function useMessages(thread, shouldFetch = false) {
   const { data, loading, error } = useGet(url, shouldFetch);
 
     const [messages, setMessages] = useState([]);
-  console.log(thread)
-  console.log(data)
 
 
   useEffect(() => {
     if (Array.isArray(data)) {
       const normalised = data.map(normalizeMsg).sort(sortByDate);
-    console.log("Normalized messages:", normalised);
     setMessages(normalised);
   } 
   else if (data && typeof data === "object") {
     // single message
     const normalised = normalizeMsg(data);
-    console.log("Normalized SINGLE message:", normalised);
     setMessages([normalised]); // store it as array for UI
       
     } else if (!shouldFetch) {
