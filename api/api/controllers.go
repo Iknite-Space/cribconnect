@@ -359,6 +359,14 @@ func (h *UserHandler) handleDeleteUser(c *gin.Context) {
 		return
 	}
 
+	// Delete from Firebase Authentication
+	err = middleware.InitFirebaseClient().DeleteUser(c, user_id)
+	if err != nil {
+		log.Println("Firebase deletion error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Firebase deletion failed: " + err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"User deleted": deletedUser,
 	})
