@@ -19,9 +19,9 @@ export function useChatSocket(thread, onMessage) {
        
        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
        ws.current.send(JSON.stringify(payload));
-       console.log("Sending WS payload:", payload);
+      //  console.log("Sending WS payload:", payload);
     } else {
-       console.warn("WS not open, queuing message");
+      //  console.warn("WS not open, queuing message");
       messageQueue.current.push(payload);
     }
   }, []);
@@ -41,15 +41,15 @@ export function useChatSocket(thread, onMessage) {
   useEffect(() => {
     if (!thread || !profile?.user_id) return;
     const user_id = profile.user_id;
-    const WS_URL = `wss://api.cribconnect.xyz/v1/user/${user_id}/messages`;
+    const WS_URL = `wss://api.cribconnect.xyz/v1/users/${user_id}/messages/ws`;
     
-    console.log("Attempting WS connect to:", WS_URL);
+    // console.log("Attempting WS connect to:", WS_URL);
     // Create WebSocket connection
     ws.current = new WebSocket(WS_URL);
 
     // Log when connected
     ws.current.onopen = function () {
-      console.log('Connected to WebSocket=', ws.current.readyState);
+      // console.log('Connected to WebSocket=', ws.current.readyState);
 
       // Flush queued messages
       while (messageQueue.current.length > 0) {
@@ -65,31 +65,31 @@ export function useChatSocket(thread, onMessage) {
 
     // Handle incoming messages
     ws.current.onmessage = function (event) {
-      console.log("WS incoming raw:", event.data); 
+      // console.log("WS incoming raw:", event.data); 
       try {
         const data = JSON.parse(event.data);
         onMessage(data); // Pass to parent
       } catch (err) {
-        console.error("Failed to parse WS message:", err);
+        // console.error("Failed to parse WS message:", err);
       }
     };
 
     // Log when disconnected
     ws.current.onclose = function (evt) {
-     console.warn(
-    ` WS closed — code: ${evt.code},` + 
-  ` reason: ${evt.reason}, wasClean: ${evt.wasClean}`);
-      console.log('Disconnected from WebSocket');
+  //    console.warn(
+  //   ` WS closed — code: ${evt.code},` + 
+  // ` reason: ${evt.reason}, wasClean: ${evt.wasClean}`);
+  //     console.log('Disconnected from WebSocket');
     };
 
     ws.current.onerror = (evt) => {
-        console.error("WS error event:", evt);
+        // console.error("WS error event:", evt);
     }
 
     // Cleanup on unmount
     return () => {
       if (ws.current) {
-        console.log("🔌 Closing WS");
+        // console.log("🔌 Closing WS");
         ws.current.close();
       }
     };

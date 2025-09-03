@@ -213,7 +213,7 @@ return (
              
              </div>
              <p className="or-text">or sign up with Google</p>
-             <Button  id="google-signin-btn" onClick={handleGoogleSignIn} ><FcGoogle size={20} /></Button>
+             <Button  id="google-signup-btn" onClick={handleGoogleSignIn} ><FcGoogle size={20} /></Button>
 
              <Button type="submit" disabled={submitting}>
       {submitting ? 'Signing UP...' : 'Sign Up'}</Button>

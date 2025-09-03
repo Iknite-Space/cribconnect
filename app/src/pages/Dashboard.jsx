@@ -560,14 +560,14 @@ function Dashboard() {
                     setViewDetails(true)
                   }}
                 />
-                <p className="name-labels">
+                <div className="name-labels">
                   <p>
                     {listing.fname.length === 0 && listing.lname === 0 ? "Anonymous" : `${listing.fname} ${listing.fname.length !== 0 ? listing.lname && listing.lname[0] + '.' : listing.lname}`}
                   </p>
                   <span className="birthdate-labels">
                     🌟 {listing.birthdate} years
                   </span>
-                </p>
+                </div>
 
                 <button
                   className="match-buttons"
@@ -645,7 +645,7 @@ function Dashboard() {
               <p>
                 <strong>{data.bio}</strong>
               </p>
-               <div class="modal-body">
+               <div className="modal-body">
               <div className="mutual-count">
                  {(() => {
                   const result = matchResults[selectedListing];

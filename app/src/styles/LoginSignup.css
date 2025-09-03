@@ -189,7 +189,8 @@ p {
   align-items: center;
 }
 
-#google-signin-btn {
+#google-signin-btn,
+#google-signup-btn {
   all: unset; /* remove inherited styles */
   padding: 6px;
   border: 1px solid #ccc;
@@ -201,8 +202,10 @@ p {
   cursor: pointer;
 }
 
-#google-signin-btn:hover {
+#google-signin-btn:hover,
+#google-signup-btn:hover {
   background-color: #0E4C92;
+  transform: scale(1.05);
 }
 
 .forgot-link {

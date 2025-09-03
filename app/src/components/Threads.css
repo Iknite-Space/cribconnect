@@ -1,13 +1,16 @@
 .sidebar {
   position: absolute;
-  top: 0;
+  top: 85px;
   left: 0;
-  height: 100%;
+  height: 88vh;
   width: 300px;
   background-color: rgb(245, 241, 235);
   transition: transform 0.3s ease-in-out;
   z-index: 1000;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  /* overflow: hidden; */
 }
 
 .sidebar.closed {
@@ -19,57 +22,86 @@
 }
 
 .sidebar h2 {
-  margin-top: 0;
+  margin: 1rem 0.5rem 0.5rem 0;
   font-size: clamp(1.5rem, 2vw, 2rem);
   color: #333;
 }
 
-.sidebar ul {
-  margin: 2rem 0;
-  list-style: none;
-  padding: 0;
-  width: 300px;
+.thread-container {
+  flex: 1;
+   overflow-y: auto;
 }
 
-.sidebar li {
-  width: 100%;
+.thread-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem;
+ 
+}
+
+.thread-list li {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 1.35rem 1rem;
+  height: 56px; 
+  /* padding: 1.35rem 1rem; */
   margin-bottom: 0.5rem;
+  padding: 0 1rem;
   border-radius: 6px;
   cursor: pointer;
   border-bottom: 1px solid #ddd;
   color: #f5f3ee;
   border-left: 4px solid transparent;
-  transition: background-color 0.2s ease, border-left-color 0.2s ease;
-
-  width: 100%;               
-  white-space: nowrap;      
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;              
+  /* white-space: nowrap;      
   overflow: hidden;          
   text-overflow: ellipsis;
-  font-size: 1rem;   
+  font-size: 1rem;    */
 }
-.sidebar li.unlocked {
+
+.thread-list li.unlocked {
 background-color: #161515;
 }
 
-.sidebar li.locked {
+.thread-list li.locked {
 background-color: #888854;
 }
 
-.sidebar .lock-icon {
+.thread-list .lock-icon {
   margin-left: 0.75rem;
   font-size: 0.9em;
 }
 
 
-.sidebar li:hover,
-.sidebar li.active {
+.thread-list li:hover,
+.thread-list li.active {
   transform: scale(1.06);
   border-left-color: #0077cc;
 }
 
+.thread-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delete-icon {
+  background-color: rgba(255, 255, 255, 0.1);;
+  border: none;
+  color: #f5f3ee;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+
+.delete-icon:hover {
+  background-color: #cc0000;
+   color: #fff;
+}
 
 .payment-notification {
   background: #f0f9ff;
@@ -87,10 +119,94 @@ background-color: #888854;
   cursor: pointer;
 }
 
+.modal-overlayc {
+position: fixed;
+  top: 85px;
+  left: 0;
+  width: 90%;
+ height: calc(100% - 85px);
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  z-index: 2000; 
+}
+
+.modalc {
+  background: #ffffff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: inline-block; 
+  width: auto;          
+  max-width: 90%;       
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  animation: fadeInScale 0.25s ease-out;
+  transform: translateY(50px); 
+}
+
+.modalc p {
+ margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #333;
+ white-space: normal;
+  word-wrap: break-word; 
+}
+
+.modalc-buttons {
+ display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.yes-btn {
+  background-color: #cc0000;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.no-btn {
+ background-color: #0077cc;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.yes-btn:hover {
+  background-color: #a30000;
+}
+
+.no-btn:hover {
+  background-color: #999;
+}
+
+/* Smooth pop-in animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 
 @media  (max-width: 768px) {
   .sidebar {
     flex: 0 0 30%;
+    top: 55px;
+    height: 83vh;
     width: 100%;
     max-width: 200px;
     border-right: none;
@@ -103,27 +219,33 @@ background-color: #888854;
     text-align: center;
   }
 
-  .sidebar ul {
+  .thread-list ul {
     width: auto;
   }
 
-  .sidebar li {
+  .thread-list li {
       font-size: 0.8rem;          
     padding: 0.5rem 0.5rem;          
     width: 24ch;                    
     border-radius: 4px;
   }
 
-  .sidebar .lock-icon {
+  .thread-list .lock-icon {
     font-size: 0.85rem;             
     margin-left: 0.5rem;
   }
+
+  .delete-icon {
+  font-size: 1rem;
+}
 }
 
 
 @media  (max-width: 480px) {
   .sidebar {
     flex: 0 0 30%;
+    top: 55px;
+    height: 83vh;
     width: 100%;
     max-width: 200px;
     border-right: none;
@@ -136,19 +258,23 @@ background-color: #888854;
     text-align: center;
   }
 
-  .sidebar ul {
+  .thread-list ul {
     width: auto;
   }
 
-  .sidebar li {
+  .thread-list li {
       font-size: 0.8rem;              
     padding: 0.5rem 0.5rem;         
     width: 24ch;                     
     border-radius: 4px;
   }
 
-  .sidebar .lock-icon {
+  .thread-list .lock-icon {
     font-size: 0.85rem;             
     margin-left: 0.5rem;
   }
+
+  .delete-icon {
+  font-size: 1rem;
+}
 }

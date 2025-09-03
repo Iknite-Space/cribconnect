@@ -1,16 +1,23 @@
 import { Link } from "react-router-dom";
 import { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import useDelete from "../../hooks/useDelete";
 import "./Navbar.css";
 // import { ThemeContext } from '../../context/ThemeContext';
+
+const DELETE_PROFILE = (userId) =>
+  `https://api.cribconnect.xyz/v1/users/${userId}`; // adjust endpoint if needed
 
 const Navbar = ({ onFeaturesClick, onHowClick }) => {
   const { profile, logout, authReady } = useContext(AuthContext);
   const [panelOpen, setPanelOpen] = useState(false);
   // const { toggleTheme, theme } = useContext(ThemeContext);
-
-   const panelRef = useRef(null);
+  const panelRef = useRef(null);
   const profilePicRef = useRef(null);
+
+  const { deleteData, loading: deleting, error: deleteError } = useDelete();
+  const [showDeleteProfileModal, setShowDeleteProfileModal] = useState(false);
+
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -31,6 +38,18 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [panelOpen]);
+
+  const handleDeleteProfile = async () => {
+    if (!profile?.user_id) return;
+    console.log(profile.user_id)
+
+    await deleteData(DELETE_PROFILE(profile.user_id));
+      logout();
+    if (!deleteError) {
+      // Optionally log the user out after deletion
+      logout();
+    }
+  };
 
   return (
     <>
@@ -102,6 +121,9 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
               <Link to='/profile'>View Profile 👤</Link>
             </li>
             <li>
+              <Link to='/'>Home 🏠</Link>
+            </li>
+            <li>
               <Link to='/dashboard'>Search 🔍</Link>
             </li>
             <li>
@@ -120,6 +142,49 @@ const Navbar = ({ onFeaturesClick, onHowClick }) => {
           <button className='side-panel-logout' onClick={logout}>
             Logout
           </button>
+
+           <button
+              className="side-panel-delete"
+              onClick={() => setShowDeleteProfileModal(true)}
+              disabled={deleting}
+            >
+              Delete Profile
+          </button>
+
+          {/* {deleteError && (
+            <p style={{ color: "red", fontSize: "0.85rem" }}>
+              Failed to delete profile.
+            </p>
+          )} */}
+          {showDeleteProfileModal && (
+              <div className="modal-overlayn">
+                <div className="modaln">
+                  <p>
+                    Are you sure you want to delete your profile,{" "}
+                    <strong>{profile.fname} {profile.lname}</strong>?
+                  </p>
+                  <div className="modaln-buttons">
+                    <button
+                      className="yes-btn"
+                      onClick={async () => {
+                        await handleDeleteProfile();
+                        setShowDeleteProfileModal(false);
+                      }}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      className="no-btn"
+                      onClick={() => setShowDeleteProfileModal(false)}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
         </div>
       )}
     </>
