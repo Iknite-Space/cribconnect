@@ -352,7 +352,7 @@ func (h *UserHandler) handleForgotPassword(c *gin.Context) {
 func (h *UserHandler) handleDeleteUser(c *gin.Context) {
 	user_id := c.Param("user_id")
 
-	deletedUser, err := h.querier.DeleteThreadById(c, user_id)
+	deletedUser, err := h.querier.DeleteUserById(c, user_id)
 	if err != nil {
 		log.Println("server here", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error" + err.Error()})
@@ -1037,3 +1037,9 @@ func (h *UserHandler) serveWs(c *gin.Context) {
 		}
 	}
 }
+
+// September 03, 2025 at 13:41
+
+// 2025/09/03 12:41:50 Failed to persist message for user
+// XX9dA9ToAecz3zwt2vFWFrfsHbl2: ERROR: insert or update on table "message"
+// violates foreign key constraint "message_receiver_id_fkey" (SQLSTATE 23503)
